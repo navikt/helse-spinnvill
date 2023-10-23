@@ -5,3 +5,21 @@
  * To learn more about Gradle by exploring our Samples at https://docs.gradle.org/8.2.1/samples
  * This project uses @Incubating APIs which are subject to change.
  */
+
+plugins {
+    kotlin("jvm") version "1.9.10"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation(kotlin("test"))
+}
+
+tasks {
+    test {
+        useJUnitPlatform()
+    }
+}
