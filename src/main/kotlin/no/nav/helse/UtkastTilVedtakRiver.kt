@@ -18,7 +18,6 @@ internal class UtkastTilVedtakRiver(rapidsConnection: RapidsConnection) : River.
                 it.requireArray("Godkjenning.omregnedeÅrsinntekter") {
                     requireKey("organisasjonsnummer", "beløp")
                 }
-                it.requireArray("sammenligningsgrunnlag")
             }
         }.register(this)
     }
