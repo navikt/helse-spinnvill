@@ -1,0 +1,59 @@
+name: Bygg og deploy Spekulant
+
+on:
+  push:
+    paths-ignore:
+      - '.idea'
+    branches:
+      - main
+jobs:
+  build:
+    permissions:
+      contents: "read"
+      id-token: "write"
+    name: Bygg, test og lag docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sjekk ut kode
+        uses: actions/checkout@v4
+      - name: Sett opp Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "17.x"
+      - name: Bygg med Gradle
+        uses: gradle/gradle-build-action@v2.9.0
+        with:
+          arguments: build
+        env:
+          ORG_GRADLE_PROJECT_githubUser: x-access-token
+          ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
+      - name: Bygg docker image
+        uses: nais/docker-build-push@v0
+        id: docker-build-push
+        with:
+          team: tbd
+          cache_from: type=gha
+          cache_to: type=gha,mode=min
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+    outputs:
+      image: ${{ steps.docker-build-push.outputs.image }}
+
+  deploy-dev:
+    name: Deploy til dev
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sjekk ut kode
+        uses: actions/checkout@v4
+      - name: Deploy til NAIS
+        uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: dev-gcp
+          RESOURCE: deploy/dev.yml
+          IMAGE: ${{ needs.build.outputs.image }}
+
+
+
