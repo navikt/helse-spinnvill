@@ -20,6 +20,13 @@ spec:
     path: /metrics
   kafka:
     pool: nav-dev
+  gcp:
+    sqlInstances:
+      - type: POSTGRES_15
+        diskAutoresize: true
+        databases:
+          - name: spinnvill
+            envVarPrefix: DATABASE
   env:
     - name: KAFKA_RAPID_TOPIC
       value: tbd.rapid.v1
