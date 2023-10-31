@@ -1,4 +1,4 @@
-name: Bygg og deploy Spekulant
+name: Bygg og deploy Spinnvill
 
 on:
   push:
