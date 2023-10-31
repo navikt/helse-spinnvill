@@ -5,6 +5,7 @@ val postgresqlVersion = "42.6.0"
 val hikariCPVersion = "5.0.1"
 val flywayCoreVersion = "9.22.3"
 val kotliqueryVersion = "1.9.0"
+val testcontainersPostgresqlVersion = "1.19.0"
 
 
 plugins {
@@ -27,7 +28,9 @@ dependencies {
         exclude("com.fasterxml.jackson.core")
         exclude("com.fasterxml.jackson.dataformat")
     }
+
     testImplementation(kotlin("test"))
+    testImplementation("org.testcontainers:postgresql:$testcontainersPostgresqlVersion")
 }
 
 tasks {
