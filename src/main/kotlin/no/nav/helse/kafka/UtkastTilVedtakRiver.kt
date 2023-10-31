@@ -1,4 +1,4 @@
-package no.nav.helse
+package no.nav.helse.kafka
 
 import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.rapids_rivers.JsonMessage

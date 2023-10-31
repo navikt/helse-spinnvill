@@ -1,6 +1,7 @@
 package no.nav.helse
 
 import no.nav.helse.db.DataSourceBuilder
+import no.nav.helse.kafka.UtkastTilVedtakRiver
 import no.nav.helse.rapids_rivers.RapidApplication
 
 internal fun main() {
