@@ -6,6 +6,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import org.intellij.lang.annotations.Language
 import java.time.LocalDate
+import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class Dao(private val dataSource: DataSource) {
@@ -14,7 +15,9 @@ class Dao(private val dataSource: DataSource) {
         return with(dataSource) {
             asSQL(
                 """
-                SELECT json FROM avviksvurdering WHERE fødselsnummer = :fodselsnummer AND skjæringstidspunkt = :skjaeringspunkt
+                SELECT json FROM avviksvurdering 
+                WHERE fødselsnummer = :fodselsnummer AND skjæringstidspunkt = :skjaeringstidspunkt 
+                ORDER BY opprettet DESC LIMIT 1
             """.trimIndent(),
                 mapOf(
                     "fodselsnummer" to fødselsnummer,
@@ -23,10 +26,30 @@ class Dao(private val dataSource: DataSource) {
             ).single { it.string("json") }
         }
     }
+
+    fun opprettAvviksvurdering(fødselsnummer: String, skjæringstidspunkt: LocalDate, json: String) {
+        with(dataSource) {
+            asSQL(
+                """
+                INSERT INTO avviksvurdering (fødselsnummer, skjæringstidspunkt, opprettet, json) 
+                VALUES (:fodselsnummer, :skjaeringstidspunkt, :opprettet, :json::json)
+            """.trimIndent(),
+                mapOf(
+                    "fodselsnummer" to fødselsnummer,
+                    "skjaeringstidspunkt" to skjæringstidspunkt,
+                    "opprettet" to LocalDateTime.now(),
+                    "json" to json
+                )
+            ).update()
+        }
+    }
 }
 
 fun asSQL(@Language("SQL") sql: String, argMap: Map<String, Any?> = emptyMap()) = queryOf(sql, argMap)
 fun asSQL(@Language("SQL") sql: String, vararg params: Any?) = queryOf(sql, *params)
+
+context (DataSource)
+fun Query.update() = sessionOf(this@DataSource).use { session -> session.run(this.asUpdate) }
 
 context (DataSource)
 fun <T> Query.single(mapping: (Row) -> T?) =

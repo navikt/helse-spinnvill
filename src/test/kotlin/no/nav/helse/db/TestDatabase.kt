@@ -1,6 +1,10 @@
 package no.nav.helse.db
 
+import kotliquery.queryOf
+import kotliquery.sessionOf
+import org.intellij.lang.annotations.Language
 import org.testcontainers.containers.PostgreSQLContainer
+import javax.sql.DataSource
 
 object TestDatabase {
 
@@ -23,7 +27,37 @@ object TestDatabase {
     )
     private val dataSourceBuilder = DataSourceBuilder(miljøvariabler)
     internal fun dataSource() = dataSourceBuilder.getDataSource()
+    internal fun reset() {
+        dataSource().use {
+            sessionOf(it).use { session ->
+                session.run(queryOf("SELECT truncate_tables()").asExecute)
+            }
+        }
+    }
+
+    private fun createTruncateFunction(dataSource: DataSource) {
+        sessionOf(dataSource).use {
+            @Language("PostgreSQL")
+            val query = """
+            CREATE OR REPLACE FUNCTION truncate_tables() RETURNS void AS $$
+            DECLARE
+            truncate_statement text;
+            BEGIN
+                SELECT 'TRUNCATE ' || string_agg(format('%I.%I', schemaname, tablename), ',') || ' RESTART IDENTITY CASCADE'
+                    INTO truncate_statement
+                FROM pg_tables
+                WHERE schemaname='public'
+                AND tablename not in ('flyway_schema_history');
+                EXECUTE truncate_statement;
+            END;
+            $$ LANGUAGE plpgsql;
+        """
+            it.run(queryOf(query).asExecute)
+        }
+    }
+
     init {
         dataSourceBuilder.migrate()
+        dataSource().use { createTruncateFunction(it) }
     }
 }
