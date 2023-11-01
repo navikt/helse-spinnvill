@@ -34,6 +34,11 @@ dependencies {
 }
 
 tasks {
+    compileKotlin {
+        compilerOptions {
+            freeCompilerArgs.add("-Xcontext-receivers")
+        }
+    }
     test {
         useJUnitPlatform()
     }
