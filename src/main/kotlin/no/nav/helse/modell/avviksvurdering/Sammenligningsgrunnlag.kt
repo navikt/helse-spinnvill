@@ -6,4 +6,9 @@ class Sammenligningsgrunnlag(private val inntekter: List<Double>) {
     internal fun beregnAvvik(beregningsgrunnlag: Beregningsgrunnlag): Avviksprosent {
         return beregningsgrunnlag.beregnAvvik(sammenligningsgrunnlag)
     }
+
+    internal companion object {
+        internal val INGEN = Sammenligningsgrunnlag(emptyList())
+    }
+
 }
