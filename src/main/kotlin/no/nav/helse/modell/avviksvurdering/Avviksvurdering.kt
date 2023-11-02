@@ -12,6 +12,7 @@ class Avviksvurdering private constructor(
 
     internal fun nyttSammenligningsgrunnlag(sammenligningsgrunnlag: Sammenligningsgrunnlag) =
         Avviksvurdering(this.beregningsgrunnlag, sammenligningsgrunnlag)
+
     internal companion object {
         internal fun nyAvviksvurdering(beregningsgrunnlag: Beregningsgrunnlag) = Avviksvurdering(beregningsgrunnlag, Sammenligningsgrunnlag.INGEN)
     }
