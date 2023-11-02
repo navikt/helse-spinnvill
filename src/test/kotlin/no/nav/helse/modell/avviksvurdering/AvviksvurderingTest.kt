@@ -44,5 +44,5 @@ class AvviksvurderingTest{
 
     private fun sammenligningsgrunnlag(inntekt: Double) = Sammenligningsgrunnlag(List(12) { inntekt })
 
-    private fun omregnedeÅrsinntekter(vararg arbeidsgivere: Pair<String, Double>) = OmregnedeÅrsinntekter(arbeidsgivere.toMap())
+    private fun omregnedeÅrsinntekter(vararg arbeidsgivere: Pair<String, Double>) = Beregningsgrunnlag(arbeidsgivere.toMap())
 }

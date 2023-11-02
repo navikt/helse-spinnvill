@@ -3,7 +3,7 @@ package no.nav.helse.modell.avviksvurdering
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
-class OmregnedeÅrsinntekterTest {
+class BeregningsgrunnlagTest {
 
     @Test
     fun `referential equals`() {
@@ -35,5 +35,5 @@ class OmregnedeÅrsinntekterTest {
         assertNotEquals(omregnedeÅrsinntekter("a1" to 500000.0, "a2" to 500000.0), omregnedeÅrsinntekter)
     }
 
-    private fun omregnedeÅrsinntekter(vararg arbeidsgivere: Pair<String, Double>) = OmregnedeÅrsinntekter(arbeidsgivere.toMap())
+    private fun omregnedeÅrsinntekter(vararg arbeidsgivere: Pair<String, Double>) = Beregningsgrunnlag(arbeidsgivere.toMap())
 }
