@@ -1,8 +1,19 @@
 package no.nav.helse.modell
 
-class Sykefraværstilfelle {
+import no.nav.helse.modell.avviksvurdering.Sammenligningsgrunnlag
+import java.time.LocalDate
+import java.time.YearMonth
 
-    fun nyttUtkastTilVedtak(): String? {
+class Sykefraværstilfelle(
+    val skjæringstidspunkt: LocalDate,
+    val omregnetÅrsinntekt: Double
+) {
+
+    fun nyttUtkastTilVedtak(sammenligningsgrunnlag: Sammenligningsgrunnlag?): BehovForSammenligningsgrunnlag? {
+        val beregningsperiodeTom = YearMonth.from(skjæringstidspunkt).minusMonths(1)
+        if (sammenligningsgrunnlag == null) {
+            return BehovForSammenligningsgrunnlag(beregningsperiodeTom.minusMonths(11), beregningsperiodeTom)
+        }
         return null
     }
 
