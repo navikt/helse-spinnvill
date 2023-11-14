@@ -27,6 +27,12 @@ internal class UtkastTilVedtakRiver(rapidsConnection: RapidsConnection) : River.
             "Leser godkjenningsbehov {}",
             kv("Fødselsnummer", packet["fødselsnummer"].asText())
         )
+        //hentDataFraDb
+        //lag sykefraværstilfelle
+        //fisk ut beregningsgrunnlaget fra utkast til vedtak (omregnede årsinntekter)
+        //spør sykefraværstilfelle om det trenger data
+        //hvis ja lag og send ut behov
+        //hvis nei få avviksprosenten fra sykefraværstilfelle
     }
 
     private companion object {

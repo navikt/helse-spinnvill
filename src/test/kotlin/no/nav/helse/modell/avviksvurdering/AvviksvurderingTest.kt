@@ -1,60 +1,45 @@
 package no.nav.helse.modell.avviksvurdering
 
+import no.nav.helse.helpers.januar
+import no.nav.helse.modell.BehovForSammenligningsgrunnlag
+import no.nav.helse.modell.BehovObserver
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class AvviksvurderingTest{
 
     @Test
-    fun`har gjort avviksvurdering før med en arbeidsgiver og samme inntekt` () {
+    fun`har ikke gjort avviksvurdering og mangler sammenligningsgrunnlag` () {
+        val avviksvurdering = Avviksvurdering
+            .nyAvviksvurdering(omregnedeÅrsinntekter("a1" to 600000.0))
+        avviksvurdering.register(observer)
+
+        avviksvurdering.håndter(1.januar, omregnedeÅrsinntekter("a1" to 600000.0))
+        assertEquals(1, observer.behov.size)
+    }
+    @Test
+    fun`har ikke gjort avviksvurdering men har sammenligningsgrunnlag` () {
         val avviksvurdering = Avviksvurdering
             .nyAvviksvurdering(omregnedeÅrsinntekter("a1" to 600000.0))
             .nyttSammenligningsgrunnlag(sammenligningsgrunnlag(50000.0))
-        assertTrue(avviksvurdering.avviksvurderingGjortFor(omregnedeÅrsinntekter("a1" to 600000.0)))
-    }
+        avviksvurdering.register(observer)
 
-    @Test
-    fun`har gjort avviksvurdering før med flere arbeidsgivere og samme inntekter` () {
-        val avviksvurdering = Avviksvurdering
-            .nyAvviksvurdering(omregnedeÅrsinntekter("a1" to 600000.0, "a2" to 600000.0))
-            .nyttSammenligningsgrunnlag(sammenligningsgrunnlag(50000.0))
-        assertTrue(avviksvurdering.avviksvurderingGjortFor(omregnedeÅrsinntekter("a1" to 600000.0, "a2" to 600000.0)))
-    }
-
-    @Test
-    fun`har gjort avviksvurdering før med flere arbeidsgivere og samme inntekter - rekkefølge har ikke betydning` () {
-        val avviksvurdering = Avviksvurdering
-            .nyAvviksvurdering(omregnedeÅrsinntekter("a2" to 200000.0, "a1" to 500000.0))
-            .nyttSammenligningsgrunnlag(sammenligningsgrunnlag(50000.0))
-        assertTrue(avviksvurdering.avviksvurderingGjortFor(omregnedeÅrsinntekter("a1" to 500000.0, "a2" to 200000.0)))
-    }
-
-    @Test
-    fun`har ikke gjort avviksvurdering før med en arbeidsgiver og forskjellig inntekt` () {
-        val avviksvurdering =Avviksvurdering
-            .nyAvviksvurdering(omregnedeÅrsinntekter("a1" to 300000.0))
-            .nyttSammenligningsgrunnlag(sammenligningsgrunnlag(50000.0))
-        assertFalse(avviksvurdering.avviksvurderingGjortFor(omregnedeÅrsinntekter("a1" to 600000.0)))
-    }
-
-    @Test
-    fun`har ikke gjort avviksvurdering før med annen arbeidsgiver men samme inntekt` () {
-        val avviksvurdering = Avviksvurdering
-            .nyAvviksvurdering(omregnedeÅrsinntekter("a1" to 300000.0))
-            .nyttSammenligningsgrunnlag(sammenligningsgrunnlag(50000.0))
-        assertFalse(avviksvurdering.avviksvurderingGjortFor(omregnedeÅrsinntekter("a2" to 300000.0)))
-    }
-
-    @Test
-    fun`har ikke gjort avviksvurdering før med ulikt antall arbeidsgivere` () {
-        val avviksvurdering = Avviksvurdering
-            .nyAvviksvurdering(omregnedeÅrsinntekter("a1" to 600000.0))
-            .nyttSammenligningsgrunnlag(sammenligningsgrunnlag(50000.0))
-        assertFalse(avviksvurdering.avviksvurderingGjortFor(omregnedeÅrsinntekter("a1" to 300000.0, "a2" to 300000.0)))
+        avviksvurdering.håndter(1.januar, omregnedeÅrsinntekter("a1" to 600000.0))
+        assertEquals(0, observer.behov.size)
     }
 
 
     private fun sammenligningsgrunnlag(inntekt: Double) = Sammenligningsgrunnlag(List(12) { inntekt })
 
     private fun omregnedeÅrsinntekter(vararg arbeidsgivere: Pair<String, Double>) = Beregningsgrunnlag(arbeidsgivere.toMap())
+
+    private val observer = object: BehovObserver {
+
+        val behov = mutableListOf<BehovForSammenligningsgrunnlag>()
+
+        override fun sammenligningsgrunnlag(behovForSammenligningsgrunnlag: BehovForSammenligningsgrunnlag) {
+            behov.add(behovForSammenligningsgrunnlag)
+        }
+    }
 }
+

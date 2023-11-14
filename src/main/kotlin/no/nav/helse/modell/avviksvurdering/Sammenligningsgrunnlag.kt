@@ -8,7 +8,7 @@ class Sammenligningsgrunnlag(private val inntekter: List<Double>) {
     }
 
     internal companion object {
-        internal val INGEN = Sammenligningsgrunnlag(emptyList())
+        internal val IKKE_INNHENTET = Sammenligningsgrunnlag(emptyList())
     }
 
 }
