@@ -1,9 +1,11 @@
 package no.nav.helse.mediator
 
+import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.modell.BehovForSammenligningsgrunnlag
 import no.nav.helse.modell.BehovObserver
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
+import org.slf4j.LoggerFactory
 import java.util.UUID
 
 class BehovProducer(
@@ -14,6 +16,10 @@ class BehovProducer(
     private val rapidsConnection: RapidsConnection
 ): BehovObserver {
 
+    private companion object {
+        private val logg = LoggerFactory.getLogger(this::class.java)
+        private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
+    }
     private val behovskø = mutableMapOf<String, Map<String, Any>>()
 
     internal fun finalize() {
@@ -29,6 +35,12 @@ class BehovProducer(
                 putAll(behovskø)
             }
         ).toJson()
+        logg.info("Etterspør {}", kv("behov", behovskø.keys))
+        sikkerlogg.info("Etterspør {} for {}, {}",
+            kv("behov", behovskø.keys),
+            kv("fødselsnummer", fødselsnummer),
+            kv("vedtaksperiodeId", vedtaksperiodeId)
+        )
         rapidsConnection.publish(fødselsnummer, compositeBehov)
     }
     override fun sammenligningsgrunnlag(behovForSammenligningsgrunnlag: BehovForSammenligningsgrunnlag) {
