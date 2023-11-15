@@ -33,4 +33,10 @@ class BehovProducerTest {
         assertEquals("2018-01", behov["InntekterForSammenligningsgrunnlag"].path("beregningStart").asText())
         assertEquals("2018-04", behov["InntekterForSammenligningsgrunnlag"].path("beregningSlutt").asText())
     }
+
+    @Test
+    fun `lager ikke behov når behovskø er tom`() {
+        behovProducer.finalize()
+        assertEquals(0, testRapid.inspektør.size)
+    }
 }

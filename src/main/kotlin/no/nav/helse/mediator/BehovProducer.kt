@@ -17,6 +17,7 @@ class BehovProducer(
     private val behovskø = mutableMapOf<String, Map<String, Any>>()
 
     internal fun finalize() {
+        if (behovskø.isEmpty()) return
         val compositeBehov = JsonMessage.newNeed(
             behovskø.keys,
             mutableMapOf<String, Any>(
