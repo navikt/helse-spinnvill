@@ -2,7 +2,6 @@ package no.nav.helse
 
 import no.nav.helse.db.Dao
 import no.nav.helse.db.DataSourceBuilder
-import no.nav.helse.kafka.UtkastTilVedtakRiver
 import no.nav.helse.mediator.Mediator
 import no.nav.helse.rapids_rivers.RapidApplication
 
@@ -15,7 +14,6 @@ class App {
     private val rapidsConnection = RapidApplication.create(System.getenv())
     private val datasourceBuilder = DataSourceBuilder(System.getenv())
     private val dao = Dao(datasourceBuilder.getDataSource())
-    private val mediator = Mediator(rapidsConnection, dao)
 
     internal fun start() {
         datasourceBuilder.migrate()
@@ -23,6 +21,6 @@ class App {
     }
 
     init {
-        UtkastTilVedtakRiver(rapidsConnection, mediator)
+        Mediator(rapidsConnection, dao)
     }
 }
