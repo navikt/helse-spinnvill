@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.db.Dao
 import no.nav.helse.kafka.MessageHandler
+import no.nav.helse.kafka.SammenligningsgrunnlagMessage
 import no.nav.helse.kafka.UtkastTilVedtakMessage
 import no.nav.helse.kafka.UtkastTilVedtakRiver
 import no.nav.helse.modell.Sykefraværstilfelle
@@ -47,6 +48,10 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val dao: 
         )
         sykefraværstilfelle.nyttUtkastTilVedtak(beregningsgrunnlag)
         behovProducer.finalize()
+    }
+
+    override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
+        TODO("Not yet implemented")
     }
 
     private fun sykefraværstilfelle(

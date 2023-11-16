@@ -16,6 +16,8 @@ class UtkastTilVedtakRiverTest {
         override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {
             messages.add(utkastTilVedtakMessage)
         }
+
+        override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}
     }
 //teste hva hvis fødselsnumemr osv ikke er der blablab
     private companion object {
