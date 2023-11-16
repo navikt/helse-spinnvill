@@ -36,10 +36,11 @@ class BehovProducer(
             }
         ).toJson()
         logg.info("Etterspør {}", kv("behov", behovskø.keys))
-        sikkerlogg.info("Etterspør {} for {}, {}",
+        sikkerlogg.info("Etterspør {} for {}, {}. Behov: {}",
             kv("behov", behovskø.keys),
             kv("fødselsnummer", fødselsnummer),
-            kv("vedtaksperiodeId", vedtaksperiodeId)
+            kv("vedtaksperiodeId", vedtaksperiodeId),
+            compositeBehov
         )
         rapidsConnection.publish(fødselsnummer, compositeBehov)
     }
