@@ -25,7 +25,15 @@ class AvviksprosentTest {
         val avviksprosent = Avviksprosent.avvik(600000.0, 200000.0)
         assertFalse(avviksprosent.harAkseptabeltAvvik())
     }
-
+    @Test
+    fun `avrunding til to desimaler`() {
+        val avviksprosent = Avviksprosent.avvik(8.8, 7.7)
+        assertEquals(14.29, avviksprosent.avrundetTilToDesimaler())
+    }
+    @Test
+    fun INGEN() {
+        assertEquals(-1.0, Avviksprosent.INGEN.avrundetTilToDesimaler())
+    }
     @Test
     fun equals() {
         val avviksprosent1 = Avviksprosent.avvik(100000.0, 100000.0)

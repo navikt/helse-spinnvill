@@ -1,11 +1,14 @@
 package no.nav.helse.modell.avviksvurdering
 
 import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 internal class Avviksprosent private constructor(private val prosent: Double): Comparable<Avviksprosent> {
 
     internal fun harAkseptabeltAvvik(): Boolean = this <= MAKSIMALT_TILLATT_AVVIK
+
+    internal fun avrundetTilToDesimaler(): Double = (prosent * 100).roundToInt() / 100.0
 
     internal companion object {
         private const val EPSILON = 0.0001
@@ -17,6 +20,8 @@ internal class Avviksprosent private constructor(private val prosent: Double): C
                 else ((beregningsgrunnlag - sammenligningsgrunnlag).absoluteValue / sammenligningsgrunnlag) * 100
             return Avviksprosent(avviksprosent)
         }
+
+        internal val INGEN = Avviksprosent(-1.0)
     }
 
     override fun toString(): String = "$prosent"
