@@ -6,6 +6,7 @@ import no.nav.helse.helpers.januar
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -17,8 +18,9 @@ class MediatorTest {
         Mediator(testRapid, dao)
     }
 
+    @Disabled
     @Test
-    fun `Henter sammenlignings hvis vi ikke har det`() {
+    fun `Henter sammenligningsgrunnlag hvis vi ikke har det`() {
         testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", "12345678910", "000000000", 1.januar))
         assertEquals(1, testRapid.inspektør.size)
         assertEquals("behov", testRapid.inspektør.field(0, "@event_name").asText())

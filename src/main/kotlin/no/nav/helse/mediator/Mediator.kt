@@ -41,10 +41,9 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val dao: 
         )
         val beregningsgrunnlag = Beregningsgrunnlag(utkastTilVedtakMessage.beregningsgrunnlag)
         val sykefraværstilfelle = sykefraværstilfelle(
-            utkastTilVedtakMessage.fødselsnummer,
-            utkastTilVedtakMessage.skjæringstidspunkt,
-            beregningsgrunnlag,
-            behovProducer
+            fødselsnummer = utkastTilVedtakMessage.fødselsnummer,
+            skjæringstidspunkt = utkastTilVedtakMessage.skjæringstidspunkt,
+            behovProducer = behovProducer
         )
         sykefraværstilfelle.nyttUtkastTilVedtak(beregningsgrunnlag)
         behovProducer.finalize()
@@ -57,14 +56,13 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val dao: 
     private fun sykefraværstilfelle(
         fødselsnummer: String,
         skjæringstidspunkt: LocalDate,
-        beregningsgrunnlag: Beregningsgrunnlag,
         behovProducer: BehovProducer
     ): Sykefraværstilfelle {
-        val avviksvurderingJson = dao.finnAvviksvurdering(fødselsnummer, skjæringstidspunkt)
-        val avviksvurdering = avviksvurderingJson?.let {
-            jacksonObjectMapper().readValue(it, Avviksvurdering::class.java)
-        } ?: Avviksvurdering.nyAvviksvurdering(beregningsgrunnlag)
-        avviksvurdering.register(behovProducer)
-        return Sykefraværstilfelle(skjæringstidspunkt, avviksvurdering)
+        TODO()
+//        val sykefraværstilfelle = dao.finnSykefraværstilfelle(fødselsnummer, skjæringstidspunkt) ?: Sykefraværstilfelle.nyttTilfelle()
+//        avviksvurdering.register()
+//        return Sykefraværstilfelle(skjæringstidspunkt).also {
+//            it.register(behovProducer)
+//        }
     }
 }

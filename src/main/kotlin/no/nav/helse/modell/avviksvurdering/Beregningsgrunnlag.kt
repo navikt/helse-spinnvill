@@ -5,7 +5,10 @@ class Beregningsgrunnlag(private val omregnedeÅrsinntekter: Map<String, Double>
     private val totalOmregnetÅrsinntekt = omregnedeÅrsinntekter.values.sum()
 
     internal fun beregnAvvik(sammenligningsgrunnlag: Double): Avviksprosent {
-        return Avviksprosent.avvik(totalOmregnetÅrsinntekt, sammenligningsgrunnlag)
+        return Avviksprosent.avvik(
+            beregningsgrunnlag = totalOmregnetÅrsinntekt,
+            sammenligningsgrunnlag = sammenligningsgrunnlag
+        )
     }
 
     override fun equals(other: Any?): Boolean {
@@ -19,5 +22,9 @@ class Beregningsgrunnlag(private val omregnedeÅrsinntekter: Map<String, Double>
 
     override fun hashCode(): Int {
         return omregnedeÅrsinntekter.hashCode()
+    }
+
+    internal companion object {
+        internal val INGEN = Beregningsgrunnlag(emptyMap())
     }
 }
