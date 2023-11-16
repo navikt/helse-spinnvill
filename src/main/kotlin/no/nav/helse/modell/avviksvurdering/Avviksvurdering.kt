@@ -1,6 +1,9 @@
 package no.nav.helse.modell.avviksvurdering
 
+import java.time.LocalDateTime
+
 class Avviksvurdering private constructor(
+    private val opprettet: LocalDateTime,
     private var beregningsgrunnlag: Beregningsgrunnlag
 ) {
     private var avviksprosent: Avviksprosent = Avviksprosent.INGEN
@@ -13,6 +16,7 @@ class Avviksvurdering private constructor(
     }
 
     internal companion object {
-        internal fun nyAvviksvurdering() = Avviksvurdering(Beregningsgrunnlag.INGEN)
+        internal fun nyAvviksvurdering() = Avviksvurdering(LocalDateTime.now(), Beregningsgrunnlag.INGEN)
+        internal fun Iterable<Avviksvurdering>.sortert() = sortedBy { it.opprettet }
     }
 }

@@ -8,7 +8,7 @@ import java.time.YearMonth
 
 class Sykefraværstilfelle private constructor(
     private val skjæringstidspunkt: LocalDate,
-    private var sammenligningsgrunnlag: Sammenligningsgrunnlag = Sammenligningsgrunnlag.IKKE_INNHENTET,
+    private var sammenligningsgrunnlag: Sammenligningsgrunnlag,
     private val avviksvurderinger: Avviksvurderinger
 ) {
     private val observers = mutableListOf<BehovObserver>()
@@ -37,7 +37,7 @@ class Sykefraværstilfelle private constructor(
         internal fun nyttSykefraværstilfelle(skjæringstidspunkt: LocalDate) = Sykefraværstilfelle(
             skjæringstidspunkt = skjæringstidspunkt,
             sammenligningsgrunnlag = Sammenligningsgrunnlag.IKKE_INNHENTET,
-            avviksvurderinger = Avviksvurderinger()
+            avviksvurderinger = Avviksvurderinger.ny()
         )
     }
 }
