@@ -35,7 +35,10 @@ class BehovProducer(
                 putAll(behovskø)
             }
         ).toJson()
-        logg.info("Etterspør {}", kv("behov", behovskø.keys))
+        logg.info("Etterspør {} for {}",
+            kv("behov", behovskø.keys),
+            kv("vedtaksperiodeId", vedtaksperiodeId),
+        )
         sikkerlogg.info("Etterspør {} for {}, {}. Behov: {}",
             kv("behov", behovskø.keys),
             kv("fødselsnummer", fødselsnummer),
