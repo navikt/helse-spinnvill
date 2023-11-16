@@ -20,6 +20,8 @@ spec:
     path: /metrics
   kafka:
     pool: nav-dev
+  secureLogs:
+    enabled: true
   gcp:
     sqlInstances:
       - type: POSTGRES_15
