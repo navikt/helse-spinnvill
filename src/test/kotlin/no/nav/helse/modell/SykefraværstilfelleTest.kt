@@ -10,7 +10,7 @@ class SykefraværstilfelleTest {
 
     @Test
     fun `send ut behov dersom sykefraværstilfellet mangler sammenligningsgrunnlag`() {
-        val sykefraværstilfelle = Sykefraværstilfelle.nyttSykefraværstilfelle(1.januar)
+        val sykefraværstilfelle = Sykefraværstilfelle.nyttTilfelle(1.januar)
         sykefraværstilfelle.register(observer)
         sykefraværstilfelle.nyttUtkastTilVedtak(omregnedeÅrsinntekter("a1" to 200000.0))
         assertEquals(1, observer.behov.size)
