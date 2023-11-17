@@ -34,7 +34,7 @@ class Sykefraværstilfelle private constructor(
     }
 
     internal companion object {
-        internal fun nyttSykefraværstilfelle(skjæringstidspunkt: LocalDate) = Sykefraværstilfelle(
+        internal fun nyttTilfelle(skjæringstidspunkt: LocalDate) = Sykefraværstilfelle(
             skjæringstidspunkt = skjæringstidspunkt,
             sammenligningsgrunnlag = Sammenligningsgrunnlag.IKKE_INNHENTET,
             avviksvurderinger = Avviksvurderinger.ny()
