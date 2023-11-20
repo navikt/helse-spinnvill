@@ -42,5 +42,37 @@ flowchart TD
     classDef legend stroke-dasharray: 5 5, fill:#CBCFD5, color:#23262A, stroke:#23262A
 ```
 
+## Datamodell
+### Avviksvurdering
+```mermaid
+---
+title: Avviksvurdering
+---
+erDiagram
+    AVVIKSVURDERING ||--|{ INNRAPPORTERT_INNTEKT: har
+    AVVIKSVURDERING ||--|{ OMMREGNET_AARSINNTEKT: har
+    OMMREGNET_AARSINNTEKT }|--|| ARBEIDSGIVER: har
+    OMMREGNET_AARSINNTEKT }|--|| INNTEKT: har
+    
+    AVVIKSVURDERING {
+        string foedselsnummer PK
+        date skjaeringstidspunkt PK
+        timestamp opprettet
+    }
+    
+    ARBEIDSGIVER {
+        string organisasjonsnummer
+    }
+
+    INNTEKT {
+        float inntekt
+    }
+
+    INNRAPPORTERT_INNTEKT {
+        string organisasjonsnummer
+        float[] inntekter
+    }
+```
+
 ### For NAV-ansatte
 Interne henvendelser kan sendes via Slack i kanalen [#team-bømlo-værsågod](https://nav-it.slack.com/archives/C019637N90X).
