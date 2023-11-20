@@ -16,34 +16,30 @@ I dette repoet skal det commites på dette formatet:
 
 NB: Husk å bytte til å bruke unicode characters i stedet for `:<emote>:` notasjon
 
-## Konsepter
-### Avviksvurdering
+## Avviksvurdering
+### Konsept
 ```mermaid
 ---
-title: Avviksvurdering prosessflyt
+title: Prosessflyt for avviksvurdering
 ---
 flowchart TD
-    lol[Stiplede bokser er ikke implementert]:::legend
+    start(Melding om utkast til vedtak)
+    utkast(Håndter utkast til vedtak)
+    avviksvurdering_finnes{{Finnes avviksvurdering?}}
+    ny_avviksvurdering(Opprett ufullstendig avviksvurdering)
+    avviksvurdering_gjort{{Er avviksvurdering gjort med <br> beregningsgrunnlag fra utkast til vedtak?}}
+    hent_sammenligningsgrunnlag(Hent sammenligningsgrunnlag)
+    gjør_avviksvurdering(Gjør avviksvurdering)
+    ikke_gjør_avviksvurdering(Ikke gjør en ny avviksvurdering)
     
-    utv(Mottar utkast til vedtak) --> sft{{Sykefraværstilfelle?}}:::ikkeImplementert
-    sft --ja--> slgl{{Sammenligningsgrunnlag?}}
-    sft --nei--> ny_sft(Opprett sykefraværstilfelle):::ikkeImplementert --> slgl
-    
-    slgl --ja--> avv{{Finnes avviksvurdering?}}
-    slgl --nei--> hent_slgl(Hent sammenligningsgrunnlag) --> lagre_slgl(Lagre sammenligningsgrunnlag):::ikkeImplementert --> utv
-    
-    avv --ja--> avv_brgl{{Er avviksvurdering gjort med <br> beregningsgrunnlag fra utkast til vedtak}}
-    avv --nei--> gjør_avv(Gjør avviksvurdering)
-    
-    avv_brgl --ja--> ikke_avv(Ikke gjør en ny avviksvurdering)
-    avv_brgl --nei--> gjør_avv
-    
-    classDef ikkeImplementert stroke-dasharray: 5 5 
-    classDef legend stroke-dasharray: 5 5, fill:#CBCFD5, color:#23262A, stroke:#23262A
+    start --> utkast --> avviksvurdering_finnes
+    avviksvurdering_finnes -- ja --> avviksvurdering_gjort
+    avviksvurdering_finnes -- nei --> hent_sammenligningsgrunnlag --> ny_avviksvurdering --> utkast
+    avviksvurdering_gjort -- ja --> ikke_gjør_avviksvurdering
+    avviksvurdering_gjort -- nei --> gjør_avviksvurdering
 ```
 
-## Datamodell
-### Avviksvurdering
+### Datamodell
 ```mermaid
 ---
 title: Avviksvurdering
