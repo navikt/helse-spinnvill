@@ -6,6 +6,7 @@ val hikariCPVersion = "5.0.1"
 val flywayCoreVersion = "9.22.3"
 val kotliqueryVersion = "1.9.0"
 val testcontainersPostgresqlVersion = "1.19.0"
+val mockkVersion = "1.13.8"
 
 
 plugins {
@@ -30,6 +31,7 @@ dependencies {
     }
 
     testImplementation(kotlin("test"))
+    testImplementation("io.mockk:mockk:$mockkVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersPostgresqlVersion")
 }
 

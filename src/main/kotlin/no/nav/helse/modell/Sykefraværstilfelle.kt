@@ -17,8 +17,8 @@ class Sykefraværstilfelle private constructor(
         observers.add(observer)
     }
 
-    fun nyttUtkastTilVedtak(beregningsgrunnlag: Beregningsgrunnlag) {
-        if (sammenligningsgrunnlag == Sammenligningsgrunnlag.IKKE_INNHENTET) trengerSammenligningsgrunnlag()
+    fun håndter(beregningsgrunnlag: Beregningsgrunnlag) {
+        if (sammenligningsgrunnlag == Sammenligningsgrunnlag.IKKE_INNHENTET) return trengerSammenligningsgrunnlag()
         avviksvurderinger.håndter(beregningsgrunnlag, sammenligningsgrunnlag)
     }
 
