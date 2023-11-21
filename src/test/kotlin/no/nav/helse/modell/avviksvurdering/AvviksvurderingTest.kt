@@ -8,21 +8,21 @@ internal class AvviksvurderingTest {
 
     @Test
     fun `har gjort avviksvurdering før`() {
-        val avviksvurdering = Avviksvurdering.nyAvviksvurdering()
+        val avviksvurdering = Avviksvurdering.nyAvviksvurdering(sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
-        avviksvurdering.håndter(omregnedeÅrsinntekter("a1" to 600000.0), sammenligningsgrunnlag(50000.0))
+        avviksvurdering.håndter(omregnedeÅrsinntekter("a1" to 600000.0))
         observer.clear()
-        avviksvurdering.håndter(omregnedeÅrsinntekter("a1" to 600000.0), sammenligningsgrunnlag(50000.0))
+        avviksvurdering.håndter(omregnedeÅrsinntekter("a1" to 600000.0))
         assertEquals(0, observer.avviksvurderinger.size)
     }
 
     @Test
     fun `har ikke gjort avviksvurdering før og avvik innenfor akseptabelt avvik`() {
-        val avviksvurdering = Avviksvurdering.nyAvviksvurdering()
+        val avviksvurdering = Avviksvurdering.nyAvviksvurdering(sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
-        avviksvurdering.håndter(omregnedeÅrsinntekter("a1" to 600000.0), sammenligningsgrunnlag(50000.0))
+        avviksvurdering.håndter(omregnedeÅrsinntekter("a1" to 600000.0))
         assertEquals(1, observer.avviksvurderinger.size)
         val (harAkseptabeltAvvik, avviksprosent) = observer.avviksvurderinger.single()
         assertEquals(true, harAkseptabeltAvvik)
@@ -31,10 +31,10 @@ internal class AvviksvurderingTest {
 
     @Test
     fun `har ikke gjort avviksvurdering før og avvik utenfor akseptabelt avvik`() {
-        val avviksvurdering = Avviksvurdering.nyAvviksvurdering()
+        val avviksvurdering = Avviksvurdering.nyAvviksvurdering(sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
-        avviksvurdering.håndter(omregnedeÅrsinntekter("a1" to 360000.0), sammenligningsgrunnlag(50000.0))
+        avviksvurdering.håndter(omregnedeÅrsinntekter("a1" to 360000.0))
         assertEquals(1, observer.avviksvurderinger.size)
         val (harAkseptabeltAvvik, avviksprosent) = observer.avviksvurderinger.single()
         assertEquals(false, harAkseptabeltAvvik)

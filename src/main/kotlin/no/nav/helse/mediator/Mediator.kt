@@ -6,7 +6,7 @@ import no.nav.helse.kafka.MessageHandler
 import no.nav.helse.kafka.SammenligningsgrunnlagMessage
 import no.nav.helse.kafka.UtkastTilVedtakMessage
 import no.nav.helse.kafka.UtkastTilVedtakRiver
-import no.nav.helse.modell.Sykefraværstilfelle
+import no.nav.helse.modell.avviksvurdering.Avviksvurdering
 import no.nav.helse.modell.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
@@ -38,29 +38,22 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val dao: 
             rapidsConnection = rapidsConnection
         )
         val beregningsgrunnlag = Beregningsgrunnlag(utkastTilVedtakMessage.beregningsgrunnlag)
-        val sykefraværstilfelle = sykefraværstilfelle(
-            fødselsnummer = utkastTilVedtakMessage.fødselsnummer,
-            skjæringstidspunkt = utkastTilVedtakMessage.skjæringstidspunkt,
-            behovProducer = behovProducer
-        )
-        sykefraværstilfelle.håndter(beregningsgrunnlag)
+        val avviksvurdering = avviksvurdering()
+            ?: return beOmSammenligningsgrunnlag(utkastTilVedtakMessage.skjæringstidspunkt, behovProducer)
+        avviksvurdering.håndter(beregningsgrunnlag)
         behovProducer.finalize()
+    }
+
+    private fun avviksvurdering(): Avviksvurdering? {
+        TODO()
+    }
+
+    private fun beOmSammenligningsgrunnlag(skjæringstidspunkt: LocalDate, behovProducer: BehovProducer) {
+        TODO()
     }
 
     override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
         TODO("Not yet implemented")
     }
 
-    private fun sykefraværstilfelle(
-        fødselsnummer: String,
-        skjæringstidspunkt: LocalDate,
-        behovProducer: BehovProducer
-    ): Sykefraværstilfelle {
-        TODO()
-//        val sykefraværstilfelle = dao.finnSykefraværstilfelle(fødselsnummer, skjæringstidspunkt) ?: Sykefraværstilfelle.nyttTilfelle()
-//        avviksvurdering.register()
-//        return Sykefraværstilfelle(skjæringstidspunkt).also {
-//            it.register(behovProducer)
-//        }
-    }
 }
