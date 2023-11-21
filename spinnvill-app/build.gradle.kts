@@ -1,13 +1,16 @@
+val hikariCPVersion = "5.0.1"
+
+
 group = "no.nav.helse"
-version = "unspecified"
+
+dependencies {
+    implementation(project(":spinnvill-db"))
+    implementation("com.zaxxer:HikariCP:$hikariCPVersion")
+
+    testImplementation(testFixtures(project(":spinnvill-db")))
+}
 
 tasks {
-    compileKotlin {
-        compilerOptions {
-            freeCompilerArgs.add("-Xcontext-receivers")
-        }
-    }
-
     withType<Jar> {
         archiveBaseName.set("app")
         manifest {
@@ -22,8 +25,5 @@ tasks {
                 if (!file.exists()) it.copyTo(file)
             }
         }
-    }
-    test {
-        useJUnitPlatform()
     }
 }

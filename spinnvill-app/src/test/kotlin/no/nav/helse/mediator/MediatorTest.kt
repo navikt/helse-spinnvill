@@ -1,7 +1,7 @@
 package no.nav.helse.mediator
 
+import no.nav.helse.TestDatabase
 import no.nav.helse.db.Dao
-import no.nav.helse.db.TestDatabase
 import no.nav.helse.helpers.januar
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language

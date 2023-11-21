@@ -10,7 +10,6 @@ internal fun main() {
 }
 
 class App {
-
     private val rapidsConnection = RapidApplication.create(System.getenv())
     private val datasourceBuilder = DataSourceBuilder(System.getenv())
     private val dao = Dao(datasourceBuilder.getDataSource())

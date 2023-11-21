@@ -1,7 +1,8 @@
-package no.nav.helse.db
+package no.nav.helse
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.helse.db.DataSourceBuilder
 import org.intellij.lang.annotations.Language
 import org.testcontainers.containers.PostgreSQLContainer
 import javax.sql.DataSource
@@ -26,8 +27,8 @@ object TestDatabase {
         "DATABASE_PASSWORD" to postgres.password,
     )
     private val dataSourceBuilder = DataSourceBuilder(miljøvariabler)
-    internal fun dataSource() = dataSourceBuilder.getDataSource()
-    internal fun reset() {
+    fun dataSource() = dataSourceBuilder.getDataSource()
+    fun reset() {
         dataSource().use {
             sessionOf(it).use { session ->
                 session.run(queryOf("SELECT truncate_tables()").asExecute)
