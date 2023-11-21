@@ -31,12 +31,18 @@ flowchart TD
     hent_sammenligningsgrunnlag(Hent sammenligningsgrunnlag)
     gjør_avviksvurdering(Gjør avviksvurdering)
     ikke_gjør_avviksvurdering(Ikke gjør en ny avviksvurdering)
+    har_ufulstendig_avviksvurdering{{Har ufullstendig avviksvurdering?}}
+    gjennbruk_avviksvurdering(Gjennbruk ufullstendig avviksvurdering)
+    opprett_avviksvurdering(Opprett ny avviksvurdering)
     
     start --> utkast --> avviksvurdering_finnes
     avviksvurdering_finnes -- ja --> avviksvurdering_gjort
     avviksvurdering_finnes -- nei --> hent_sammenligningsgrunnlag --> ny_avviksvurdering --> utkast
     avviksvurdering_gjort -- ja --> ikke_gjør_avviksvurdering
-    avviksvurdering_gjort -- nei --> gjør_avviksvurdering
+    avviksvurdering_gjort -- nei --> har_ufulstendig_avviksvurdering
+    har_ufulstendig_avviksvurdering -- ja --> gjennbruk_avviksvurdering
+    har_ufulstendig_avviksvurdering -- nei --> opprett_avviksvurdering
+    gjennbruk_avviksvurdering & opprett_avviksvurdering --> gjør_avviksvurdering
 ```
 
 ### Datamodell
