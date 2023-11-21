@@ -13,50 +13,38 @@ plugins {
     kotlin("jvm") version "1.9.10"
 }
 
-repositories {
-    mavenCentral()
-    maven("https://jitpack.io")
-}
+allprojects {
+    apply(plugin = "org.jetbrains.kotlin.jvm")
 
-dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
-    implementation("ch.qos.logback:logback-classic:$logbackVersion")
-    implementation("org.postgresql:postgresql:$postgresqlVersion")
-    implementation("com.zaxxer:HikariCP:$hikariCPVersion")
-    implementation("org.flywaydb:flyway-core:$flywayCoreVersion")
-    implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
-    implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion") {
-        exclude("com.fasterxml.jackson.core")
-        exclude("com.fasterxml.jackson.dataformat")
+    repositories {
+        mavenCentral()
+        maven("https://jitpack.io")
     }
 
-    testImplementation(kotlin("test"))
-    testImplementation("io.mockk:mockk:$mockkVersion")
-    testImplementation("org.testcontainers:postgresql:$testcontainersPostgresqlVersion")
+    dependencies {
+        implementation("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
+        implementation("ch.qos.logback:logback-classic:$logbackVersion")
+        implementation("org.postgresql:postgresql:$postgresqlVersion")
+        implementation("com.zaxxer:HikariCP:$hikariCPVersion")
+        implementation("org.flywaydb:flyway-core:$flywayCoreVersion")
+        implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
+        implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion") {
+            exclude("com.fasterxml.jackson.core")
+            exclude("com.fasterxml.jackson.dataformat")
+        }
+
+        testImplementation(kotlin("test"))
+        testImplementation("io.mockk:mockk:$mockkVersion")
+        testImplementation("org.testcontainers:postgresql:$testcontainersPostgresqlVersion")
+    }
 }
+
 
 tasks {
-    compileKotlin {
-        compilerOptions {
-            freeCompilerArgs.add("-Xcontext-receivers")
-        }
-    }
     test {
         useJUnitPlatform()
     }
-    withType<Jar> {
-        archiveBaseName.set("app")
-        manifest {
-            attributes["Main-Class"] = "no.nav.helse.AppKt"
-            attributes["Class-Path"] = configurations.runtimeClasspath.get().joinToString(separator = " ") {
-                it.name
-            }
-        }
-        doLast {
-            configurations.runtimeClasspath.get().forEach {
-                val file = File("$buildDir/libs/${it.name}")
-                if (!file.exists()) it.copyTo(file)
-            }
-        }
+    jar {
+        enabled = false
     }
 }
