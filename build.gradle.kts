@@ -2,6 +2,7 @@ private val rapidsAndRiversVersion = "2023101613431697456627.0cdd93eb696f"
 val logbackVersion = "1.4.11"
 val logstashVersion = "7.4"
 val mockkVersion = "1.13.8"
+val junitJupiterVersion = "5.10.1"
 
 plugins {
     kotlin("jvm") version "1.9.10"
@@ -25,6 +26,7 @@ allprojects {
 
         testImplementation(kotlin("test"))
         testImplementation("io.mockk:mockk:$mockkVersion")
+        testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
     }
 
     tasks {
