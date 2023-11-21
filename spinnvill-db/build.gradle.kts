@@ -31,4 +31,10 @@ tasks {
             freeCompilerArgs.add("-Xcontext-receivers")
         }
     }
+
+    compileTestKotlin {
+        compilerOptions {
+            freeCompilerArgs.add("-Xcontext-receivers")
+        }
+    }
 }
