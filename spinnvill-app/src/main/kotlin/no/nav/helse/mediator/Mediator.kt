@@ -1,7 +1,7 @@
 package no.nav.helse.mediator
 
 import net.logstash.logback.argument.StructuredArguments.kv
-import no.nav.helse.db.Dao
+import no.nav.helse.db.Database
 import no.nav.helse.kafka.MessageHandler
 import no.nav.helse.kafka.SammenligningsgrunnlagMessage
 import no.nav.helse.kafka.UtkastTilVedtakMessage
@@ -12,7 +12,7 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 
-class Mediator(private val rapidsConnection: RapidsConnection, private val dao: Dao) : MessageHandler {
+class Mediator(private val rapidsConnection: RapidsConnection, private val database: Database) : MessageHandler {
 
     private companion object {
         private val logg = LoggerFactory.getLogger(this::class.java)

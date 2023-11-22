@@ -9,7 +9,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-class Dao(private val dataSource: DataSource) {
+internal class Dao(private val dataSource: DataSource) {
 
     internal fun finnAvviksvurdering(fødselsnummer: String, skjæringstidspunkt: LocalDate): String? {
         return with(dataSource) {
@@ -45,12 +45,17 @@ class Dao(private val dataSource: DataSource) {
     }
 }
 
-fun asSQL(@Language("SQL") sql: String, argMap: Map<String, Any?> = emptyMap()) = queryOf(sql, argMap)
-fun asSQL(@Language("SQL") sql: String, vararg params: Any?) = queryOf(sql, *params)
+internal fun asSQL(@Language("SQL") sql: String, argMap: Map<String, Any?> = emptyMap()) = queryOf(sql, argMap)
+internal fun asSQL(@Language("SQL") sql: String, vararg params: Any?) = queryOf(sql, *params)
 
 context (DataSource)
-fun Query.update() = sessionOf(this@DataSource).use { session -> session.run(this.asUpdate) }
+internal fun Query.update() = sessionOf(this@DataSource).use { session -> session.run(this.asUpdate) }
 
 context (DataSource)
-fun <T> Query.single(mapping: (Row) -> T?) =
+internal fun <T> Query.single(mapping: (Row) -> T?) =
     sessionOf(this@DataSource, strict = true).use { session -> session.run(this.map { mapping(it) }.asSingle) }
+
+context (DataSource)
+internal fun <T> Query.list(mapping: (Row) -> T?) =
+    sessionOf(this@DataSource, strict = true).use { session -> session.run(this.map { mapping(it) }.asList) }
+

@@ -2,7 +2,7 @@ package no.nav.helse
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.helse.db.DataSourceBuilder
+import no.nav.helse.db.Database
 import org.intellij.lang.annotations.Language
 import org.testcontainers.containers.PostgreSQLContainer
 import javax.sql.DataSource
@@ -11,7 +11,7 @@ object TestDatabase {
 
     private val port: String
 
-    private val postgres = PostgreSQLContainer<Nothing>("postgres:14").apply {
+    private val postgres = PostgreSQLContainer<Nothing>("postgres:15").apply {
         withReuse(true)
         withLabel("app-navn", "spinnvill")
         start()
@@ -26,10 +26,11 @@ object TestDatabase {
         "DATABASE_USERNAME" to postgres.username,
         "DATABASE_PASSWORD" to postgres.password,
     )
-    private val dataSourceBuilder = DataSourceBuilder(miljøvariabler)
-    fun dataSource() = dataSourceBuilder.getDataSource()
-    fun reset() {
-        dataSource().use {
+
+    internal fun database() = Database.instance(miljøvariabler)
+
+    internal fun reset() {
+        database().datasource().use {
             sessionOf(it).use { session ->
                 session.run(queryOf("SELECT truncate_tables()").asExecute)
             }
@@ -58,7 +59,7 @@ object TestDatabase {
     }
 
     init {
-        dataSourceBuilder.migrate()
-        dataSource().use { createTruncateFunction(it) }
+        database().migrate()
+        database().datasource().use { createTruncateFunction(it) }
     }
 }

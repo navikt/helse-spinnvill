@@ -1,7 +1,6 @@
 package no.nav.helse
 
-import no.nav.helse.db.Dao
-import no.nav.helse.db.DataSourceBuilder
+import no.nav.helse.db.Database
 import no.nav.helse.mediator.Mediator
 import no.nav.helse.rapids_rivers.RapidApplication
 
@@ -11,15 +10,14 @@ internal fun main() {
 
 class App {
     private val rapidsConnection = RapidApplication.create(System.getenv())
-    private val datasourceBuilder = DataSourceBuilder(System.getenv())
-    private val dao = Dao(datasourceBuilder.getDataSource())
+    private val database = Database.instance(System.getenv())
 
     internal fun start() {
-        datasourceBuilder.migrate()
+        database.migrate()
         rapidsConnection.start()
     }
 
     init {
-        Mediator(rapidsConnection, dao)
+        Mediator(rapidsConnection, database)
     }
 }

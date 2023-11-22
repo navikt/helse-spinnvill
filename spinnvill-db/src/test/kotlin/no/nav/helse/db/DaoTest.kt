@@ -6,9 +6,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-class DaoTest {
+internal class DaoTest {
 
-    private val dao = Dao(TestDatabase.dataSource())
+    private val dao = Dao(TestDatabase.database().datasource())
 
     @BeforeEach
     fun beforeEach() {
