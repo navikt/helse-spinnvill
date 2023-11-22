@@ -3,6 +3,7 @@ val hikariCPVersion = "5.0.1"
 val flywayCoreVersion = "9.22.3"
 val kotliqueryVersion = "1.9.0"
 val testcontainersPostgresqlVersion = "1.19.0"
+val micrometerVersion = "1.12.0"
 
 group = "no.nav.helse"
 
@@ -15,6 +16,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:$hikariCPVersion")
     implementation("org.flywaydb:flyway-core:$flywayCoreVersion")
     implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
+    implementation("io.micrometer:micrometer-registry-prometheus:$micrometerVersion")
 
     testImplementation("org.testcontainers:postgresql:$testcontainersPostgresqlVersion")
 

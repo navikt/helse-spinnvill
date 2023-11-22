@@ -1,8 +1,7 @@
-private val rapidsAndRiversVersion = "2023101613431697456627.0cdd93eb696f"
-val logbackVersion = "1.4.11"
-val logstashVersion = "7.4"
-val mockkVersion = "1.13.8"
-val junitJupiterVersion = "5.10.1"
+private val logbackVersion = "1.4.11"
+private val logstashVersion = "7.4"
+private val mockkVersion = "1.13.8"
+private val junitJupiterVersion = "5.10.1"
 
 plugins {
     kotlin("jvm") version "1.9.10"
@@ -17,7 +16,6 @@ allprojects {
     }
 
     dependencies {
-        implementation("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
         implementation("ch.qos.logback:logback-classic:$logbackVersion")
         implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion") {
             exclude("com.fasterxml.jackson.core")

@@ -1,10 +1,12 @@
-val hikariCPVersion = "5.0.1"
+private val rapidsAndRiversVersion = "2023101613431697456627.0cdd93eb696f"
+private val hikariCPVersion = "5.0.1"
 
 
 group = "no.nav.helse"
 
 dependencies {
     implementation(project(":spinnvill-db"))
+    implementation("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
     implementation("com.zaxxer:HikariCP:$hikariCPVersion")
 
     testImplementation(testFixtures(project(":spinnvill-db")))
