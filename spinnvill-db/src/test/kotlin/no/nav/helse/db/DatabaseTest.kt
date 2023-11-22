@@ -1,7 +1,13 @@
 package no.nav.helse.db
 
+import kotliquery.Query
+import kotliquery.Row
+import kotliquery.queryOf
+import kotliquery.sessionOf
 import no.nav.helse.TestDatabase
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
+import javax.sql.DataSource
 import kotlin.test.assertTrue
 
 internal class DatabaseTest {
@@ -17,4 +23,9 @@ internal class DatabaseTest {
 
         assertTrue(success, "Alle migreringer skal kjøre vellykket")
     }
+
+    private fun asSQL(@Language("SQL") sql: String, argMap: Map<String, Any?> = emptyMap()) = queryOf(sql, argMap)
+    context (DataSource)
+    private fun <T> Query.list(mapping: (Row) -> T?) =
+        sessionOf(this@DataSource, strict = true).use { session -> session.run(this.map { mapping(it) }.asList) }
 }

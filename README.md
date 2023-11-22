@@ -51,28 +51,29 @@ flowchart TD
 title: Avviksvurdering
 ---
 erDiagram
-    AVVIKSVURDERING ||--|{ INNRAPPORTERT_INNTEKT: har
-    AVVIKSVURDERING ||--|{ OMMREGNET_AARSINNTEKT: har
-    OMMREGNET_AARSINNTEKT }|--|| ARBEIDSGIVER: har
-    OMMREGNET_AARSINNTEKT }|--|| INNTEKT: har
-    
+    AVVIKSVURDERING ||--o{ BEREGNINGSGRUNNLAG: har
+    AVVIKSVURDERING ||--|{ SAMMENLIGNINGSGRUNNLAG: har
+    SAMMENLIGNINGSGRUNNLAG ||--|{ MANEDSINNTEKT: har
+  
     AVVIKSVURDERING {
-        string foedselsnummer PK
-        date skjaeringstidspunkt PK
-        timestamp opprettet
+      string foedselsnummer PK
+      date skjaeringstidspunkt PK
+      timestamp opprettet
+    }
+
+    SAMMENLIGNINGSGRUNNLAG {
+      string organisasjonsnummer
     }
     
-    ARBEIDSGIVER {
-        string organisasjonsnummer
-    }
-
-    INNTEKT {
+    MANEDSINNTEKT {
         float inntekt
+        int year
+        int month
     }
-
-    INNRAPPORTERT_INNTEKT {
-        string organisasjonsnummer
-        float[] inntekter
+  
+    BEREGNINGSGRUNNLAG {
+      string organisasjonsnummer
+      float aarsinntekt
     }
 ```
 

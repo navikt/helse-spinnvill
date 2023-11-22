@@ -8,8 +8,6 @@ dependencies {
     implementation(project(":spinnvill-db"))
     implementation("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
     implementation("com.zaxxer:HikariCP:$hikariCPVersion")
-
-    testImplementation(testFixtures(project(":spinnvill-db")))
 }
 
 tasks {
