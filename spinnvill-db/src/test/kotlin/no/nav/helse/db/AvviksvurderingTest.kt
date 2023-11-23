@@ -1,6 +1,5 @@
 package no.nav.helse.db
 
-import no.nav.helse.TestDatabase
 import no.nav.helse.dto.*
 import no.nav.helse.helpers.januar
 import org.junit.jupiter.api.BeforeEach

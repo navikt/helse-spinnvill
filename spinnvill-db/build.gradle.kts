@@ -8,6 +8,10 @@ private val exposedVersion = "0.44.1"
 
 group = "no.nav.helse"
 
+plugins {
+    `java-test-fixtures`
+}
+
 dependencies {
     implementation("org.postgresql:postgresql:$postgresqlVersion")
     implementation("com.zaxxer:HikariCP:$hikariCPVersion")
@@ -21,6 +25,20 @@ dependencies {
 
     testImplementation("com.github.seratch:kotliquery:$kotliqueryVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersPostgresqlVersion")
+
+    testFixturesImplementation("org.postgresql:postgresql:$postgresqlVersion")
+    testFixturesImplementation("com.zaxxer:HikariCP:$hikariCPVersion")
+    testFixturesImplementation("org.flywaydb:flyway-core:$flywayCoreVersion")
+    testFixturesImplementation("com.github.seratch:kotliquery:$kotliqueryVersion")
+    testFixturesImplementation("org.testcontainers:postgresql:$testcontainersPostgresqlVersion")
+}
+
+// testFixtures sammen med Kotlin er ikke 100% modent enda, som gjør at testFixtures ikke ut av boksen
+// deler visibility med resten av modulen den ligger i.
+// Denne workarounden løser dette problemet frem til JetBrains retter feilen.
+// https://youtrack.jetbrains.com/issue/KT-34901/Gradle-testFixtures-dont-have-friendPaths-set#focus=Comments-27-3810442.0-0
+kotlin.target.compilations.getByName("testFixtures") {
+    associateWith(target.compilations.getByName("main"))
 }
 
 tasks {

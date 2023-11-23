@@ -45,6 +45,8 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
     }
 
     private fun avviksvurdering(): Avviksvurdering? {
+        // Finn dto fra database ?: return null
+        // Map om til domenemodell og returner avviksvurdering
         TODO()
     }
 
