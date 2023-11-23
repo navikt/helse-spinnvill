@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.datetime
@@ -87,59 +88,70 @@ internal class Avviksvurdering {
             internal val yearMonth: YearMonth get() = YearMonth.of(år, måned)
         }
     }
-
-    fun insert(
+    internal fun upsert(
+        id: UUID,
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
         sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
         beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?
     ): AvviksvurderingDto {
         return transaction {
-            val enAvviksvurdering = EnAvviksvurdering.new {
-                this.fødselsnummer = fødselsnummer.value
-                this.skjæringstidspunkt = skjæringstidspunkt
-                this.opprettet = LocalDateTime.now()
-            }
-
-            sammenligningsgrunnlag.innrapporterteInntekter.forEach { (organisasjonsnummer, inntekter) ->
-                val ettSammenligningsgrunnlag = EttSammenligningsgrunnlag.new {
-                    this.avviksvurdering = enAvviksvurdering
-                    this.organisasjonsnummer = organisasjonsnummer.value
-                }
-
-                inntekter.forEach { (inntekt, yearMonth) ->
-                    EnMånedsinntekt.new {
-                        this.sammenligningsgrunnlag = ettSammenligningsgrunnlag
-                        this.inntekt = inntekt.value
-                        this.måned = yearMonth.monthValue
-                        this.år = yearMonth.year
-                    }
-                }
-            }
-
-            beregningsgrunnlag?.omregnedeÅrsinntekter?.forEach { (organisasjonsnummer, inntekt) ->
-                EttBeregningsgrunnlag.new {
-                    this.organisasjonsnummer = organisasjonsnummer.value
-                    this.inntekt = inntekt.value
-                    this.avviksvurdering = enAvviksvurdering
-                }
-            }
-            enAvviksvurdering.dto()
+            EnAvviksvurdering.findById(id)?.let {
+                update(id, requireNotNull(beregningsgrunnlag))
+            } ?: insert(id, fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, beregningsgrunnlag)
         }
     }
 
-    fun update(id: UUID, beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto): AvviksvurderingDto {
-         return transaction {
-             val enAvviksvurdering = requireNotNull(EnAvviksvurdering.findById(id)) { "Forventer å finne avviksvurdering med id=${id}" }
-             beregningsgrunnlag.omregnedeÅrsinntekter.forEach { (organisasjonsnummer, inntekt) ->
-                 EttBeregningsgrunnlag.new {
-                     this.organisasjonsnummer = organisasjonsnummer.value
-                     this.inntekt = inntekt.value
-                     this.avviksvurdering = enAvviksvurdering
-                 }
-             }
-             enAvviksvurdering.dto()
-         }
+    private fun Transaction.insert(
+        id: UUID,
+        fødselsnummer: Fødselsnummer,
+        skjæringstidspunkt: LocalDate,
+        sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
+        beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?
+    ): AvviksvurderingDto = this.run {
+        val enAvviksvurdering = EnAvviksvurdering.new(id) {
+            this.fødselsnummer = fødselsnummer.value
+            this.skjæringstidspunkt = skjæringstidspunkt
+            this.opprettet = LocalDateTime.now()
+        }
+
+        sammenligningsgrunnlag.innrapporterteInntekter.forEach { (organisasjonsnummer, inntekter) ->
+            val ettSammenligningsgrunnlag = EttSammenligningsgrunnlag.new {
+                this.avviksvurdering = enAvviksvurdering
+                this.organisasjonsnummer = organisasjonsnummer.value
+            }
+
+            inntekter.forEach { (inntekt, yearMonth) ->
+                EnMånedsinntekt.new {
+                    this.sammenligningsgrunnlag = ettSammenligningsgrunnlag
+                    this.inntekt = inntekt.value
+                    this.måned = yearMonth.monthValue
+                    this.år = yearMonth.year
+                }
+            }
+        }
+
+        beregningsgrunnlag?.omregnedeÅrsinntekter?.forEach { (organisasjonsnummer, inntekt) ->
+            EttBeregningsgrunnlag.new {
+                this.organisasjonsnummer = organisasjonsnummer.value
+                this.inntekt = inntekt.value
+                this.avviksvurdering = enAvviksvurdering
+            }
+        }
+        enAvviksvurdering.dto()
+    }
+
+    private fun Transaction.update(id: UUID, beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto): AvviksvurderingDto = this.run {
+        val enAvviksvurdering =
+            requireNotNull(EnAvviksvurdering.findById(id)) { "Forventer å finne avviksvurdering med id=${id}" }
+        beregningsgrunnlag.omregnedeÅrsinntekter.forEach { (organisasjonsnummer, inntekt) ->
+            EttBeregningsgrunnlag.new {
+                this.organisasjonsnummer = organisasjonsnummer.value
+                this.inntekt = inntekt.value
+                this.avviksvurdering = enAvviksvurdering
+            }
+        }
+        enAvviksvurdering.dto()
     }
 
     fun findLatest(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
