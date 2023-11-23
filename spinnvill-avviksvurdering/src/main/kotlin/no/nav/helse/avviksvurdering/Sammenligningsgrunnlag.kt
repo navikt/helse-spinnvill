@@ -1,6 +1,6 @@
-package no.nav.helse.modell.avviksvurdering
+package no.nav.helse.avviksvurdering
 
-import no.nav.helse.modell.avviksvurdering.ArbeidsgiverInntekt.Companion.sum
+import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.Companion.sum
 
 class Sammenligningsgrunnlag(private val inntekter: List<ArbeidsgiverInntekt>) {
 

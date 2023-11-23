@@ -1,6 +1,6 @@
-package no.nav.helse.modell.avviksvurdering
+package no.nav.helse.avviksvurdering
 
-import no.nav.helse.modell.KriterieObserver
+import no.nav.helse.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

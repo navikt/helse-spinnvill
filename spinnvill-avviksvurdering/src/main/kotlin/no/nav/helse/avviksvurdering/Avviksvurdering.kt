@@ -1,6 +1,6 @@
-package no.nav.helse.modell.avviksvurdering
+package no.nav.helse.avviksvurdering
 
-import no.nav.helse.modell.KriterieObserver
+import no.nav.helse.KriterieObserver
 import java.time.LocalDateTime
 
 class Avviksvurdering private constructor(
@@ -16,7 +16,7 @@ class Avviksvurdering private constructor(
         this.observers.addAll(observers)
     }
 
-    internal fun håndter(beregningsgrunnlag: Beregningsgrunnlag) {
+    fun håndter(beregningsgrunnlag: Beregningsgrunnlag) {
         if (beregningsgrunnlag == this.beregningsgrunnlag) return
         this.beregningsgrunnlag = beregningsgrunnlag
         avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)

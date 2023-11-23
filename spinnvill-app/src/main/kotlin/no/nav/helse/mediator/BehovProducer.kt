@@ -1,8 +1,8 @@
 package no.nav.helse.mediator
 
 import net.logstash.logback.argument.StructuredArguments.kv
-import no.nav.helse.modell.BehovForSammenligningsgrunnlag
-import no.nav.helse.modell.BehovObserver
+import no.nav.helse.avviksvurdering.BehovForSammenligningsgrunnlag
+import no.nav.helse.BehovObserver
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory

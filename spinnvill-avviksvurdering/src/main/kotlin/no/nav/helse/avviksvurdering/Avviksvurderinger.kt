@@ -1,6 +1,6 @@
-package no.nav.helse.modell.avviksvurdering
+package no.nav.helse.avviksvurdering
 
-import no.nav.helse.modell.avviksvurdering.Avviksvurdering.Companion.sortert
+import no.nav.helse.avviksvurdering.Avviksvurdering.Companion.sortert
 
 class Avviksvurderinger private constructor(avviksvurderinger: List<Avviksvurdering>) {
 

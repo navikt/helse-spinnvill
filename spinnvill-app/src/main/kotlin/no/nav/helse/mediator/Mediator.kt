@@ -6,8 +6,8 @@ import no.nav.helse.kafka.MessageHandler
 import no.nav.helse.kafka.SammenligningsgrunnlagMessage
 import no.nav.helse.kafka.UtkastTilVedtakMessage
 import no.nav.helse.kafka.UtkastTilVedtakRiver
-import no.nav.helse.modell.avviksvurdering.Avviksvurdering
-import no.nav.helse.modell.avviksvurdering.Beregningsgrunnlag
+import no.nav.helse.avviksvurdering.Avviksvurdering
+import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
 import java.time.LocalDate

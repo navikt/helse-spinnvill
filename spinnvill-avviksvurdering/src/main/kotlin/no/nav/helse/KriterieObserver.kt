@@ -1,4 +1,4 @@
-package no.nav.helse.modell
+package no.nav.helse
 
 interface KriterieObserver {
     fun avvikVurdert(harAkseptabeltAvvik: Boolean, avviksprosent: Double) {}

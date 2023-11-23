@@ -1,4 +1,4 @@
-package no.nav.helse.modell
+package no.nav.helse.avviksvurdering
 
 import java.time.YearMonth
 

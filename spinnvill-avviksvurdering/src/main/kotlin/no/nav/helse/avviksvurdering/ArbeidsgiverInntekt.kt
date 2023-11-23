@@ -1,4 +1,4 @@
-package no.nav.helse.modell.avviksvurdering
+package no.nav.helse.avviksvurdering
 
 class ArbeidsgiverInntekt(private val organisasjonsummer: String, private val inntekter: List<Double>) {
 

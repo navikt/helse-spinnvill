@@ -1,6 +1,6 @@
 package no.nav.helse.mediator
 
-import no.nav.helse.modell.BehovForSammenligningsgrunnlag
+import no.nav.helse.avviksvurdering.BehovForSammenligningsgrunnlag
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.time.Month

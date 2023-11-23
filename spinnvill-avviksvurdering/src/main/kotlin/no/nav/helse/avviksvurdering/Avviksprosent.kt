@@ -1,4 +1,4 @@
-package no.nav.helse.modell.avviksvurdering
+package no.nav.helse.avviksvurdering
 
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt

@@ -1,4 +1,4 @@
-package no.nav.helse.modell.avviksvurdering
+package no.nav.helse.avviksvurdering
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test

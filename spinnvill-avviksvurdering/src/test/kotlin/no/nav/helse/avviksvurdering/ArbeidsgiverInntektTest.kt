@@ -1,6 +1,6 @@
-package no.nav.helse.modell.avviksvurdering
+package no.nav.helse.avviksvurdering
 
-import no.nav.helse.modell.avviksvurdering.ArbeidsgiverInntekt.Companion.sum
+import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.Companion.sum
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.math.roundToInt

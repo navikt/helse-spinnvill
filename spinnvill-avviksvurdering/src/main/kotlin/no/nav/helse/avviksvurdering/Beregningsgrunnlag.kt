@@ -1,4 +1,4 @@
-package no.nav.helse.modell.avviksvurdering
+package no.nav.helse.avviksvurdering
 
 class Beregningsgrunnlag(private val omregnedeÅrsinntekter: Map<String, Double>) {
 
