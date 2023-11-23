@@ -10,10 +10,4 @@ value class Organisasjonsnummer(val value: String)
 value class InntektPerMåned(val value: Double)
 
 @JvmInline
-value class År(val value: Int)
-
-@JvmInline
-value class Måned(val value: Int)
-
-@JvmInline
 value class OmregnetÅrsinntekt(val value: Double)

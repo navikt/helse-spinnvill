@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
 import java.util.*
 
 internal class Avviksvurdering {
@@ -82,6 +83,8 @@ internal class Avviksvurdering {
             var inntekt by Månedsinntekter.inntekt
             var år by Månedsinntekter.år
             var måned by Månedsinntekter.måned
+
+            internal val yearMonth: YearMonth get() = YearMonth.of(år, måned)
         }
     }
 
@@ -104,12 +107,12 @@ internal class Avviksvurdering {
                     this.organisasjonsnummer = organisasjonsnummer.value
                 }
 
-                inntekter.forEach { (inntekt, månedPair) ->
+                inntekter.forEach { (inntekt, yearMonth) ->
                     EnMånedsinntekt.new {
                         this.sammenligningsgrunnlag = ettSammenligningsgrunnlag
                         this.inntekt = inntekt.value
-                        this.måned = månedPair.first.value
-                        this.år = månedPair.second.value
+                        this.måned = yearMonth.monthValue
+                        this.år = yearMonth.year
                     }
                 }
             }
@@ -159,8 +162,11 @@ internal class Avviksvurdering {
                 innrapporterteInntekter = this.sammenligningsgrunnlag
                     .associate { ettSammenligningsgrunnlag ->
                         Organisasjonsnummer(ettSammenligningsgrunnlag.organisasjonsnummer) to ettSammenligningsgrunnlag.inntekter
-                            .associate { enMånedsinntekt ->
-                                InntektPerMåned(enMånedsinntekt.inntekt) to (Måned(enMånedsinntekt.måned) to År(enMånedsinntekt.år))
+                            .map { enMånedsinntekt ->
+                                AvviksvurderingDto.MånedligInntektDto(
+                                    inntekt = InntektPerMåned(enMånedsinntekt.inntekt),
+                                    måned = enMånedsinntekt.yearMonth
+                                )
                             }
                     }
             ),

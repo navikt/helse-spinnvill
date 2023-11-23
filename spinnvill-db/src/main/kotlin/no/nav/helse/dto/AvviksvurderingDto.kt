@@ -1,6 +1,7 @@
 package no.nav.helse.dto
 
 import java.time.LocalDate
+import java.time.YearMonth
 import java.util.UUID
 
 data class AvviksvurderingDto(
@@ -11,7 +12,12 @@ data class AvviksvurderingDto(
     val beregningsgrunnlag: BeregningsgrunnlagDto?
 ) {
     data class SammenligningsgrunnlagDto(
-        val innrapporterteInntekter: Map<Organisasjonsnummer, Map<InntektPerMåned, Pair<Måned, År>>>
+        val innrapporterteInntekter: Map<Organisasjonsnummer, List<MånedligInntektDto>>
+    )
+
+    data class MånedligInntektDto(
+        val inntekt: InntektPerMåned,
+        val måned: YearMonth
     )
 
     data class BeregningsgrunnlagDto(

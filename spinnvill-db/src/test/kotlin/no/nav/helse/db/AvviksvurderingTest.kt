@@ -5,6 +5,7 @@ import no.nav.helse.dto.*
 import no.nav.helse.helpers.januar
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.YearMonth
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -88,7 +89,11 @@ internal class AvviksvurderingTest {
 
     private fun sammenligningsgrunnlag(inntektPerMåned: Double = 200000.0): AvviksvurderingDto.SammenligningsgrunnlagDto {
         return AvviksvurderingDto.SammenligningsgrunnlagDto(
-            mapOf(Organisasjonsnummer("123456789") to mapOf(InntektPerMåned(inntektPerMåned) to Pair(Måned(1), År(2020))))
+            mapOf(Organisasjonsnummer("123456789") to listOf(
+                AvviksvurderingDto.MånedligInntektDto(
+                    InntektPerMåned(inntektPerMåned), YearMonth.of(2020, 1))
+                )
+            )
         )
     }
 }
