@@ -75,7 +75,7 @@ internal class Avviksvurdering {
         }
     }
 
-    fun upsert(
+    fun insert(
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
         sammenligningsgrunnlag: Map<Organisasjonsnummer, Map<InntektPerMåned, Pair<Måned, År>>>,
@@ -110,29 +110,48 @@ internal class Avviksvurdering {
                     this.avviksvurdering = enAvviksvurdering
                 }
             }
-            AvviksvurderingDto(
-                fødselsnummer = Fødselsnummer(enAvviksvurdering.fødselsnummer),
-                skjæringstidspunkt = enAvviksvurdering.skjæringstidspunkt,
-                sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
-                    innrapporterteInntekter = enAvviksvurdering.sammenligningsgrunnlag
-                        .associate { ettSammenligningsgrunnlag ->
-                            Organisasjonsnummer(ettSammenligningsgrunnlag.organisasjonsnummer) to ettSammenligningsgrunnlag.inntekter
-                                .associate { enMånedsinntekt ->
-                                    InntektPerMåned(enMånedsinntekt.inntekt) to (Måned(enMånedsinntekt.måned) to År(enMånedsinntekt.år))
-                                }
-                        }
-                ),
-                beregningsgrunnlag = enAvviksvurdering.beregningsgrunnlag
-                    .takeUnless { beregningsgrunnlag -> beregningsgrunnlag.empty() }
-                    ?.let { ettBeregningsgrunnlag ->
-                        AvviksvurderingDto.BeregningsgrunnlagDto(
-                            omregnedeÅrsinntekter = ettBeregningsgrunnlag
-                                .associate { beregningsgrunnlag ->
-                                    Organisasjonsnummer(beregningsgrunnlag.organisasjonsnummer) to OmregnetÅrsinntekt(beregningsgrunnlag.inntekt)
-                                }
-                        )
-                    }
-            )
+            enAvviksvurdering.dto()
         }
+    }
+
+    fun update(id: UUID, beregningsgrunnlag: Map<Organisasjonsnummer, OmregnetÅrsinntekt>): AvviksvurderingDto {
+         return transaction {
+             val enAvviksvurdering = requireNotNull(EnAvviksvurdering.findById(id)) { "Forventer å finne avviksvurdering med id=${id}" }
+             beregningsgrunnlag.forEach { (organisasjonsnummer, inntekt) ->
+                 EttBeregningsgrunnlag.new {
+                     this.organisasjonsnummer = organisasjonsnummer.value
+                     this.inntekt = inntekt.value
+                     this.avviksvurdering = enAvviksvurdering
+                 }
+             }
+             enAvviksvurdering.dto()
+         }
+    }
+
+    private fun EnAvviksvurdering.dto(): AvviksvurderingDto {
+        return AvviksvurderingDto(
+            id = this.id.value,
+            fødselsnummer = Fødselsnummer(this.fødselsnummer),
+            skjæringstidspunkt = this.skjæringstidspunkt,
+            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
+                innrapporterteInntekter = this.sammenligningsgrunnlag
+                    .associate { ettSammenligningsgrunnlag ->
+                        Organisasjonsnummer(ettSammenligningsgrunnlag.organisasjonsnummer) to ettSammenligningsgrunnlag.inntekter
+                            .associate { enMånedsinntekt ->
+                                InntektPerMåned(enMånedsinntekt.inntekt) to (Måned(enMånedsinntekt.måned) to År(enMånedsinntekt.år))
+                            }
+                    }
+            ),
+            beregningsgrunnlag = this.beregningsgrunnlag
+                .takeUnless { beregningsgrunnlag -> beregningsgrunnlag.empty() }
+                ?.let { ettBeregningsgrunnlag ->
+                    AvviksvurderingDto.BeregningsgrunnlagDto(
+                        omregnedeÅrsinntekter = ettBeregningsgrunnlag
+                            .associate { beregningsgrunnlag ->
+                                Organisasjonsnummer(beregningsgrunnlag.organisasjonsnummer) to OmregnetÅrsinntekt(beregningsgrunnlag.inntekt)
+                            }
+                    )
+                }
+        )
     }
 }
