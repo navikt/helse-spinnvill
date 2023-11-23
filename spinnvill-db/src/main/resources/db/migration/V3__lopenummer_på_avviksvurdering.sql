@@ -1,1 +1,0 @@
-ALTER TABLE avviksvurdering ADD COLUMN løpenummer BIGSERIAL NOT NULL;

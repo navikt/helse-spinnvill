@@ -1,1 +1,0 @@
-ALTER TABLE avviksvurdering ALTER COLUMN opprettet DROP default;
