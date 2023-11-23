@@ -6,6 +6,8 @@ import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -16,6 +18,7 @@ import java.util.*
 internal class Avviksvurdering {
     private companion object {
         private object Avviksvurderinger : UUIDTable(name = "avviksvurdering") {
+            val løpenummer: Column<Long> = long("løpenummer").autoIncrement()
             val fødselsnummer: Column<String> = varchar("fødselsnummer", 11)
             val skjæringstidspunkt: Column<LocalDate> = date("skjæringstidspunkt")
             val opprettet: Column<LocalDateTime> = datetime("opprettet").default(LocalDateTime.now())
@@ -133,6 +136,17 @@ internal class Avviksvurdering {
              }
              enAvviksvurdering.dto()
          }
+    }
+
+    fun findLatest(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
+        return transaction {
+            EnAvviksvurdering.find {
+                Avviksvurderinger.fødselsnummer eq fødselsnummer.value and (Avviksvurderinger.skjæringstidspunkt eq skjæringstidspunkt)
+            }
+                .orderBy(Avviksvurderinger.løpenummer to SortOrder.DESC)
+                .firstOrNull()
+                ?.dto()
+        }
     }
 
     private fun EnAvviksvurdering.dto(): AvviksvurderingDto {
