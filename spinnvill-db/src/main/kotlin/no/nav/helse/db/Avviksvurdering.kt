@@ -88,8 +88,8 @@ internal class Avviksvurdering {
     fun insert(
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
-        sammenligningsgrunnlag: Map<Organisasjonsnummer, Map<InntektPerMåned, Pair<Måned, År>>>,
-        beregningsgrunnlag: Map<Organisasjonsnummer, OmregnetÅrsinntekt>
+        sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
+        beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?
     ): AvviksvurderingDto {
         return transaction {
             val enAvviksvurdering = EnAvviksvurdering.new {
@@ -98,7 +98,7 @@ internal class Avviksvurdering {
                 this.opprettet = LocalDateTime.now()
             }
 
-            sammenligningsgrunnlag.forEach { (organisasjonsnummer, inntekter) ->
+            sammenligningsgrunnlag.innrapporterteInntekter.forEach { (organisasjonsnummer, inntekter) ->
                 val ettSammenligningsgrunnlag = EttSammenligningsgrunnlag.new {
                     this.avviksvurdering = enAvviksvurdering
                     this.organisasjonsnummer = organisasjonsnummer.value
@@ -114,7 +114,7 @@ internal class Avviksvurdering {
                 }
             }
 
-            beregningsgrunnlag.forEach { (organisasjonsnummer, inntekt) ->
+            beregningsgrunnlag?.omregnedeÅrsinntekter?.forEach { (organisasjonsnummer, inntekt) ->
                 EttBeregningsgrunnlag.new {
                     this.organisasjonsnummer = organisasjonsnummer.value
                     this.inntekt = inntekt.value
@@ -125,10 +125,10 @@ internal class Avviksvurdering {
         }
     }
 
-    fun update(id: UUID, beregningsgrunnlag: Map<Organisasjonsnummer, OmregnetÅrsinntekt>): AvviksvurderingDto {
+    fun update(id: UUID, beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto): AvviksvurderingDto {
          return transaction {
              val enAvviksvurdering = requireNotNull(EnAvviksvurdering.findById(id)) { "Forventer å finne avviksvurdering med id=${id}" }
-             beregningsgrunnlag.forEach { (organisasjonsnummer, inntekt) ->
+             beregningsgrunnlag.omregnedeÅrsinntekter.forEach { (organisasjonsnummer, inntekt) ->
                  EttBeregningsgrunnlag.new {
                      this.organisasjonsnummer = organisasjonsnummer.value
                      this.inntekt = inntekt.value

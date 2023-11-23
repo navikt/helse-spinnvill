@@ -25,12 +25,12 @@ internal class AvviksvurderingTest {
         val skjæringstidspunkt = 1.januar
         val sammenligningsgrunnlag = sammenligningsgrunnlag()
 
-        val avviksvurdering = avviksvurdering.insert(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, emptyMap())
+        val avviksvurdering = avviksvurdering.insert(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, null)
 
         assertEquals(fødselsnummer, avviksvurdering.fødselsnummer)
         assertEquals(skjæringstidspunkt, avviksvurdering.skjæringstidspunkt)
-        assertEquals(sammenligningsgrunnlag.entries.first().key, avviksvurdering.sammenligningsgrunnlag.innrapporterteInntekter.entries.first().key)
-        assertEquals(sammenligningsgrunnlag.entries.first().value, avviksvurdering.sammenligningsgrunnlag.innrapporterteInntekter.entries.first().value)
+        assertEquals(sammenligningsgrunnlag.innrapporterteInntekter.entries.first().key, avviksvurdering.sammenligningsgrunnlag.innrapporterteInntekter.entries.first().key)
+        assertEquals(sammenligningsgrunnlag.innrapporterteInntekter.entries.first().value, avviksvurdering.sammenligningsgrunnlag.innrapporterteInntekter.entries.first().value)
         assertNull(avviksvurdering.beregningsgrunnlag)
     }
 
@@ -41,12 +41,12 @@ internal class AvviksvurderingTest {
         val sammenligningsgrunnlag= sammenligningsgrunnlag()
         val beregningsgrunnlag = beregningsgrunnlag()
 
-        val nyAvviksvurdering = avviksvurdering.insert(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, emptyMap())
+        val nyAvviksvurdering = avviksvurdering.insert(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, null)
         val modifisertAvviksvurdering = avviksvurdering.update(nyAvviksvurdering.id, beregningsgrunnlag)
 
         assertEquals(nyAvviksvurdering.id, modifisertAvviksvurdering.id)
-        assertEquals(beregningsgrunnlag.keys.first(), modifisertAvviksvurdering.beregningsgrunnlag?.omregnedeÅrsinntekter?.keys?.first())
-        assertEquals(beregningsgrunnlag.values.first(), modifisertAvviksvurdering.beregningsgrunnlag?.omregnedeÅrsinntekter?.values?.first())
+        assertEquals(beregningsgrunnlag.omregnedeÅrsinntekter.keys.first(), modifisertAvviksvurdering.beregningsgrunnlag?.omregnedeÅrsinntekter?.keys?.first())
+        assertEquals(beregningsgrunnlag.omregnedeÅrsinntekter.values.first(), modifisertAvviksvurdering.beregningsgrunnlag?.omregnedeÅrsinntekter?.values?.first())
     }
 
     @Test
@@ -72,7 +72,7 @@ internal class AvviksvurderingTest {
 
         avviksvurdering.insert(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag(20000.0), beregningsgrunnlag(200000.0))
         avviksvurdering.insert(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag(40000.0), beregningsgrunnlag(300000.0))
-        val expectedLatest = avviksvurdering.insert(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag(60000.0), emptyMap())
+        val expectedLatest = avviksvurdering.insert(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag(60000.0), null)
         val avviksvurdering = avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
 
         assertNotNull(avviksvurdering)
@@ -80,14 +80,15 @@ internal class AvviksvurderingTest {
         assertNull(avviksvurdering.beregningsgrunnlag)
     }
 
-    private fun beregningsgrunnlag(omregnetÅrsinntekt: Double = 20000.0): Map<Organisasjonsnummer, OmregnetÅrsinntekt> {
-        return mapOf(
-            Organisasjonsnummer("123456789") to OmregnetÅrsinntekt(omregnetÅrsinntekt)
+    private fun beregningsgrunnlag(omregnetÅrsinntekt: Double = 20000.0): AvviksvurderingDto.BeregningsgrunnlagDto {
+        return AvviksvurderingDto.BeregningsgrunnlagDto(
+            mapOf(Organisasjonsnummer("123456789") to OmregnetÅrsinntekt(omregnetÅrsinntekt))
         )
     }
 
-    private fun sammenligningsgrunnlag(inntektPerMåned: Double = 200000.0): Map<Organisasjonsnummer, Map<InntektPerMåned, Pair<Måned, År>>> {
-        return mapOf(
-            Organisasjonsnummer("123456789") to mapOf(InntektPerMåned(inntektPerMåned) to Pair(Måned(1), År(2020)))
-        )    }
+    private fun sammenligningsgrunnlag(inntektPerMåned: Double = 200000.0): AvviksvurderingDto.SammenligningsgrunnlagDto {
+        return AvviksvurderingDto.SammenligningsgrunnlagDto(
+            mapOf(Organisasjonsnummer("123456789") to mapOf(InntektPerMåned(inntektPerMåned) to Pair(Måned(1), År(2020))))
+        )
+    }
 }
