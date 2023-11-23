@@ -21,7 +21,7 @@ internal class Avviksvurdering {
             val løpenummer: Column<Long> = long("løpenummer").autoIncrement()
             val fødselsnummer: Column<String> = varchar("fødselsnummer", 11)
             val skjæringstidspunkt: Column<LocalDate> = date("skjæringstidspunkt")
-            val opprettet: Column<LocalDateTime> = datetime("opprettet").default(LocalDateTime.now())
+            val opprettet: Column<LocalDateTime> = datetime("opprettet")
         }
 
         class EnAvviksvurdering(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -95,6 +95,7 @@ internal class Avviksvurdering {
             val enAvviksvurdering = EnAvviksvurdering.new {
                 this.fødselsnummer = fødselsnummer.value
                 this.skjæringstidspunkt = skjæringstidspunkt
+                this.opprettet = LocalDateTime.now()
             }
 
             sammenligningsgrunnlag.forEach { (organisasjonsnummer, inntekter) ->
