@@ -6,8 +6,8 @@ group = "no.nav.helse"
 
 dependencies {
     implementation(project(":spinnvill-db"))
+    implementation(project(":spinnvill-avviksvurdering"))
     implementation("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
-    implementation("com.zaxxer:HikariCP:$hikariCPVersion")
 }
 
 tasks {
