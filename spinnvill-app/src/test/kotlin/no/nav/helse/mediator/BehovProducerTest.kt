@@ -1,6 +1,7 @@
 package no.nav.helse.mediator
 
 import no.nav.helse.avviksvurdering.BehovForSammenligningsgrunnlag
+import no.nav.helse.helpers.januar
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.time.Month
@@ -18,7 +19,7 @@ class BehovProducerTest {
     @Test
     fun `Kan lage behov for sammenligningsgrunnlag`() {
         behovProducer.sammenligningsgrunnlag(
-            BehovForSammenligningsgrunnlag(YearMonth.of(2018, Month.JANUARY), YearMonth.of(2018, Month.APRIL))
+            BehovForSammenligningsgrunnlag(1.januar, YearMonth.of(2018, Month.JANUARY), YearMonth.of(2018, Month.APRIL))
         )
         behovProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
@@ -30,6 +31,7 @@ class BehovProducerTest {
         assertEquals("000000000", behov["organisasjonsnummer"].asText())
         assertEquals(vedtaksperiodeId.toString(), behov["vedtaksperiodeId"].asText())
         assertEquals(listOf("InntekterForSammenligningsgrunnlag"), behov["@behov"].map { it.asText() })
+        assertEquals("2018-01-01", behov["InntekterForSammenligningsgrunnlag"].path("skjæringstidspunkt").asText())
         assertEquals("2018-01", behov["InntekterForSammenligningsgrunnlag"].path("beregningStart").asText())
         assertEquals("2018-04", behov["InntekterForSammenligningsgrunnlag"].path("beregningSlutt").asText())
     }

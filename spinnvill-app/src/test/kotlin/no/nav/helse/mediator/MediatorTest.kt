@@ -7,6 +7,7 @@ import no.nav.helse.Organisasjonsnummer
 import no.nav.helse.db.TestDatabase
 import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.helpers.januar
+import no.nav.helse.rapids_rivers.asLocalDate
 import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
@@ -44,6 +45,7 @@ internal class MediatorTest {
         assertEquals("behov", testRapid.inspektør.field(0, "@event_name").asText())
         assertEquals(beregningsperiodeFom, testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("beregningStart").asYearMonth())
         assertEquals(beregningsperiodeTom, testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("beregningSlutt").asYearMonth())
+        assertEquals(skjæringstidspunkt, testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("skjæringstidspunkt").asLocalDate())
     }
 
     @Test

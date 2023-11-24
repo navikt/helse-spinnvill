@@ -79,7 +79,13 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
     private fun beOmSammenligningsgrunnlag(skjæringstidspunkt: LocalDate, behovProducer: BehovProducer) {
         val tom = YearMonth.from(skjæringstidspunkt).minusMonths(1)
         val fom = tom.minusMonths(11)
-        behovProducer.sammenligningsgrunnlag(BehovForSammenligningsgrunnlag(fom, tom))
+        behovProducer.sammenligningsgrunnlag(
+            BehovForSammenligningsgrunnlag(
+                skjæringstidspunkt = skjæringstidspunkt,
+                beregningsperiodeFom = fom,
+                beregningsperiodeTom = tom
+            )
+        )
     }
 
     private fun AvviksvurderingDto.tilDomene(): Avviksvurdering {

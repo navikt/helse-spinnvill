@@ -52,6 +52,10 @@ class BehovProducer(
     }
 
     private fun BehovForSammenligningsgrunnlag.toMap(): Map<String, Any> {
-        return mapOf("beregningStart" to beregningsperiodeFom, "beregningSlutt" to beregningsperiodeTom)
+        return mapOf(
+            "beregningStart" to beregningsperiodeFom,
+            "beregningSlutt" to beregningsperiodeTom,
+            "skjæringstidspunkt" to skjæringstidspunkt
+        )
     }
 }
