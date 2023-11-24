@@ -2,21 +2,33 @@ package no.nav.helse.mediator
 
 import no.nav.helse.db.TestDatabase
 import no.nav.helse.helpers.januar
+import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.YearMonth
+import kotlin.test.assertEquals
 
 internal class MediatorTest {
 
     private val testRapid = TestRapid()
-    private val mediator = Mediator(testRapid, TestDatabase.database())
+    init {
+        Mediator(testRapid, TestDatabase.database())
+    }
 
-    @Disabled
     @Test
-    fun foo() {
-        testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", "12345678910", "987654321", 1.januar))
+    fun `sender behov for sammenligningsgrunnlag`() {
+        val skjæringstidspunkt = 1.januar
+        testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", "12345678910", "987654321", skjæringstidspunkt))
+
+        val beregningsperiodeTom = YearMonth.from(skjæringstidspunkt.minusMonths(1))
+        val beregningsperiodeFom = beregningsperiodeTom.minusMonths(11)
+
+        assertEquals(1, testRapid.inspektør.size)
+        assertEquals("behov", testRapid.inspektør.field(0, "@event_name").asText())
+        assertEquals(beregningsperiodeFom, testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("beregningStart").asYearMonth())
+        assertEquals(beregningsperiodeTom, testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("beregningSlutt").asYearMonth())
     }
 
     private fun utkastTilVedtakJson(

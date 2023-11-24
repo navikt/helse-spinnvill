@@ -4,9 +4,9 @@ import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.Organisasjonsnummer
 import no.nav.helse.avviksvurdering.Avviksvurdering
+import no.nav.helse.avviksvurdering.BehovForSammenligningsgrunnlag
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.db.Database
-import no.nav.helse.dto.Fødselsnummer
 import no.nav.helse.kafka.MessageHandler
 import no.nav.helse.kafka.SammenligningsgrunnlagMessage
 import no.nav.helse.kafka.UtkastTilVedtakMessage
@@ -14,6 +14,7 @@ import no.nav.helse.kafka.UtkastTilVedtakRiver
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.time.YearMonth
 
 class Mediator(private val rapidsConnection: RapidsConnection, private val database: Database) : MessageHandler {
 
@@ -41,24 +42,29 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
             rapidsConnection = rapidsConnection
         )
         val beregningsgrunnlag = Beregningsgrunnlag.opprett(utkastTilVedtakMessage.beregningsgrunnlag.entries.associate { Organisasjonsnummer(it.key) to OmregnetÅrsinntekt(it.value) })
-        val avviksvurdering = avviksvurdering()
-            ?: return beOmSammenligningsgrunnlag(utkastTilVedtakMessage.skjæringstidspunkt, behovProducer)
-        avviksvurdering.håndter(beregningsgrunnlag)
+        håndter(beregningsgrunnlag, utkastTilVedtakMessage.skjæringstidspunkt, behovProducer)
         behovProducer.finalize()
-    }
-
-    private fun avviksvurdering(): Avviksvurdering? {
-        // Finn dto fra database ?: return null
-        // Map om til domenemodell og returner avviksvurdering
-        TODO()
-    }
-
-    private fun beOmSammenligningsgrunnlag(skjæringstidspunkt: LocalDate, behovProducer: BehovProducer) {
-        TODO()
     }
 
     override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
         TODO("Not yet implemented")
     }
 
+    private fun håndter(beregningsgrunnlag: Beregningsgrunnlag, skjæringstidspunkt: LocalDate, behovProducer: BehovProducer) {
+        val avviksvurdering = avviksvurdering()
+            ?: return beOmSammenligningsgrunnlag(skjæringstidspunkt, behovProducer)
+        avviksvurdering.håndter(beregningsgrunnlag)
+    }
+
+    private fun avviksvurdering(): Avviksvurdering? {
+        // Finn dto fra database ?: return null
+        // Map om til domenemodell og returner avviksvurdering
+        return null
+    }
+
+    private fun beOmSammenligningsgrunnlag(skjæringstidspunkt: LocalDate, behovProducer: BehovProducer) {
+        val tom = YearMonth.from(skjæringstidspunkt).minusMonths(1)
+        val fom = tom.minusMonths(11)
+        behovProducer.sammenligningsgrunnlag(BehovForSammenligningsgrunnlag(fom, tom))
+    }
 }

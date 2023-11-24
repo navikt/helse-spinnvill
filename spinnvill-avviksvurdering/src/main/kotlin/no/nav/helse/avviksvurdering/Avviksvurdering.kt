@@ -1,10 +1,8 @@
 package no.nav.helse.avviksvurdering
 
 import no.nav.helse.KriterieObserver
-import java.time.LocalDateTime
 
-class Avviksvurdering private constructor(
-    private val opprettet: LocalDateTime,
+class Avviksvurdering(
     private var beregningsgrunnlag: Beregningsgrunnlag,
     private val sammenligningsgrunnlag: Sammenligningsgrunnlag
 ) {
@@ -26,7 +24,6 @@ class Avviksvurdering private constructor(
     }
 
     internal companion object {
-        internal fun nyAvviksvurdering(sammenligningsgrunnlag: Sammenligningsgrunnlag) = Avviksvurdering(LocalDateTime.now(), Beregningsgrunnlag.INGEN, sammenligningsgrunnlag)
-        internal fun Iterable<Avviksvurdering>.sortert() = sortedBy { it.opprettet }
+        internal fun nyAvviksvurdering(sammenligningsgrunnlag: Sammenligningsgrunnlag) = Avviksvurdering(Beregningsgrunnlag.INGEN, sammenligningsgrunnlag)
     }
 }
