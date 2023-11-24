@@ -1,6 +1,8 @@
 package no.nav.helse.avviksvurdering
 
-class ArbeidsgiverInntekt(private val organisasjonsummer: String, private val inntekter: List<Double>) {
+import no.nav.helse.Organisasjonsnummer
+
+class ArbeidsgiverInntekt(private val organisasjonsummer: Organisasjonsnummer, private val inntekter: List<Double>) {
 
     operator fun plus(other: Double) = other + inntekter.sum()
 

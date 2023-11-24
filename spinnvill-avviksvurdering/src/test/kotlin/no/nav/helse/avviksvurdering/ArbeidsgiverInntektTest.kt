@@ -1,5 +1,6 @@
 package no.nav.helse.avviksvurdering
 
+import no.nav.helse.Organisasjonsnummer
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.Companion.sum
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -12,8 +13,8 @@ class ArbeidsgiverInntektTest {
     @Test
     fun sum() {
         val arbeidsgiverInntekter = listOf(
-            ArbeidsgiverInntekt("a1", List(12) { 10000.0 }),
-            ArbeidsgiverInntekt("a2", List(12) { 20000.0 })
+            ArbeidsgiverInntekt(Organisasjonsnummer("a1"), List(12) { 10000.0 }),
+            ArbeidsgiverInntekt(Organisasjonsnummer("a2"), List(12) { 20000.0 })
         )
         assertEquals(360000.0, arbeidsgiverInntekter.sum().rundTilToDesimaler())
     }
@@ -21,8 +22,8 @@ class ArbeidsgiverInntektTest {
     @Test
     fun `sum med desimaltall`() {
         val arbeidsgiverInntekter = listOf(
-            ArbeidsgiverInntekt("a1", List(12) { 10000.10 }),
-            ArbeidsgiverInntekt("a2", List(12) { 20000.20 })
+            ArbeidsgiverInntekt(Organisasjonsnummer("a1"), List(12) { 10000.10 }),
+            ArbeidsgiverInntekt(Organisasjonsnummer("a2"), List(12) { 20000.20 })
         )
         assertEquals(360003.60, arbeidsgiverInntekter.sum().rundTilToDesimaler())
     }

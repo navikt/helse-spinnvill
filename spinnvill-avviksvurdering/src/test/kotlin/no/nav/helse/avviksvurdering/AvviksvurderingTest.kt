@@ -46,7 +46,7 @@ internal class AvviksvurderingTest {
 
     private fun sammenligningsgrunnlag(inntekt: Double) = Sammenligningsgrunnlag(
         listOf(
-            ArbeidsgiverInntekt("a1", List(12) { inntekt })
+            ArbeidsgiverInntekt(Organisasjonsnummer("a1"), List(12) { inntekt })
         )
     )
 
