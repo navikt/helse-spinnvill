@@ -1,9 +1,11 @@
 package no.nav.helse.avviksvurdering
 
+import no.nav.helse.InntektPerMåned
 import no.nav.helse.Organisasjonsnummer
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.Companion.sum
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.YearMonth
 import kotlin.math.roundToInt
 
 class ArbeidsgiverInntektTest {
@@ -13,8 +15,8 @@ class ArbeidsgiverInntektTest {
     @Test
     fun sum() {
         val arbeidsgiverInntekter = listOf(
-            ArbeidsgiverInntekt(Organisasjonsnummer("a1"), List(12) { 10000.0 }),
-            ArbeidsgiverInntekt(Organisasjonsnummer("a2"), List(12) { 20000.0 })
+            ArbeidsgiverInntekt(Organisasjonsnummer("a1"), inntekter(10000.0)),
+            ArbeidsgiverInntekt(Organisasjonsnummer("a2"), inntekter(20000.0))
         )
         assertEquals(360000.0, arbeidsgiverInntekter.sum().rundTilToDesimaler())
     }
@@ -22,9 +24,11 @@ class ArbeidsgiverInntektTest {
     @Test
     fun `sum med desimaltall`() {
         val arbeidsgiverInntekter = listOf(
-            ArbeidsgiverInntekt(Organisasjonsnummer("a1"), List(12) { 10000.10 }),
-            ArbeidsgiverInntekt(Organisasjonsnummer("a2"), List(12) { 20000.20 })
+            ArbeidsgiverInntekt(Organisasjonsnummer("a1"), inntekter(10000.10)),
+            ArbeidsgiverInntekt(Organisasjonsnummer("a2"), inntekter(20000.20))
         )
         assertEquals(360003.60, arbeidsgiverInntekter.sum().rundTilToDesimaler())
     }
+
+    private fun inntekter(beløp: Double) = List(12) { YearMonth.of(2018, it + 1) to InntektPerMåned(beløp) }.toMap()
 }

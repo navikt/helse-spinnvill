@@ -87,7 +87,7 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
                 this.sammenligningsgrunnlag.innrapporterteInntekter.map { (organisasjonsnummer, inntekter) ->
                     ArbeidsgiverInntekt(
                         organisasjonsummer = organisasjonsnummer,
-                        inntekter = inntekter.map { it.inntekt.value }
+                        inntekter = inntekter.associate { it.måned to it.inntekt }
                     )
                 }
             )

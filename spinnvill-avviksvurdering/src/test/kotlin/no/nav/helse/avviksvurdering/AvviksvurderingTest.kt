@@ -1,10 +1,12 @@
 package no.nav.helse.avviksvurdering
 
+import no.nav.helse.InntektPerMåned
 import no.nav.helse.KriterieObserver
 import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.Organisasjonsnummer
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.YearMonth
 
 internal class AvviksvurderingTest {
 
@@ -46,7 +48,7 @@ internal class AvviksvurderingTest {
 
     private fun sammenligningsgrunnlag(inntekt: Double) = Sammenligningsgrunnlag(
         listOf(
-            ArbeidsgiverInntekt(Organisasjonsnummer("a1"), List(12) { inntekt })
+            ArbeidsgiverInntekt(Organisasjonsnummer("a1"), List(12) { YearMonth.of(2018, it + 1) to InntektPerMåned(inntekt) }.toMap())
         )
     )
 
