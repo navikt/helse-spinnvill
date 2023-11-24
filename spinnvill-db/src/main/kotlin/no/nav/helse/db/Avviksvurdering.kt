@@ -1,5 +1,9 @@
 package no.nav.helse.db
 
+import no.nav.helse.Fødselsnummer
+import no.nav.helse.InntektPerMåned
+import no.nav.helse.OmregnetÅrsinntekt
+import no.nav.helse.Organisasjonsnummer
 import no.nav.helse.dto.*
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass

@@ -1,5 +1,9 @@
 package no.nav.helse.dto
 
+import no.nav.helse.Fødselsnummer
+import no.nav.helse.InntektPerMåned
+import no.nav.helse.OmregnetÅrsinntekt
+import no.nav.helse.Organisasjonsnummer
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID

@@ -1,8 +1,5 @@
 group = "no.nav.helse"
 
 dependencies {
-
-}
-
-tasks {
+    implementation(project(":spinnvill-felles"))
 }

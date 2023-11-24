@@ -1,2 +1,2 @@
 rootProject.name = "helse-spinnvill"
-include("spinnvill-app", "spinnvill-db", "spinnvill-avviksvurdering")
+include("spinnvill-app", "spinnvill-db", "spinnvill-avviksvurdering", "spinnvill-felles")

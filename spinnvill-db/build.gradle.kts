@@ -13,6 +13,8 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":spinnvill-felles"))
+
     implementation("org.postgresql:postgresql:$postgresqlVersion")
     implementation("com.zaxxer:HikariCP:$hikariCPVersion")
     implementation("org.flywaydb:flyway-core:$flywayCoreVersion")
