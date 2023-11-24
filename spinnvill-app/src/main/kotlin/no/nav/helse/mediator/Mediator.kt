@@ -41,7 +41,11 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
             organisasjonsnummer = utkastTilVedtakMessage.organisasjonsnummer,
             rapidsConnection = rapidsConnection
         )
-        val beregningsgrunnlag = Beregningsgrunnlag.opprett(utkastTilVedtakMessage.beregningsgrunnlag.entries.associate { Organisasjonsnummer(it.key) to OmregnetÅrsinntekt(it.value) })
+        val beregningsgrunnlag = Beregningsgrunnlag.opprett(
+            utkastTilVedtakMessage.beregningsgrunnlag.entries.associate {
+                Organisasjonsnummer(it.key) to OmregnetÅrsinntekt(it.value)
+            }
+        )
         håndter(
             beregningsgrunnlag = beregningsgrunnlag,
             fødselsnummer = Fødselsnummer(utkastTilVedtakMessage.fødselsnummer),
@@ -52,13 +56,15 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
     }
 
     override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
-        database.lagreAvviksvurdering(AvviksvurderingDto(
-            id = UUID.randomUUID(),
-            fødselsnummer = Fødselsnummer(sammenligningsgrunnlagMessage.fødselsnummer),
-            skjæringstidspunkt = sammenligningsgrunnlagMessage.skjæringstidspunkt,
-            sammenligningsgrunnlag = sammenligningsgrunnlagMessage.sammenligningsgrunnlag.dto(),
-            beregningsgrunnlag = null
-        ))
+        database.lagreAvviksvurdering(
+            AvviksvurderingDto(
+                id = UUID.randomUUID(),
+                fødselsnummer = Fødselsnummer(sammenligningsgrunnlagMessage.fødselsnummer),
+                skjæringstidspunkt = sammenligningsgrunnlagMessage.skjæringstidspunkt,
+                sammenligningsgrunnlag = sammenligningsgrunnlagMessage.sammenligningsgrunnlag.dto(),
+                beregningsgrunnlag = null
+            )
+        )
     }
 
     private fun håndter(
