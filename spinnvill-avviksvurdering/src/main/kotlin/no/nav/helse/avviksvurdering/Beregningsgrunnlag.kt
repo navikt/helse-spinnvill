@@ -1,8 +1,11 @@
 package no.nav.helse.avviksvurdering
 
-class Beregningsgrunnlag(private val omregnedeÅrsinntekter: Map<String, Double>) {
+import no.nav.helse.OmregnetÅrsinntekt
+import no.nav.helse.Organisasjonsnummer
 
-    private val totalOmregnetÅrsinntekt = omregnedeÅrsinntekter.values.sum()
+class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter: Map<Organisasjonsnummer, OmregnetÅrsinntekt>) {
+
+    private val totalOmregnetÅrsinntekt = omregnedeÅrsinntekter.values.sumOf { it.value }
 
     internal fun beregnAvvik(sammenligningsgrunnlag: Double): Avviksprosent {
         return Avviksprosent.avvik(
@@ -24,7 +27,11 @@ class Beregningsgrunnlag(private val omregnedeÅrsinntekter: Map<String, Double>
         return omregnedeÅrsinntekter.hashCode()
     }
 
-    internal companion object {
-        internal val INGEN = Beregningsgrunnlag(emptyMap())
+    companion object {
+        val INGEN = Beregningsgrunnlag(emptyMap())
+        fun opprett(omregnedeÅrsinntekter: Map<Organisasjonsnummer, OmregnetÅrsinntekt>) : Beregningsgrunnlag {
+            require(omregnedeÅrsinntekter.isNotEmpty()) { "Omregmede årsinntekter kan ikke være en tom liste"}
+            return Beregningsgrunnlag(omregnedeÅrsinntekter)
+        }
     }
 }

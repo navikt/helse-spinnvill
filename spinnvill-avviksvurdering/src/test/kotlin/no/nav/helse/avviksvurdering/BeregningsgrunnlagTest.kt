@@ -1,39 +1,51 @@
 package no.nav.helse.avviksvurdering
 
-import org.junit.jupiter.api.Assertions.*
+import no.nav.helse.OmregnetÅrsinntekt
+import no.nav.helse.Organisasjonsnummer
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class BeregningsgrunnlagTest {
 
     @Test
     fun `referential equals`() {
-        val omregnedeÅrsinntekter = omregnedeÅrsinntekter("a1" to 400000.0)
+        val omregnedeÅrsinntekter = beregningsgrunnlag("a1" to 400000.0)
         assertEquals(omregnedeÅrsinntekter, omregnedeÅrsinntekter)
     }
 
     @Test
     fun `structural equals`() {
-        val omregnedeÅrsinntekter = omregnedeÅrsinntekter("a1" to 400000.0)
-        assertEquals(omregnedeÅrsinntekter("a1" to 400000.0), omregnedeÅrsinntekter)
+        val omregnedeÅrsinntekter = beregningsgrunnlag("a1" to 400000.0)
+        assertEquals(beregningsgrunnlag("a1" to 400000.0), omregnedeÅrsinntekter)
     }
 
     @Test
     fun `not equals - forskjellig arbeidsgiver`() {
-        val omregnedeÅrsinntekter = omregnedeÅrsinntekter("a1" to 400000.0)
-        assertNotEquals(omregnedeÅrsinntekter("a2" to 400000.0), omregnedeÅrsinntekter)
+        val omregnedeÅrsinntekter = beregningsgrunnlag("a1" to 400000.0)
+        assertNotEquals(beregningsgrunnlag("a2" to 400000.0), omregnedeÅrsinntekter)
     }
 
     @Test
     fun `not equals - forskjellig beløp`() {
-        val omregnedeÅrsinntekter = omregnedeÅrsinntekter("a1" to 400000.0)
-        assertNotEquals(omregnedeÅrsinntekter("a1" to 500000.0), omregnedeÅrsinntekter)
+        val omregnedeÅrsinntekter = beregningsgrunnlag("a1" to 400000.0)
+        assertNotEquals(beregningsgrunnlag("a1" to 500000.0), omregnedeÅrsinntekter)
     }
 
     @Test
     fun `not equals - ulikt antall arbeidsgivere`() {
-        val omregnedeÅrsinntekter = omregnedeÅrsinntekter("a1" to 400000.0)
-        assertNotEquals(omregnedeÅrsinntekter("a1" to 500000.0, "a2" to 500000.0), omregnedeÅrsinntekter)
+        val omregnedeÅrsinntekter = beregningsgrunnlag("a1" to 400000.0)
+        assertNotEquals(beregningsgrunnlag("a1" to 500000.0, "a2" to 500000.0), omregnedeÅrsinntekter)
     }
 
-    private fun omregnedeÅrsinntekter(vararg arbeidsgivere: Pair<String, Double>) = Beregningsgrunnlag(arbeidsgivere.toMap())
+    @Test
+    fun `kan bare opprette gyldige beregningsgrunnlag`() {
+        val omregnedeÅrsinntekter = emptyMap<Organisasjonsnummer, OmregnetÅrsinntekt>()
+        assertThrows<IllegalArgumentException> { Beregningsgrunnlag.opprett(omregnedeÅrsinntekter) }
+    }
+
+    private fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) = Beregningsgrunnlag.opprett(
+        arbeidsgivere.toMap().entries.associate { Organisasjonsnummer(it.key) to OmregnetÅrsinntekt(it.value) }
+    )
 }

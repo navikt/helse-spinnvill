@@ -1,6 +1,8 @@
 package no.nav.helse.avviksvurdering
 
-import no.nav.helse.*
+import no.nav.helse.KriterieObserver
+import no.nav.helse.OmregnetÅrsinntekt
+import no.nav.helse.Organisasjonsnummer
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -11,9 +13,9 @@ internal class AvviksvurderingTest {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering(sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
-        avviksvurdering.håndter(omregnedeÅrsinntekter("a1" to 600000.0))
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.0))
         observer.clear()
-        avviksvurdering.håndter(omregnedeÅrsinntekter("a1" to 600000.0))
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.0))
         assertEquals(0, observer.avviksvurderinger.size)
     }
 
@@ -22,7 +24,7 @@ internal class AvviksvurderingTest {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering(sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
-        avviksvurdering.håndter(omregnedeÅrsinntekter("a1" to 600000.0))
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.0))
         assertEquals(1, observer.avviksvurderinger.size)
         val (harAkseptabeltAvvik, avviksprosent) = observer.avviksvurderinger.single()
         assertEquals(true, harAkseptabeltAvvik)
@@ -34,7 +36,7 @@ internal class AvviksvurderingTest {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering(sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
-        avviksvurdering.håndter(omregnedeÅrsinntekter("a1" to 360000.0))
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 360000.0))
         assertEquals(1, observer.avviksvurderinger.size)
         val (harAkseptabeltAvvik, avviksprosent) = observer.avviksvurderinger.single()
         assertEquals(false, harAkseptabeltAvvik)
@@ -48,8 +50,8 @@ internal class AvviksvurderingTest {
         )
     )
 
-    private fun omregnedeÅrsinntekter(vararg arbeidsgivere: Pair<String, Double>) =
-        Beregningsgrunnlag(arbeidsgivere.toMap())
+    private fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) =
+        Beregningsgrunnlag.opprett(arbeidsgivere.toMap().entries.associate { Organisasjonsnummer(it.key) to OmregnetÅrsinntekt(it.value) })
 
     private val observer = object : KriterieObserver {
 
