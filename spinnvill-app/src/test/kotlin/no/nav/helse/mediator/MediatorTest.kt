@@ -1,20 +1,34 @@
 package no.nav.helse.mediator
 
+import no.nav.helse.Fødselsnummer
+import no.nav.helse.InntektPerMåned
+import no.nav.helse.OmregnetÅrsinntekt
+import no.nav.helse.Organisasjonsnummer
 import no.nav.helse.db.TestDatabase
+import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.helpers.januar
 import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.*
 import kotlin.test.assertEquals
 
 internal class MediatorTest {
 
     private val testRapid = TestRapid()
+    private val database = TestDatabase.database()
+
     init {
-        Mediator(testRapid, TestDatabase.database())
+        Mediator(testRapid, database)
+    }
+
+    @BeforeEach
+    fun beforeEach() {
+        TestDatabase.reset()
     }
 
     @Test
@@ -29,6 +43,31 @@ internal class MediatorTest {
         assertEquals("behov", testRapid.inspektør.field(0, "@event_name").asText())
         assertEquals(beregningsperiodeFom, testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("beregningStart").asYearMonth())
         assertEquals(beregningsperiodeTom, testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("beregningSlutt").asYearMonth())
+    }
+
+    @Test
+    fun `sender ikke behov for sammenligningsgrunnlag når det finnes en ekisterende avviksvurdering`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+        val organisasjonsnummer = Organisasjonsnummer("987654321")
+
+        val avviksvurderingDto = AvviksvurderingDto(
+            id = UUID.randomUUID(),
+            fødselsnummer = fødselsnummer,
+            skjæringstidspunkt = skjæringstidspunkt,
+            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
+                mapOf(organisasjonsnummer to listOf(AvviksvurderingDto.MånedligInntektDto(InntektPerMåned(20000.0), YearMonth.from(skjæringstidspunkt))))
+            ),
+            beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
+                mapOf(organisasjonsnummer to OmregnetÅrsinntekt(400000.0))
+            )
+        )
+
+        database.lagreAvviksvurdering(avviksvurderingDto)
+
+        testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", fødselsnummer.value, organisasjonsnummer.value, skjæringstidspunkt))
+
+        assertEquals(0, testRapid.inspektør.size)
     }
 
     private fun utkastTilVedtakJson(
