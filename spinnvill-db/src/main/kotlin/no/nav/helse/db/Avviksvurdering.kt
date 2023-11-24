@@ -88,6 +88,17 @@ internal class Avviksvurdering {
             internal val yearMonth: YearMonth get() = YearMonth.of(år, måned)
         }
     }
+    fun findLatest(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
+        return transaction {
+            EnAvviksvurdering.find {
+                Avviksvurderinger.fødselsnummer eq fødselsnummer.value and (Avviksvurderinger.skjæringstidspunkt eq skjæringstidspunkt)
+            }
+                .orderBy(Avviksvurderinger.løpenummer to SortOrder.DESC)
+                .firstOrNull()
+                ?.dto()
+        }
+    }
+
     internal fun upsert(
         id: UUID,
         fødselsnummer: Fødselsnummer,
@@ -152,17 +163,6 @@ internal class Avviksvurdering {
             }
         }
         enAvviksvurdering.dto()
-    }
-
-    fun findLatest(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
-        return transaction {
-            EnAvviksvurdering.find {
-                Avviksvurderinger.fødselsnummer eq fødselsnummer.value and (Avviksvurderinger.skjæringstidspunkt eq skjæringstidspunkt)
-            }
-                .orderBy(Avviksvurderinger.løpenummer to SortOrder.DESC)
-                .firstOrNull()
-                ?.dto()
-        }
     }
 
     private fun EnAvviksvurdering.dto(): AvviksvurderingDto {
