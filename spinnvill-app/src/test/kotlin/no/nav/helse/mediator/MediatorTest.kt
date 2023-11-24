@@ -16,6 +16,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.util.*
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 internal class MediatorTest {
 
@@ -70,6 +71,17 @@ internal class MediatorTest {
         assertEquals(0, testRapid.inspektør.size)
     }
 
+    @Test
+    fun `motta sammenligningsgrunnlag`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val organisasjonsnummer = Organisasjonsnummer("987654321")
+        val skjæringstidspunkt = 1.januar
+
+        testRapid.sendTestMessage(sammenligningsgrunnlagJson("1234567891011", fødselsnummer.value, organisasjonsnummer.value, skjæringstidspunkt))
+
+        assertNotNull(database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt))
+    }
+
     private fun utkastTilVedtakJson(
         aktørId: String,
         fødselsnummer: String,
@@ -118,6 +130,89 @@ internal class MediatorTest {
               },
               "@id": "ba376523-62b1-49d7-8647-f902c739b634",
               "@opprettet": "2018-01-01T00:00:00.000"
+            }
+        """.trimIndent()
+        return json
+    }
+
+    private fun sammenligningsgrunnlagJson(
+        aktørId: String,
+        fødselsnummer: String,
+        organisasjonsnummer: String,
+        skjæringstidspunkt: LocalDate
+    ): String {
+        @Language("JSON")
+        val json = """
+            {
+              "@event_name": "behov",
+              "@behovId": "ed8f2e02-15b1-45a7-88e4-3b2f0b9cda73",
+              "@behov": [
+                "InntekterForSammenligningsgrunnlag"
+              ],
+              "meldingsreferanseId": "ff032457-203f-43ec-8850-b72a57ad9e52",
+              "aktørId": "$aktørId",
+              "fødselsnummer": "$fødselsnummer",
+              "organisasjonsnummer": "$organisasjonsnummer",
+              "skjæringstidspunkt": "$skjæringstidspunkt",
+              "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
+              "InntekterForSammenligningsgrunnlag": {
+                "beregningStart": "2018-01",
+                "beregningSlutt": "2018-02"
+              },
+              "@id": "ecfe47f6-2063-451a-b7e1-182490cc3153",
+              "@opprettet": "2018-01-01T00:00:00.000",
+              "@løsning": {
+                "InntekterForSammenligningsgrunnlag": [
+                  {
+                    "årMåned": "2018-01",
+                    "arbeidsforholdliste": [],
+                    "inntektsliste": [
+                      {
+                        "beløp": 20000.00,
+                        "inntektstype": "LOENNSINNTEKT",
+                        "orgnummer": "$organisasjonsnummer",
+                        "fødselsnummer": null,
+                        "aktørId": null,
+                        "beskrivelse": "skattepliktigDelForsikringer",
+                        "fordel": "naturalytelse"
+                      },
+                      {
+                        "beløp": 50000.00,
+                        "inntektstype": "LOENNSINNTEKT",
+                        "orgnummer": "000000000",
+                        "fødselsnummer": null,
+                        "aktørId": null,
+                        "beskrivelse": "fastloenn",
+                        "fordel": "kontantytelse"
+                      }
+                    ]
+                  },
+                  {
+                    "årMåned": "2018-02",
+                    "arbeidsforholdliste": [],
+                    "inntektsliste": [
+                      {
+                        "beløp": 20000.00,
+                        "inntektstype": "LOENNSINNTEKT",
+                        "orgnummer": "$organisasjonsnummer",
+                        "fødselsnummer": null,
+                        "aktørId": null,
+                        "beskrivelse": "skattepliktigDelForsikringer",
+                        "fordel": "naturalytelse"
+                      },
+                      {
+                        "beløp": 50000.00,
+                        "inntektstype": "LOENNSINNTEKT",
+                        "orgnummer": "000000000",
+                        "fødselsnummer": null,
+                        "aktørId": null,
+                        "beskrivelse": "fastloenn",
+                        "fordel": "kontantytelse"
+                      }
+                    ]
+                  }
+                ]
+              }
             }
         """.trimIndent()
         return json

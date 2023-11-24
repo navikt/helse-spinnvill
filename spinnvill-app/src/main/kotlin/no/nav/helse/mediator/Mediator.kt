@@ -2,19 +2,18 @@ package no.nav.helse.mediator
 
 import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.Fødselsnummer
+import no.nav.helse.InntektPerMåned
 import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.Organisasjonsnummer
 import no.nav.helse.avviksvurdering.*
 import no.nav.helse.db.Database
 import no.nav.helse.dto.AvviksvurderingDto
-import no.nav.helse.kafka.MessageHandler
-import no.nav.helse.kafka.SammenligningsgrunnlagMessage
-import no.nav.helse.kafka.UtkastTilVedtakMessage
-import no.nav.helse.kafka.UtkastTilVedtakRiver
+import no.nav.helse.kafka.*
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.*
 
 class Mediator(private val rapidsConnection: RapidsConnection, private val database: Database) : MessageHandler {
 
@@ -25,6 +24,7 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
 
     init {
         UtkastTilVedtakRiver(rapidsConnection, this)
+        SammenligningsgrunnlagRiver(rapidsConnection, this)
     }
 
     override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {
@@ -52,7 +52,13 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
     }
 
     override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
-        TODO("Not yet implemented")
+        database.lagreAvviksvurdering(AvviksvurderingDto(
+            id = UUID.randomUUID(),
+            fødselsnummer = Fødselsnummer(sammenligningsgrunnlagMessage.fødselsnummer),
+            skjæringstidspunkt = sammenligningsgrunnlagMessage.skjæringstidspunkt,
+            sammenligningsgrunnlag = sammenligningsgrunnlagMessage.sammenligningsgrunnlag.dto(),
+            beregningsgrunnlag = null
+        ))
     }
 
     private fun håndter(
@@ -93,4 +99,13 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
             )
         )
     }
+
+    private fun Map<String, List<SammenligningsgrunnlagMessage.Inntekt>>.dto(): AvviksvurderingDto.SammenligningsgrunnlagDto =
+        AvviksvurderingDto.SammenligningsgrunnlagDto(
+            this.entries.associate { (organisasjonsnummer, inntekter) ->
+                Organisasjonsnummer(organisasjonsnummer) to inntekter.map {
+                    AvviksvurderingDto.MånedligInntektDto(InntektPerMåned(it.beløp), it.årMåned)
+                }
+            }
+        )
 }

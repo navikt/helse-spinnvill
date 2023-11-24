@@ -1,8 +1,10 @@
 package no.nav.helse.kafka
 
+import no.nav.helse.helpers.januar
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import kotlin.test.assertEquals
 
 class SammenligningsgrunnlagRiverTest {
@@ -31,20 +33,21 @@ class SammenligningsgrunnlagRiverTest {
 
     @Test
     fun `Leser inn sammenligningsgrunnlag løsning`() {
-        testRapid.sendTestMessage(sammenligningsgrunnlagJson(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER))
+        testRapid.sendTestMessage(sammenligningsgrunnlagJson(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, 1.januar))
         assertEquals(1, messageHandler.messages.size)
     }
 
     @Test
     fun `Leser ikke inn sammenligningsgrunnlag uten løsning`() {
-        testRapid.sendTestMessage(sammenligningsgrunnlagJsonUtenLøsning(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER))
+        testRapid.sendTestMessage(sammenligningsgrunnlagJsonUtenLøsning(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, 1.januar))
         assertEquals(0, messageHandler.messages.size)
     }
 
     private fun sammenligningsgrunnlagJson(
         aktørId: String,
         fødselsnummer: String,
-        organisasjonsnummer: String
+        organisasjonsnummer: String,
+        skjæringstidspunkt: LocalDate
     ): String {
         @Language("JSON")
         val json = """
@@ -58,6 +61,7 @@ class SammenligningsgrunnlagRiverTest {
               "aktørId": "$aktørId",
               "fødselsnummer": "$fødselsnummer",
               "organisasjonsnummer": "$organisasjonsnummer",
+              "skjæringstidspunkt": "$skjæringstidspunkt",
               "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
               "InntekterForSammenligningsgrunnlag": {
                 "beregningStart": "2018-01",
@@ -124,7 +128,8 @@ class SammenligningsgrunnlagRiverTest {
     private fun sammenligningsgrunnlagJsonUtenLøsning(
         aktørId: String,
         fødselsnummer: String,
-        organisasjonsnummer: String
+        organisasjonsnummer: String,
+        skjæringstidspunkt: LocalDate
     ): String {
         @Language("JSON")
         val json = """
@@ -138,6 +143,7 @@ class SammenligningsgrunnlagRiverTest {
               "aktørId": "$aktørId",
               "fødselsnummer": "$fødselsnummer",
               "organisasjonsnummer": "$organisasjonsnummer",
+              "skjæringstidspunkt": "$skjæringstidspunkt",
               "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
               "InntekterForSammenligningsgrunnlag": {
                 "beregningStart": "2018-01",

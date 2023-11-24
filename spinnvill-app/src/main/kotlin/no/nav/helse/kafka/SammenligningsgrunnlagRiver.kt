@@ -10,8 +10,9 @@ internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, p
         River(rapidsConnection).apply {
             validate {
                 it.demandAll("@behov", listOf("InntekterForSammenligningsgrunnlag"))
-                it.requireKey("@løsning")
+                it.requireKey("@løsning", "fødselsnummer", "skjæringstidspunkt")
                 it.requireArray("@løsning.InntekterForSammenligningsgrunnlag") {
+                    requireKey("årMåned")
                     requireArray("inntektsliste") {
                         requireKey("beløp", "orgnummer")
                     }

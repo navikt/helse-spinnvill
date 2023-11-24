@@ -6,7 +6,6 @@ import java.time.LocalDate
 import java.util.UUID
 
 class UtkastTilVedtakMessage(packet: JsonMessage) {
-
     val skjæringstidspunkt: LocalDate = packet["Godkjenning.skjæringstidspunkt"].asLocalDate()
     val fødselsnummer: String = packet["fødselsnummer"].asText()
     val aktørId: String = packet["aktørId"].asText()
