@@ -1,9 +1,6 @@
 package no.nav.helse.mediator
 
-import no.nav.helse.Fødselsnummer
-import no.nav.helse.InntektPerMåned
-import no.nav.helse.OmregnetÅrsinntekt
-import no.nav.helse.Organisasjonsnummer
+import no.nav.helse.*
 import no.nav.helse.db.TestDatabase
 import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.helpers.januar
@@ -59,7 +56,13 @@ internal class MediatorTest {
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = skjæringstidspunkt,
             sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
-                mapOf(organisasjonsnummer to listOf(AvviksvurderingDto.MånedligInntektDto(InntektPerMåned(20000.0), YearMonth.from(skjæringstidspunkt))))
+                mapOf(organisasjonsnummer to listOf(AvviksvurderingDto.MånedligInntektDto(
+                    inntekt = InntektPerMåned(value = 20000.0),
+                    måned = YearMonth.from(skjæringstidspunkt),
+                    fordel = Fordel("En fordel"),
+                    beskrivelse = Beskrivelse("En beskrivelse"),
+                    inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+                )))
             ),
             beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
                 mapOf(organisasjonsnummer to OmregnetÅrsinntekt(400000.0))

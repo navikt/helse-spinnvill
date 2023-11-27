@@ -116,8 +116,17 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
         AvviksvurderingDto.SammenligningsgrunnlagDto(
             this.entries.associate { (organisasjonsnummer, inntekter) ->
                 Organisasjonsnummer(organisasjonsnummer) to inntekter.map {
-                    AvviksvurderingDto.MånedligInntektDto(InntektPerMåned(it.beløp), it.årMåned)
+                    AvviksvurderingDto.MånedligInntektDto(InntektPerMåned(it.beløp), it.årMåned, it.fordel, it.beskrivelse, it.inntektstype.tilDto())
                 }
             }
         )
+
+    private fun SammenligningsgrunnlagMessage.Inntektstype.tilDto(): AvviksvurderingDto.InntektstypeDto {
+        return when (this) {
+            SammenligningsgrunnlagMessage.Inntektstype.LØNNSINNTEKT -> AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+            SammenligningsgrunnlagMessage.Inntektstype.NÆRINGSINNTEKT -> AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT
+            SammenligningsgrunnlagMessage.Inntektstype.PENSJON_ELLER_TRYGD -> AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD
+            SammenligningsgrunnlagMessage.Inntektstype.YTELSE_FRA_OFFENTLIGE -> AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE
+        }
+    }
 }

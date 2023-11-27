@@ -1,9 +1,6 @@
 package no.nav.helse.db
 
-import no.nav.helse.Fødselsnummer
-import no.nav.helse.InntektPerMåned
-import no.nav.helse.OmregnetÅrsinntekt
-import no.nav.helse.Organisasjonsnummer
+import no.nav.helse.*
 import no.nav.helse.dto.*
 import no.nav.helse.helpers.januar
 import org.junit.jupiter.api.BeforeEach
@@ -97,9 +94,15 @@ internal class AvviksvurderingTest {
 
     private fun sammenligningsgrunnlag(inntektPerMåned: Double = 200000.0): AvviksvurderingDto.SammenligningsgrunnlagDto {
         return AvviksvurderingDto.SammenligningsgrunnlagDto(
-            mapOf(Organisasjonsnummer("123456789") to listOf(
-                AvviksvurderingDto.MånedligInntektDto(
-                    InntektPerMåned(inntektPerMåned), YearMonth.of(2020, 1))
+            mapOf(
+                Organisasjonsnummer("123456789") to listOf(
+                    AvviksvurderingDto.MånedligInntektDto(
+                        InntektPerMåned(inntektPerMåned),
+                        YearMonth.of(2020, 1),
+                        fordel = Fordel("En fordel"),
+                        beskrivelse = Beskrivelse("En beskrivelse"),
+                        inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+                    )
                 )
             )
         )

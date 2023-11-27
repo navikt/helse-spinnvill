@@ -1,9 +1,6 @@
 package no.nav.helse.db
 
-import no.nav.helse.Fødselsnummer
-import no.nav.helse.InntektPerMåned
-import no.nav.helse.OmregnetÅrsinntekt
-import no.nav.helse.Organisasjonsnummer
+import no.nav.helse.*
 import no.nav.helse.dto.*
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
@@ -60,7 +57,7 @@ internal class Avviksvurdering {
         private object Sammenligningsgrunnlag : UUIDTable(name = "sammenligningsgrunnlag") {
             val avviksvurdering = reference("avviksvurdering_ref", Avviksvurderinger)
 
-            val organisasjonsnummer: Column<String> = varchar("organisasjonsnummer", 9)
+            val arbeidsgiverreferanse: Column<String> = varchar("arbeidsgiverreferanse", 16)
         }
 
         class EttSammenligningsgrunnlag(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -69,7 +66,7 @@ internal class Avviksvurdering {
             val inntekter by EnMånedsinntekt referrersOn Månedsinntekter.sammenligningsgrunnlag
             var avviksvurdering by EnAvviksvurdering referencedOn Sammenligningsgrunnlag.avviksvurdering
 
-            var organisasjonsnummer by Sammenligningsgrunnlag.organisasjonsnummer
+            var arbeidsgiverreferanse by Sammenligningsgrunnlag.arbeidsgiverreferanse
         }
 
         private object Månedsinntekter : UUIDTable(name = "manedsinntekt") {
@@ -78,6 +75,9 @@ internal class Avviksvurdering {
             val inntekt: Column<Double> = double("inntekt")
             val år: Column<Int> = integer("år")
             val måned: Column<Int> = integer("måned")
+            val inntektstype: Column<String> = varchar("inntektstype", 255)
+            val fordel: Column<String?> = varchar("fordel", 255).nullable()
+            val beskrivelse: Column<String?> = varchar("beskrivelse", 255).nullable()
         }
 
         class EnMånedsinntekt(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -88,6 +88,9 @@ internal class Avviksvurdering {
             var inntekt by Månedsinntekter.inntekt
             var år by Månedsinntekter.år
             var måned by Månedsinntekter.måned
+            var inntektstype by Månedsinntekter.inntektstype
+            var fordel by Månedsinntekter.fordel
+            var beskrivelse by Månedsinntekter.beskrivelse
 
             internal val yearMonth: YearMonth get() = YearMonth.of(år, måned)
         }
@@ -130,18 +133,21 @@ internal class Avviksvurdering {
             this.opprettet = LocalDateTime.now()
         }
 
-        sammenligningsgrunnlag.innrapporterteInntekter.forEach { (organisasjonsnummer, inntekter) ->
+        sammenligningsgrunnlag.innrapporterteInntekter.forEach { (arbeidsgiverreferanse, inntekter) ->
             val ettSammenligningsgrunnlag = EttSammenligningsgrunnlag.new {
                 this.avviksvurdering = enAvviksvurdering
-                this.organisasjonsnummer = organisasjonsnummer.value
+                this.arbeidsgiverreferanse = arbeidsgiverreferanse.value
             }
 
-            inntekter.forEach { (inntekt, yearMonth) ->
+            inntekter.forEach { (inntekt, yearMonth, fordel, beskrivelse, inntektstype) ->
                 EnMånedsinntekt.new {
                     this.sammenligningsgrunnlag = ettSammenligningsgrunnlag
                     this.inntekt = inntekt.value
                     this.måned = yearMonth.monthValue
                     this.år = yearMonth.year
+                    this.fordel = fordel?.value
+                    this.beskrivelse = beskrivelse?.value
+                    this.inntektstype = inntektstype.tilDatabase()
                 }
             }
         }
@@ -177,11 +183,14 @@ internal class Avviksvurdering {
             sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
                 innrapporterteInntekter = this.sammenligningsgrunnlag
                     .associate { ettSammenligningsgrunnlag ->
-                        Organisasjonsnummer(ettSammenligningsgrunnlag.organisasjonsnummer) to ettSammenligningsgrunnlag.inntekter
+                        Organisasjonsnummer(ettSammenligningsgrunnlag.arbeidsgiverreferanse) to ettSammenligningsgrunnlag.inntekter
                             .map { enMånedsinntekt ->
                                 AvviksvurderingDto.MånedligInntektDto(
                                     inntekt = InntektPerMåned(enMånedsinntekt.inntekt),
-                                    måned = enMånedsinntekt.yearMonth
+                                    måned = enMånedsinntekt.yearMonth,
+                                    fordel = enMånedsinntekt.fordel?.let { Fordel(it) },
+                                    beskrivelse = enMånedsinntekt.beskrivelse?.let { Beskrivelse(it) },
+                                    inntektstype = enMånedsinntekt.inntektstype.tilInntektstype()
                                 )
                             }
                     }
@@ -197,5 +206,24 @@ internal class Avviksvurdering {
                     )
                 }
         )
+    }
+
+    private fun String.tilInntektstype(): AvviksvurderingDto.InntektstypeDto {
+        return when (this) {
+            "LØNNSINNTEKT" -> AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+            "NÆRINGSINNTEKT" -> AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT
+            "PENSJON_ELLER_TRYGD" -> AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD
+            "YTELSE_FRA_OFFENTLIGE" -> AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE
+            else -> error("Kunne ikke mappe InntektstypeDto")
+        }
+    }
+
+    private fun AvviksvurderingDto.InntektstypeDto.tilDatabase(): String {
+        return when (this) {
+            AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT -> "LØNNSINNTEKT"
+            AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT -> "NÆRINGSINNTEKT"
+            AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD -> "PENSJON_ELLER_TRYGD"
+            AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE -> "YTELSE_FRA_OFFENTLIGE"
+        }
     }
 }

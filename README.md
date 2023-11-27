@@ -62,13 +62,16 @@ erDiagram
     }
 
     SAMMENLIGNINGSGRUNNLAG {
-      string organisasjonsnummer
+      string arbeidsgiverreferanse
     }
     
     MANEDSINNTEKT {
         float inntekt
         int year
         int month
+        string fordel
+        string beskrivelse
+        enum inntektstype
     }
   
     BEREGNINGSGRUNNLAG {

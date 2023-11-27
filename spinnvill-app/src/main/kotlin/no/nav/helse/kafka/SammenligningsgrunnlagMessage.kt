@@ -2,6 +2,8 @@ package no.nav.helse.kafka
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import no.nav.helse.Beskrivelse
+import no.nav.helse.Fordel
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.asLocalDate
 import no.nav.helse.rapids_rivers.asYearMonth
@@ -16,8 +18,8 @@ class SammenligningsgrunnlagMessage(packet: JsonMessage) {
     data class Inntekt(
         val beløp: Double,
         val inntektstype: Inntektstype,
-        val fordel: String,
-        val beskrivelse: String,
+        val fordel: Fordel?,
+        val beskrivelse: Beskrivelse?,
         val årMåned: YearMonth
     )
 
@@ -55,8 +57,8 @@ class SammenligningsgrunnlagMessage(packet: JsonMessage) {
                     årMåned = inntekt["årMåned"].asYearMonth(),
                     beløp = inntekt["beløp"].asDouble(),
                     inntektstype = inntekt["inntektstype"].asInntektstype(),
-                    fordel = if (inntekt.path("fordel").isTextual) inntekt["fordel"].asText() else "",
-                    beskrivelse = if (inntekt.path("beskrivelse").isTextual) inntekt["beskrivelse"].asText() else ""
+                    fordel = if (inntekt.path("fordel").isTextual) Fordel(inntekt["fordel"].asText()) else null,
+                    beskrivelse = if (inntekt.path("beskrivelse").isTextual) Beskrivelse(inntekt["beskrivelse"].asText()) else null
                 )
             }
 }

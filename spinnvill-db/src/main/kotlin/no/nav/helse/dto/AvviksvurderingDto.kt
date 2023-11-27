@@ -1,9 +1,6 @@
 package no.nav.helse.dto
 
-import no.nav.helse.Fødselsnummer
-import no.nav.helse.InntektPerMåned
-import no.nav.helse.OmregnetÅrsinntekt
-import no.nav.helse.Organisasjonsnummer
+import no.nav.helse.*
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID
@@ -21,10 +18,20 @@ data class AvviksvurderingDto(
 
     data class MånedligInntektDto(
         val inntekt: InntektPerMåned,
-        val måned: YearMonth
+        val måned: YearMonth,
+        val fordel: Fordel?,
+        val beskrivelse: Beskrivelse?,
+        val inntektstype: InntektstypeDto
     )
 
     data class BeregningsgrunnlagDto(
         val omregnedeÅrsinntekter: Map<Organisasjonsnummer, OmregnetÅrsinntekt>
     )
+
+    enum class InntektstypeDto {
+        LØNNSINNTEKT,
+        NÆRINGSINNTEKT,
+        PENSJON_ELLER_TRYGD,
+        YTELSE_FRA_OFFENTLIGE,
+    }
 }
