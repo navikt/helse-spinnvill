@@ -1,10 +1,10 @@
 package no.nav.helse.mediator
 
 import net.logstash.logback.argument.StructuredArguments.kv
+import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.InntektPerMåned
 import no.nav.helse.OmregnetÅrsinntekt
-import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.avviksvurdering.*
 import no.nav.helse.db.Database
 import no.nav.helse.dto.AvviksvurderingDto
@@ -95,14 +95,17 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
     }
 
     private fun AvviksvurderingDto.tilDomene(): Avviksvurdering {
-        val beregningsgrunnlag = this.beregningsgrunnlag?.let {
+        val beregningsgrunnlag = beregningsgrunnlag?.let {
             Beregningsgrunnlag.opprett(it.omregnedeÅrsinntekter)
         } ?: Beregningsgrunnlag.INGEN
 
         return Avviksvurdering(
+            id = id,
+            fødselsnummer = fødselsnummer,
+            skjæringstidspunkt = skjæringstidspunkt,
             beregningsgrunnlag = beregningsgrunnlag,
             sammenligningsgrunnlag = Sammenligningsgrunnlag(
-                this.sammenligningsgrunnlag.innrapporterteInntekter.map { (organisasjonsnummer, inntekter) ->
+                sammenligningsgrunnlag.innrapporterteInntekter.map { (organisasjonsnummer, inntekter) ->
                     ArbeidsgiverInntekt(
                         arbeidsgiverreferanse = organisasjonsnummer,
                         inntekter = inntekter.associate { it.måned to it.inntekt }

@@ -1,9 +1,7 @@
 package no.nav.helse.avviksvurdering
 
-import no.nav.helse.InntektPerMåned
-import no.nav.helse.KriterieObserver
-import no.nav.helse.OmregnetÅrsinntekt
-import no.nav.helse.Arbeidsgiverreferanse
+import no.nav.helse.*
+import no.nav.helse.helpers.januar
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.YearMonth
@@ -12,7 +10,7 @@ internal class AvviksvurderingTest {
 
     @Test
     fun `har gjort avviksvurdering før`() {
-        val avviksvurdering = Avviksvurdering.nyAvviksvurdering(sammenligningsgrunnlag(50000.0))
+        val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
         avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.0))
@@ -23,7 +21,7 @@ internal class AvviksvurderingTest {
 
     @Test
     fun `har ikke gjort avviksvurdering før og avvik innenfor akseptabelt avvik`() {
-        val avviksvurdering = Avviksvurdering.nyAvviksvurdering(sammenligningsgrunnlag(50000.0))
+        val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
         avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.0))
@@ -35,7 +33,7 @@ internal class AvviksvurderingTest {
 
     @Test
     fun `har ikke gjort avviksvurdering før og avvik utenfor akseptabelt avvik`() {
-        val avviksvurdering = Avviksvurdering.nyAvviksvurdering(sammenligningsgrunnlag(50000.0))
+        val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
         avviksvurdering.håndter(beregningsgrunnlag("a1" to 360000.0))

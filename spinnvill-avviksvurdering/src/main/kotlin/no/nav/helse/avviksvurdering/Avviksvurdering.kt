@@ -1,8 +1,14 @@
 package no.nav.helse.avviksvurdering
 
+import no.nav.helse.Fødselsnummer
 import no.nav.helse.KriterieObserver
+import java.time.LocalDate
+import java.util.*
 
 class Avviksvurdering(
+    private val id: UUID,
+    private val fødselsnummer: Fødselsnummer,
+    private val skjæringstidspunkt: LocalDate,
     private var beregningsgrunnlag: Beregningsgrunnlag,
     private val sammenligningsgrunnlag: Sammenligningsgrunnlag
 ) {
@@ -24,6 +30,16 @@ class Avviksvurdering(
     }
 
     internal companion object {
-        internal fun nyAvviksvurdering(sammenligningsgrunnlag: Sammenligningsgrunnlag) = Avviksvurdering(Beregningsgrunnlag.INGEN, sammenligningsgrunnlag)
+        internal fun nyAvviksvurdering(
+            fødselsnummer: Fødselsnummer,
+            skjæringstidspunkt: LocalDate,
+            sammenligningsgrunnlag: Sammenligningsgrunnlag
+        ) = Avviksvurdering(
+            id = UUID.randomUUID(),
+            fødselsnummer = fødselsnummer,
+            skjæringstidspunkt = skjæringstidspunkt,
+            beregningsgrunnlag = Beregningsgrunnlag.INGEN,
+            sammenligningsgrunnlag = sammenligningsgrunnlag
+        )
     }
 }
