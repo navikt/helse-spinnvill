@@ -1,9 +1,7 @@
 package no.nav.helse.kafka
 
-import no.nav.helse.rapids_rivers.JsonMessage
-import no.nav.helse.rapids_rivers.MessageContext
-import no.nav.helse.rapids_rivers.RapidsConnection
-import no.nav.helse.rapids_rivers.River
+import com.fasterxml.jackson.databind.JsonNode
+import no.nav.helse.rapids_rivers.*
 
 internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, private val messageHandler: MessageHandler) : River.PacketListener {
     init {
@@ -12,9 +10,11 @@ internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, p
                 it.demandAll("@behov", listOf("InntekterForSammenligningsgrunnlag"))
                 it.requireKey("@løsning", "fødselsnummer", "skjæringstidspunkt")
                 it.requireArray("@løsning.InntekterForSammenligningsgrunnlag") {
-                    requireKey("årMåned")
+                    require("årMåned", JsonNode::asYearMonth)
                     requireArray("inntektsliste") {
-                        requireKey("beløp", "orgnummer")
+                        requireKey("beløp")
+                        requireAny("inntektstype", listOf("LOENNSINNTEKT", "NAERINGSINNTEKT", "PENSJON_ELLER_TRYGD", "YTELSE_FRA_OFFENTLIGE"))
+                        interestedIn("orgnummer", "fødselsnummer", "aktørId", "fordel", "beskrivelse")
                     }
                 }
             }

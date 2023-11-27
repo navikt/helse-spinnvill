@@ -1,10 +1,16 @@
 package no.nav.helse.kafka
 
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.helpers.januar
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import java.lang.IllegalStateException
 import java.time.LocalDate
+import java.time.YearMonth
 import kotlin.test.assertEquals
 
 class SammenligningsgrunnlagRiverTest {
@@ -25,6 +31,9 @@ class SammenligningsgrunnlagRiverTest {
         private const val AKTØRID = "1234567891011"
         private const val FØDSELSNUMMER = "12345678910"
         private const val ORGANISASJONSNUMMER = "987654321"
+        private val objectMapper = jacksonObjectMapper()
+            .registerModule(JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     }
 
     init {
@@ -33,7 +42,17 @@ class SammenligningsgrunnlagRiverTest {
 
     @Test
     fun `Leser inn sammenligningsgrunnlag løsning`() {
-        testRapid.sendTestMessage(sammenligningsgrunnlagJson(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, 1.januar))
+        testRapid.sendTestMessage(
+            sammenligningsgrunnlagJsonMed(
+                aktørId = AKTØRID,
+                fødselsnummer = FØDSELSNUMMER,
+                organisasjonsnummer = ORGANISASJONSNUMMER,
+                skjæringstidspunkt = 1.januar,
+                inntekter = inntekterForSammenligningsgrunnlag(
+                    YearMonth.of(2023, 1) to listOf(inntekt())
+                )
+            )
+        )
         assertEquals(1, messageHandler.messages.size)
     }
 
@@ -43,11 +62,158 @@ class SammenligningsgrunnlagRiverTest {
         assertEquals(0, messageHandler.messages.size)
     }
 
-    private fun sammenligningsgrunnlagJson(
+    @Test
+    fun `Leser ikke inn sammenligningsgrunnlag som mangler årMåned`() {
+        testRapid.sendTestMessage(sammenligningsgrunnlagJsonMed(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, 1.januar, inntekterForSammenligningsgrunnlag(null to emptyList())))
+        assertEquals(0, messageHandler.messages.size)
+    }
+
+    @Test
+    fun `Leser ikke inn sammenligningsgrunnlag som mangler inntektsliste`() {
+        testRapid.sendTestMessage(
+            sammenligningsgrunnlagJsonMed(
+                aktørId = AKTØRID,
+                fødselsnummer = FØDSELSNUMMER,
+                organisasjonsnummer = ORGANISASJONSNUMMER,
+                skjæringstidspunkt = 1.januar,
+                inntekter = inntekterForSammenligningsgrunnlag(YearMonth.of(2023, 1) to null)
+            )
+        )
+        assertEquals(0, messageHandler.messages.size)
+    }
+
+    @Test
+    fun `Leser inn sammenligningsgrunnlag uten beskrivelse`() {
+        testRapid.sendTestMessage(
+            sammenligningsgrunnlagJsonMed(
+                aktørId = AKTØRID,
+                fødselsnummer = FØDSELSNUMMER,
+                organisasjonsnummer = ORGANISASJONSNUMMER,
+                skjæringstidspunkt = 1.januar,
+                inntekter = inntekterForSammenligningsgrunnlag(
+                    YearMonth.of(2023, 1) to listOf(inntekt(fordel = null))
+                )
+            )
+        )
+        assertEquals(1, messageHandler.messages.size)
+    }
+
+    @Test
+    fun `Leser ikke inn sammenligningsgrunnlag uten inntektstype`() {
+        testRapid.sendTestMessage(
+            sammenligningsgrunnlagJsonMed(
+                aktørId = AKTØRID,
+                fødselsnummer = FØDSELSNUMMER,
+                organisasjonsnummer = ORGANISASJONSNUMMER,
+                skjæringstidspunkt = 1.januar,
+                inntekterForSammenligningsgrunnlag(
+                    YearMonth.of(2023, 1) to listOf(inntekt(inntektstype = null))
+                )
+            )
+        )
+        assertEquals(0, messageHandler.messages.size)
+    }
+
+    @Test
+    fun `Leser ikke inn sammenligningsgrunnlag uten orgnummer, aktørId eller fødselsnummer`() {
+        assertThrows<IllegalStateException> {
+            testRapid.sendTestMessage(
+                sammenligningsgrunnlagJsonMed(
+                    aktørId = AKTØRID,
+                    fødselsnummer = FØDSELSNUMMER,
+                    organisasjonsnummer = ORGANISASJONSNUMMER,
+                    skjæringstidspunkt = 1.januar,
+                    inntekterForSammenligningsgrunnlag(
+                        YearMonth.of(2023, 1) to listOf(inntekt(arbeidsgiverMangler = true))
+                    )
+                )
+            )
+        }
+        assertEquals(0, messageHandler.messages.size)
+    }
+
+    @Test
+    fun `Leser ikke inn sammenligningsgrunnlag uten beløp`() {
+        testRapid.sendTestMessage(
+            sammenligningsgrunnlagJsonMed(
+                aktørId = AKTØRID,
+                fødselsnummer = FØDSELSNUMMER,
+                organisasjonsnummer = ORGANISASJONSNUMMER,
+                skjæringstidspunkt = 1.januar,
+                inntekterForSammenligningsgrunnlag(
+                    YearMonth.of(2023, 1) to listOf(inntekt(beløp = null))
+                )
+            )
+        )
+        assertEquals(0, messageHandler.messages.size)
+    }
+
+    @Test
+    fun `Leser ikke inn sammenligningsgrunnlag hvis inntektstype ikke er gyldig`() {
+        testRapid.sendTestMessage(
+            sammenligningsgrunnlagJsonMed(
+                aktørId = AKTØRID,
+                fødselsnummer = FØDSELSNUMMER,
+                organisasjonsnummer = ORGANISASJONSNUMMER,
+                skjæringstidspunkt = 1.januar,
+                inntekterForSammenligningsgrunnlag(
+                    YearMonth.of(2023, 1) to listOf(inntekt(inntektstype = "NOE ANNET"))
+                )
+            )
+        )
+        assertEquals(0, messageHandler.messages.size)
+    }
+
+    private fun inntekterForSammenligningsgrunnlag(
+        vararg inntekter: Pair<YearMonth?, List<Inntekt>?>
+    ): List<InntektForSammenligningsgrunnlag> {
+        return inntekter.map { (yearMonth, inntekter) ->
+            InntektForSammenligningsgrunnlag(yearMonth, inntekter)
+        }
+    }
+
+    private fun inntekt(
+        beløp: Double? = 20000.0,
+        inntektstype: String? = "LOENNSINNTEKT",
+        arbeidsgiverMangler: Boolean = false,
+        beskrivelse: String? = "En beskrivelse",
+        fordel: String? = "En fordel"
+    ): Inntekt {
+        return Inntekt(
+            beløp = beløp,
+            inntektstype = inntektstype,
+            orgnummer = if (arbeidsgiverMangler) null else "987654321",
+            fødselsnummer = if (arbeidsgiverMangler) null else "12345678910",
+            aktørId = if (arbeidsgiverMangler) null else "1234567891011",
+            beskrivelse = beskrivelse,
+            fordel = fordel
+        )
+    }
+
+    private data class InntektForSammenligningsgrunnlag(
+        val årMåned: YearMonth?,
+        val inntektsliste: List<Inntekt>?
+    )
+
+    private data class Inntekt(
+        val beløp: Double?,
+        val inntektstype: String?,
+        val orgnummer: String?,
+        val fødselsnummer: String?,
+        val aktørId: String?,
+        val beskrivelse: String?,
+        val fordel: String?
+    )
+    private fun List<InntektForSammenligningsgrunnlag>.toJson(): String {
+        return objectMapper.writeValueAsString(this)
+    }
+
+    private fun sammenligningsgrunnlagJsonMed(
         aktørId: String,
         fødselsnummer: String,
         organisasjonsnummer: String,
-        skjæringstidspunkt: LocalDate
+        skjæringstidspunkt: LocalDate,
+        inntekter: List<InntektForSammenligningsgrunnlag>
     ): String {
         @Language("JSON")
         val json = """
@@ -70,61 +236,13 @@ class SammenligningsgrunnlagRiverTest {
               "@id": "ecfe47f6-2063-451a-b7e1-182490cc3153",
               "@opprettet": "2018-01-01T00:00:00.000",
               "@løsning": {
-                "InntekterForSammenligningsgrunnlag": [
-                  {
-                    "årMåned": "2018-01",
-                    "arbeidsforholdliste": [],
-                    "inntektsliste": [
-                      {
-                        "beløp": 20000.00,
-                        "inntektstype": "LOENNSINNTEKT",
-                        "orgnummer": "$organisasjonsnummer",
-                        "fødselsnummer": null,
-                        "aktørId": null,
-                        "beskrivelse": "skattepliktigDelForsikringer",
-                        "fordel": "naturalytelse"
-                      },
-                      {
-                        "beløp": 50000.00,
-                        "inntektstype": "LOENNSINNTEKT",
-                        "orgnummer": "000000000",
-                        "fødselsnummer": null,
-                        "aktørId": null,
-                        "beskrivelse": "fastloenn",
-                        "fordel": "kontantytelse"
-                      }
-                    ]
-                  },
-                  {
-                    "årMåned": "2018-02",
-                    "arbeidsforholdliste": [],
-                    "inntektsliste": [
-                      {
-                        "beløp": 20000.00,
-                        "inntektstype": "LOENNSINNTEKT",
-                        "orgnummer": "$organisasjonsnummer",
-                        "fødselsnummer": null,
-                        "aktørId": null,
-                        "beskrivelse": "skattepliktigDelForsikringer",
-                        "fordel": "naturalytelse"
-                      },
-                      {
-                        "beløp": 50000.00,
-                        "inntektstype": "LOENNSINNTEKT",
-                        "orgnummer": "000000000",
-                        "fødselsnummer": null,
-                        "aktørId": null,
-                        "beskrivelse": "fastloenn",
-                        "fordel": "kontantytelse"
-                      }
-                    ]
-                  }
-                ]
+                "InntekterForSammenligningsgrunnlag": ${inntekter.toJson()}
               }
             }
         """.trimIndent()
         return json
     }
+
     private fun sammenligningsgrunnlagJsonUtenLøsning(
         aktørId: String,
         fødselsnummer: String,
