@@ -4,7 +4,7 @@ package no.nav.helse
 value class Fødselsnummer(val value: String)
 
 @JvmInline
-value class Organisasjonsnummer(val value: String)
+value class Arbeidsgiverreferanse(val value: String)
 
 @JvmInline
 value class InntektPerMåned(val value: Double)

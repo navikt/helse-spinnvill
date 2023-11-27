@@ -1,9 +1,9 @@
 package no.nav.helse.avviksvurdering
 
 import no.nav.helse.OmregnetÅrsinntekt
-import no.nav.helse.Organisasjonsnummer
+import no.nav.helse.Arbeidsgiverreferanse
 
-class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter: Map<Organisasjonsnummer, OmregnetÅrsinntekt>) {
+class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>) {
 
     private val totalOmregnetÅrsinntekt = omregnedeÅrsinntekter.values.sumOf { it.value }
 
@@ -29,7 +29,7 @@ class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter:
 
     companion object {
         val INGEN = Beregningsgrunnlag(emptyMap())
-        fun opprett(omregnedeÅrsinntekter: Map<Organisasjonsnummer, OmregnetÅrsinntekt>) : Beregningsgrunnlag {
+        fun opprett(omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>) : Beregningsgrunnlag {
             require(omregnedeÅrsinntekter.isNotEmpty()) { "Omregmede årsinntekter kan ikke være en tom liste"}
             return Beregningsgrunnlag(omregnedeÅrsinntekter)
         }

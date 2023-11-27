@@ -49,14 +49,14 @@ internal class MediatorTest {
     fun `sender ikke behov for sammenligningsgrunnlag når det finnes en ekisterende avviksvurdering`() {
         val fødselsnummer = Fødselsnummer("12345678910")
         val skjæringstidspunkt = 1.januar
-        val organisasjonsnummer = Organisasjonsnummer("987654321")
+        val arbeidsgiverreferanse = Arbeidsgiverreferanse("987654321")
 
         val avviksvurderingDto = AvviksvurderingDto(
             id = UUID.randomUUID(),
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = skjæringstidspunkt,
             sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
-                mapOf(organisasjonsnummer to listOf(AvviksvurderingDto.MånedligInntektDto(
+                mapOf(arbeidsgiverreferanse to listOf(AvviksvurderingDto.MånedligInntektDto(
                     inntekt = InntektPerMåned(value = 20000.0),
                     måned = YearMonth.from(skjæringstidspunkt),
                     fordel = Fordel("En fordel"),
@@ -65,13 +65,13 @@ internal class MediatorTest {
                 )))
             ),
             beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
-                mapOf(organisasjonsnummer to OmregnetÅrsinntekt(400000.0))
+                mapOf(arbeidsgiverreferanse to OmregnetÅrsinntekt(400000.0))
             )
         )
 
         database.lagreAvviksvurdering(avviksvurderingDto)
 
-        testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", fødselsnummer.value, organisasjonsnummer.value, skjæringstidspunkt))
+        testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", fødselsnummer.value, arbeidsgiverreferanse.value, skjæringstidspunkt))
 
         assertEquals(0, testRapid.inspektør.size)
     }
@@ -79,10 +79,10 @@ internal class MediatorTest {
     @Test
     fun `motta sammenligningsgrunnlag`() {
         val fødselsnummer = Fødselsnummer("12345678910")
-        val organisasjonsnummer = Organisasjonsnummer("987654321")
+        val arbeidsgiverreferanse = Arbeidsgiverreferanse("987654321")
         val skjæringstidspunkt = 1.januar
 
-        testRapid.sendTestMessage(sammenligningsgrunnlagJson("1234567891011", fødselsnummer.value, organisasjonsnummer.value, skjæringstidspunkt))
+        testRapid.sendTestMessage(sammenligningsgrunnlagJson("1234567891011", fødselsnummer.value, arbeidsgiverreferanse.value, skjæringstidspunkt))
 
         assertNotNull(database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt))
     }

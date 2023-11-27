@@ -3,7 +3,7 @@ package no.nav.helse.avviksvurdering
 import no.nav.helse.InntektPerMåned
 import no.nav.helse.KriterieObserver
 import no.nav.helse.OmregnetÅrsinntekt
-import no.nav.helse.Organisasjonsnummer
+import no.nav.helse.Arbeidsgiverreferanse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.YearMonth
@@ -48,12 +48,12 @@ internal class AvviksvurderingTest {
 
     private fun sammenligningsgrunnlag(inntekt: Double) = Sammenligningsgrunnlag(
         listOf(
-            ArbeidsgiverInntekt(Organisasjonsnummer("a1"), List(12) { YearMonth.of(2018, it + 1) to InntektPerMåned(inntekt) }.toMap())
+            ArbeidsgiverInntekt(Arbeidsgiverreferanse("a1"), List(12) { YearMonth.of(2018, it + 1) to InntektPerMåned(inntekt) }.toMap())
         )
     )
 
     private fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) =
-        Beregningsgrunnlag.opprett(arbeidsgivere.toMap().entries.associate { Organisasjonsnummer(it.key) to OmregnetÅrsinntekt(it.value) })
+        Beregningsgrunnlag.opprett(arbeidsgivere.toMap().entries.associate { Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value) })
 
     private val observer = object : KriterieObserver {
 

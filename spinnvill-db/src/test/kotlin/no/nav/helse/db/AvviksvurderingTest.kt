@@ -88,14 +88,14 @@ internal class AvviksvurderingTest {
 
     private fun beregningsgrunnlag(omregnetÅrsinntekt: Double = 20000.0): AvviksvurderingDto.BeregningsgrunnlagDto {
         return AvviksvurderingDto.BeregningsgrunnlagDto(
-            mapOf(Organisasjonsnummer("123456789") to OmregnetÅrsinntekt(omregnetÅrsinntekt))
+            mapOf(Arbeidsgiverreferanse("123456789") to OmregnetÅrsinntekt(omregnetÅrsinntekt))
         )
     }
 
     private fun sammenligningsgrunnlag(inntektPerMåned: Double = 200000.0): AvviksvurderingDto.SammenligningsgrunnlagDto {
         return AvviksvurderingDto.SammenligningsgrunnlagDto(
             mapOf(
-                Organisasjonsnummer("123456789") to listOf(
+                Arbeidsgiverreferanse("123456789") to listOf(
                     AvviksvurderingDto.MånedligInntektDto(
                         InntektPerMåned(inntektPerMåned),
                         YearMonth.of(2020, 1),

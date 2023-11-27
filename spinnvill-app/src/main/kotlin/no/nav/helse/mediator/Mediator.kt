@@ -4,7 +4,7 @@ import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.InntektPerMåned
 import no.nav.helse.OmregnetÅrsinntekt
-import no.nav.helse.Organisasjonsnummer
+import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.avviksvurdering.*
 import no.nav.helse.db.Database
 import no.nav.helse.dto.AvviksvurderingDto
@@ -43,7 +43,7 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
         )
         val beregningsgrunnlag = Beregningsgrunnlag.opprett(
             utkastTilVedtakMessage.beregningsgrunnlag.entries.associate {
-                Organisasjonsnummer(it.key) to OmregnetÅrsinntekt(it.value)
+                Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value)
             }
         )
         håndter(
@@ -104,7 +104,7 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
             sammenligningsgrunnlag = Sammenligningsgrunnlag(
                 this.sammenligningsgrunnlag.innrapporterteInntekter.map { (organisasjonsnummer, inntekter) ->
                     ArbeidsgiverInntekt(
-                        organisasjonsummer = organisasjonsnummer,
+                        arbeidsgiverreferanse = organisasjonsnummer,
                         inntekter = inntekter.associate { it.måned to it.inntekt }
                     )
                 }
@@ -115,7 +115,7 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
     private fun Map<String, List<SammenligningsgrunnlagMessage.Inntekt>>.dto(): AvviksvurderingDto.SammenligningsgrunnlagDto =
         AvviksvurderingDto.SammenligningsgrunnlagDto(
             this.entries.associate { (organisasjonsnummer, inntekter) ->
-                Organisasjonsnummer(organisasjonsnummer) to inntekter.map {
+                Arbeidsgiverreferanse(organisasjonsnummer) to inntekter.map {
                     AvviksvurderingDto.MånedligInntektDto(InntektPerMåned(it.beløp), it.årMåned, it.fordel, it.beskrivelse, it.inntektstype.tilDto())
                 }
             }

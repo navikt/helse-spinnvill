@@ -75,7 +75,7 @@ erDiagram
     }
   
     BEREGNINGSGRUNNLAG {
-      string organisasjonsnummer
+      string arbeidsgiverreferanse
       float aarsinntekt
     }
 ```

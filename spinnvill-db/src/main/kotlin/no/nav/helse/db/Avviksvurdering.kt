@@ -183,7 +183,7 @@ internal class Avviksvurdering {
             sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
                 innrapporterteInntekter = this.sammenligningsgrunnlag
                     .associate { ettSammenligningsgrunnlag ->
-                        Organisasjonsnummer(ettSammenligningsgrunnlag.arbeidsgiverreferanse) to ettSammenligningsgrunnlag.inntekter
+                        Arbeidsgiverreferanse(ettSammenligningsgrunnlag.arbeidsgiverreferanse) to ettSammenligningsgrunnlag.inntekter
                             .map { enMånedsinntekt ->
                                 AvviksvurderingDto.MånedligInntektDto(
                                     inntekt = InntektPerMåned(enMånedsinntekt.inntekt),
@@ -201,7 +201,7 @@ internal class Avviksvurdering {
                     AvviksvurderingDto.BeregningsgrunnlagDto(
                         omregnedeÅrsinntekter = ettBeregningsgrunnlag
                             .associate { beregningsgrunnlag ->
-                                Organisasjonsnummer(beregningsgrunnlag.organisasjonsnummer) to OmregnetÅrsinntekt(beregningsgrunnlag.inntekt)
+                                Arbeidsgiverreferanse(beregningsgrunnlag.organisasjonsnummer) to OmregnetÅrsinntekt(beregningsgrunnlag.inntekt)
                             }
                     )
                 }

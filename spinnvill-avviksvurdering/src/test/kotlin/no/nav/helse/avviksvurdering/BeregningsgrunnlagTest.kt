@@ -1,7 +1,7 @@
 package no.nav.helse.avviksvurdering
 
 import no.nav.helse.OmregnetÅrsinntekt
-import no.nav.helse.Organisasjonsnummer
+import no.nav.helse.Arbeidsgiverreferanse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
@@ -41,11 +41,11 @@ class BeregningsgrunnlagTest {
 
     @Test
     fun `kan bare opprette gyldige beregningsgrunnlag`() {
-        val omregnedeÅrsinntekter = emptyMap<Organisasjonsnummer, OmregnetÅrsinntekt>()
+        val omregnedeÅrsinntekter = emptyMap<Arbeidsgiverreferanse, OmregnetÅrsinntekt>()
         assertThrows<IllegalArgumentException> { Beregningsgrunnlag.opprett(omregnedeÅrsinntekter) }
     }
 
     private fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) = Beregningsgrunnlag.opprett(
-        arbeidsgivere.toMap().entries.associate { Organisasjonsnummer(it.key) to OmregnetÅrsinntekt(it.value) }
+        arbeidsgivere.toMap().entries.associate { Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value) }
     )
 }

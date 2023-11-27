@@ -13,7 +13,7 @@ data class AvviksvurderingDto(
     val beregningsgrunnlag: BeregningsgrunnlagDto?
 ) {
     data class SammenligningsgrunnlagDto(
-        val innrapporterteInntekter: Map<Organisasjonsnummer, List<MånedligInntektDto>>
+        val innrapporterteInntekter: Map<Arbeidsgiverreferanse, List<MånedligInntektDto>>
     )
 
     data class MånedligInntektDto(
@@ -25,7 +25,7 @@ data class AvviksvurderingDto(
     )
 
     data class BeregningsgrunnlagDto(
-        val omregnedeÅrsinntekter: Map<Organisasjonsnummer, OmregnetÅrsinntekt>
+        val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
     )
 
     enum class InntektstypeDto {
