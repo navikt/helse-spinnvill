@@ -29,6 +29,12 @@ class Avviksvurdering(
         }
     }
 
+    fun accept(visitor: Visitor) {
+        visitor.visitAvviksvurdering(id, fødselsnummer, skjæringstidspunkt)
+        beregningsgrunnlag.accept(visitor)
+        sammenligningsgrunnlag.accept(visitor)
+    }
+
     internal companion object {
         internal fun nyAvviksvurdering(
             fødselsnummer: Fødselsnummer,

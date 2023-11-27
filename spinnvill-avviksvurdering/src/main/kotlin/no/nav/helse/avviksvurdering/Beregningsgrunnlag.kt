@@ -27,6 +27,10 @@ class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter:
         return omregnedeÅrsinntekter.hashCode()
     }
 
+    fun accept(visitor: Visitor) {
+        visitor.visitBeregningsgrunnlag(omregnedeÅrsinntekter)
+    }
+
     companion object {
         val INGEN = Beregningsgrunnlag(emptyMap())
         fun opprett(omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>) : Beregningsgrunnlag {

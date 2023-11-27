@@ -9,6 +9,10 @@ class Sammenligningsgrunnlag(private val inntekter: List<ArbeidsgiverInntekt>) {
         return beregningsgrunnlag.beregnAvvik(sammenligningsgrunnlag)
     }
 
+    fun accept(visitor: Visitor) {
+        inntekter.forEach { it.accept(visitor) }
+    }
+
     internal companion object {
         internal val IKKE_INNHENTET = Sammenligningsgrunnlag(emptyList())
     }

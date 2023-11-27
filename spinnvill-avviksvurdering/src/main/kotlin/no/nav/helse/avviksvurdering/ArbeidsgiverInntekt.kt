@@ -34,4 +34,9 @@ class ArbeidsgiverInntekt(
         PENSJON_ELLER_TRYGD,
         YTELSE_FRA_OFFENTLIGE,
     }
+
+    internal fun accept(visitor: Visitor) {
+        visitor.visitArbeidsgiverInntekt(arbeidsgiverreferanse, inntekter)
+    }
+
 }

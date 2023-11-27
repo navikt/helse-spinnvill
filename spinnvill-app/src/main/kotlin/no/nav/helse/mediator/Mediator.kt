@@ -17,11 +17,6 @@ import java.util.*
 
 class Mediator(private val rapidsConnection: RapidsConnection, private val database: Database) : MessageHandler {
 
-    private companion object {
-        private val logg = LoggerFactory.getLogger(this::class.java)
-        private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
-    }
-
     init {
         UtkastTilVedtakRiver(rapidsConnection, this)
         SammenligningsgrunnlagRiver(rapidsConnection, this)
@@ -94,59 +89,65 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
         )
     }
 
-    private fun AvviksvurderingDto.tilDomene(): Avviksvurdering {
-        val beregningsgrunnlag = beregningsgrunnlag?.let {
-            Beregningsgrunnlag.opprett(it.omregnedeÅrsinntekter)
-        } ?: Beregningsgrunnlag.INGEN
+    internal companion object {
+        private val logg = LoggerFactory.getLogger(this::class.java)
+        private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
 
-        return Avviksvurdering(
-            id = id,
-            fødselsnummer = fødselsnummer,
-            skjæringstidspunkt = skjæringstidspunkt,
-            beregningsgrunnlag = beregningsgrunnlag,
-            sammenligningsgrunnlag = Sammenligningsgrunnlag(
-                sammenligningsgrunnlag.innrapporterteInntekter.map { (organisasjonsnummer, inntekter) ->
-                    ArbeidsgiverInntekt(
-                        arbeidsgiverreferanse = organisasjonsnummer,
-                        inntekter = inntekter.map {
-                            ArbeidsgiverInntekt.MånedligInntekt(
-                                inntekt = it.inntekt,
-                                måned = it.måned,
-                                fordel = it.fordel,
-                                beskrivelse = it.beskrivelse,
-                                inntektstype = it.inntektstype.tilDomene()
-                            )
-                        }
-                    )
+
+        internal fun AvviksvurderingDto.tilDomene(): Avviksvurdering {
+            val beregningsgrunnlag = beregningsgrunnlag?.let {
+                Beregningsgrunnlag.opprett(it.omregnedeÅrsinntekter)
+            } ?: Beregningsgrunnlag.INGEN
+
+            return Avviksvurdering(
+                id = id,
+                fødselsnummer = fødselsnummer,
+                skjæringstidspunkt = skjæringstidspunkt,
+                beregningsgrunnlag = beregningsgrunnlag,
+                sammenligningsgrunnlag = Sammenligningsgrunnlag(
+                    sammenligningsgrunnlag.innrapporterteInntekter.map { (organisasjonsnummer, inntekter) ->
+                        ArbeidsgiverInntekt(
+                            arbeidsgiverreferanse = organisasjonsnummer,
+                            inntekter = inntekter.map {
+                                ArbeidsgiverInntekt.MånedligInntekt(
+                                    inntekt = it.inntekt,
+                                    måned = it.måned,
+                                    fordel = it.fordel,
+                                    beskrivelse = it.beskrivelse,
+                                    inntektstype = it.inntektstype.tilDomene()
+                                )
+                            }
+                        )
+                    }
+                )
+            )
+        }
+
+        private fun Map<String, List<SammenligningsgrunnlagMessage.Inntekt>>.dto(): AvviksvurderingDto.SammenligningsgrunnlagDto =
+            AvviksvurderingDto.SammenligningsgrunnlagDto(
+                this.entries.associate { (organisasjonsnummer, inntekter) ->
+                    Arbeidsgiverreferanse(organisasjonsnummer) to inntekter.map {
+                        AvviksvurderingDto.MånedligInntektDto(InntektPerMåned(it.beløp), it.årMåned, it.fordel, it.beskrivelse, it.inntektstype.tilDto())
+                    }
                 }
             )
-        )
-    }
 
-    private fun Map<String, List<SammenligningsgrunnlagMessage.Inntekt>>.dto(): AvviksvurderingDto.SammenligningsgrunnlagDto =
-        AvviksvurderingDto.SammenligningsgrunnlagDto(
-            this.entries.associate { (organisasjonsnummer, inntekter) ->
-                Arbeidsgiverreferanse(organisasjonsnummer) to inntekter.map {
-                    AvviksvurderingDto.MånedligInntektDto(InntektPerMåned(it.beløp), it.årMåned, it.fordel, it.beskrivelse, it.inntektstype.tilDto())
-                }
+        private fun SammenligningsgrunnlagMessage.Inntektstype.tilDto(): AvviksvurderingDto.InntektstypeDto {
+            return when (this) {
+                SammenligningsgrunnlagMessage.Inntektstype.LØNNSINNTEKT -> AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+                SammenligningsgrunnlagMessage.Inntektstype.NÆRINGSINNTEKT -> AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT
+                SammenligningsgrunnlagMessage.Inntektstype.PENSJON_ELLER_TRYGD -> AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD
+                SammenligningsgrunnlagMessage.Inntektstype.YTELSE_FRA_OFFENTLIGE -> AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE
             }
-        )
-
-    private fun SammenligningsgrunnlagMessage.Inntektstype.tilDto(): AvviksvurderingDto.InntektstypeDto {
-        return when (this) {
-            SammenligningsgrunnlagMessage.Inntektstype.LØNNSINNTEKT -> AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
-            SammenligningsgrunnlagMessage.Inntektstype.NÆRINGSINNTEKT -> AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT
-            SammenligningsgrunnlagMessage.Inntektstype.PENSJON_ELLER_TRYGD -> AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD
-            SammenligningsgrunnlagMessage.Inntektstype.YTELSE_FRA_OFFENTLIGE -> AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE
         }
-    }
 
-    private fun AvviksvurderingDto.InntektstypeDto.tilDomene(): ArbeidsgiverInntekt.Inntektstype {
-        return when (this) {
-            AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
-            AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.NÆRINGSINNTEKT
-            AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD -> ArbeidsgiverInntekt.Inntektstype.PENSJON_ELLER_TRYGD
-            AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE -> ArbeidsgiverInntekt.Inntektstype.YTELSE_FRA_OFFENTLIGE
+        private fun AvviksvurderingDto.InntektstypeDto.tilDomene(): ArbeidsgiverInntekt.Inntektstype {
+            return when (this) {
+                AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.NÆRINGSINNTEKT
+                AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD -> ArbeidsgiverInntekt.Inntektstype.PENSJON_ELLER_TRYGD
+                AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE -> ArbeidsgiverInntekt.Inntektstype.YTELSE_FRA_OFFENTLIGE
+            }
         }
     }
 }
