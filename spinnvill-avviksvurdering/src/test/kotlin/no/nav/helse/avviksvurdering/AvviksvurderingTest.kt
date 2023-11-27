@@ -46,7 +46,15 @@ internal class AvviksvurderingTest {
 
     private fun sammenligningsgrunnlag(inntekt: Double) = Sammenligningsgrunnlag(
         listOf(
-            ArbeidsgiverInntekt(Arbeidsgiverreferanse("a1"), List(12) { YearMonth.of(2018, it + 1) to InntektPerMåned(inntekt) }.toMap())
+            ArbeidsgiverInntekt(Arbeidsgiverreferanse("a1"), List(12) {
+                ArbeidsgiverInntekt.MånedligInntekt(
+                    inntekt = InntektPerMåned(inntekt),
+                    måned = YearMonth.of(2018, it + 1),
+                    fordel = Fordel("En fordel"),
+                    beskrivelse = Beskrivelse("En beskrivelse"),
+                    inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                )
+            })
         )
     )
 

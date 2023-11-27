@@ -1,7 +1,9 @@
 package no.nav.helse.avviksvurdering
 
-import no.nav.helse.InntektPerMåned
 import no.nav.helse.Arbeidsgiverreferanse
+import no.nav.helse.Beskrivelse
+import no.nav.helse.Fordel
+import no.nav.helse.InntektPerMåned
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.Companion.sum
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -30,5 +32,13 @@ class ArbeidsgiverInntektTest {
         assertEquals(360003.60, arbeidsgiverInntekter.sum().rundTilToDesimaler())
     }
 
-    private fun inntekter(beløp: Double) = List(12) { YearMonth.of(2018, it + 1) to InntektPerMåned(beløp) }.toMap()
+    private fun inntekter(beløp: Double): List<ArbeidsgiverInntekt.MånedligInntekt> = List(12) {
+        ArbeidsgiverInntekt.MånedligInntekt(
+            inntekt = InntektPerMåned(beløp),
+            måned = YearMonth.of(2018, it + 1),
+            fordel = Fordel("En fordel"),
+            beskrivelse = Beskrivelse("En beskrivelse"),
+            inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+        )
+    }
 }

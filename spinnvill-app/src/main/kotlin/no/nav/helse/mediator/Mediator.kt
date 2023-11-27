@@ -108,7 +108,15 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
                 sammenligningsgrunnlag.innrapporterteInntekter.map { (organisasjonsnummer, inntekter) ->
                     ArbeidsgiverInntekt(
                         arbeidsgiverreferanse = organisasjonsnummer,
-                        inntekter = inntekter.associate { it.måned to it.inntekt }
+                        inntekter = inntekter.map {
+                            ArbeidsgiverInntekt.MånedligInntekt(
+                                inntekt = it.inntekt,
+                                måned = it.måned,
+                                fordel = it.fordel,
+                                beskrivelse = it.beskrivelse,
+                                inntektstype = it.inntektstype.tilDomene()
+                            )
+                        }
                     )
                 }
             )
@@ -130,6 +138,15 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
             SammenligningsgrunnlagMessage.Inntektstype.NÆRINGSINNTEKT -> AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT
             SammenligningsgrunnlagMessage.Inntektstype.PENSJON_ELLER_TRYGD -> AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD
             SammenligningsgrunnlagMessage.Inntektstype.YTELSE_FRA_OFFENTLIGE -> AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE
+        }
+    }
+
+    private fun AvviksvurderingDto.InntektstypeDto.tilDomene(): ArbeidsgiverInntekt.Inntektstype {
+        return when (this) {
+            AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+            AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.NÆRINGSINNTEKT
+            AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD -> ArbeidsgiverInntekt.Inntektstype.PENSJON_ELLER_TRYGD
+            AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE -> ArbeidsgiverInntekt.Inntektstype.YTELSE_FRA_OFFENTLIGE
         }
     }
 }
