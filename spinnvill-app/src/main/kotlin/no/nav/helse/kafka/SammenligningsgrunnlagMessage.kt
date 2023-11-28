@@ -11,7 +11,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 class SammenligningsgrunnlagMessage(packet: JsonMessage) {
-    val skjæringstidspunkt: LocalDate = packet["skjæringstidspunkt"].asLocalDate()
+    val skjæringstidspunkt: LocalDate = packet["InntekterForSammenligningsgrunnlag.skjæringstidspunkt"].asLocalDate()
     val fødselsnummer: String = packet["fødselsnummer"].asText()
     val sammenligningsgrunnlag: Map<String, List<Inntekt>> = mapSammenligningsgrunnlag(packet["@løsning.InntekterForSammenligningsgrunnlag"])
 

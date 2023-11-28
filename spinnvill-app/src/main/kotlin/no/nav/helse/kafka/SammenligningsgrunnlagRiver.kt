@@ -8,7 +8,7 @@ internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, p
         River(rapidsConnection).apply {
             validate {
                 it.demandAll("@behov", listOf("InntekterForSammenligningsgrunnlag"))
-                it.requireKey("@løsning", "fødselsnummer", "skjæringstidspunkt")
+                it.requireKey("@løsning", "fødselsnummer", "InntekterForSammenligningsgrunnlag.skjæringstidspunkt")
                 it.requireArray("@løsning.InntekterForSammenligningsgrunnlag") {
                     require("årMåned", JsonNode::asYearMonth)
                     requireArray("inntektsliste") {

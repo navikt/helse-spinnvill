@@ -244,7 +244,7 @@ internal class MediatorTest {
                   "ARBEIDSGIVERUTBETALING"
                 ],
                 "kanAvvises": true,
-                "omregnedeÅrsinntekter":  ${beregningsgrunnlagDto.toJson()} 
+                "omregnedeÅrsinntekter": ${beregningsgrunnlagDto.toJson()} 
               },
               "@id": "ba376523-62b1-49d7-8647-f902c739b634",
               "@opprettet": "2018-01-01T00:00:00.000"
@@ -275,9 +275,9 @@ internal class MediatorTest {
               "aktørId": "$aktørId",
               "fødselsnummer": "$fødselsnummer",
               "organisasjonsnummer": "$organisasjonsnummer",
-              "skjæringstidspunkt": "$skjæringstidspunkt",
               "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
               "InntekterForSammenligningsgrunnlag": {
+                "skjæringstidspunkt": "$skjæringstidspunkt",
                 "beregningStart": "2018-01",
                 "beregningSlutt": "2018-02"
               },

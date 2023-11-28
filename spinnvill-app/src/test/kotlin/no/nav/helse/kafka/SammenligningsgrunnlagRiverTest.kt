@@ -227,9 +227,9 @@ class SammenligningsgrunnlagRiverTest {
               "aktørId": "$aktørId",
               "fødselsnummer": "$fødselsnummer",
               "organisasjonsnummer": "$organisasjonsnummer",
-              "skjæringstidspunkt": "$skjæringstidspunkt",
               "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
               "InntekterForSammenligningsgrunnlag": {
+                "skjæringstidspunkt": "$skjæringstidspunkt",
                 "beregningStart": "2018-01",
                 "beregningSlutt": "2018-02"
               },
@@ -261,9 +261,9 @@ class SammenligningsgrunnlagRiverTest {
               "aktørId": "$aktørId",
               "fødselsnummer": "$fødselsnummer",
               "organisasjonsnummer": "$organisasjonsnummer",
-              "skjæringstidspunkt": "$skjæringstidspunkt",
               "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
               "InntekterForSammenligningsgrunnlag": {
+                "skjæringstidspunkt": "$skjæringstidspunkt",
                 "beregningStart": "2018-01",
                 "beregningSlutt": "2018-02"
               },
