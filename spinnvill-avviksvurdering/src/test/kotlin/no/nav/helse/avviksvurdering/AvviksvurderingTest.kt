@@ -3,6 +3,7 @@ package no.nav.helse.avviksvurdering
 import no.nav.helse.*
 import no.nav.helse.helpers.januar
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.YearMonth
 
@@ -41,6 +42,12 @@ internal class AvviksvurderingTest {
         val (harAkseptabeltAvvik, avviksprosent) = observer.avviksvurderinger.single()
         assertEquals(false, harAkseptabeltAvvik)
         assertEquals(40.0, avviksprosent)
+    }
+
+    @Disabled
+    @Test
+    fun `sender ut varsel ved mer enn 25pp avvik`() {
+
     }
 
 
