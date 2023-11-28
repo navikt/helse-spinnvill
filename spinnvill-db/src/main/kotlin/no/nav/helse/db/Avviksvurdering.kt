@@ -1,15 +1,12 @@
 package no.nav.helse.db
 
 import no.nav.helse.*
-import no.nav.helse.dto.*
+import no.nav.helse.dto.AvviksvurderingDto
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -19,7 +16,7 @@ import java.time.YearMonth
 import java.util.*
 
 internal class Avviksvurdering {
-    private companion object {
+    internal companion object {
         private object Avviksvurderinger : UUIDTable(name = "avviksvurdering") {
             val løpenummer: Column<Long> = long("løpenummer").autoIncrement()
             val fødselsnummer: Column<String> = varchar("fødselsnummer", 11)
@@ -38,7 +35,7 @@ internal class Avviksvurdering {
             var opprettet by Avviksvurderinger.opprettet
         }
 
-        private object Beregningsgrunnlag : UUIDTable(name = "beregningsgrunnlag") {
+        internal object Beregningsgrunnlag : UUIDTable(name = "beregningsgrunnlag") {
             val avviksvurdering = optReference("avviksvurdering_ref", Avviksvurderinger)
 
             val organisasjonsnummer: Column<String> = varchar("organisasjonsnummer", 9)
@@ -54,7 +51,7 @@ internal class Avviksvurdering {
             var inntekt by Beregningsgrunnlag.inntekt
         }
 
-        private object Sammenligningsgrunnlag : UUIDTable(name = "sammenligningsgrunnlag") {
+        internal object Sammenligningsgrunnlag : UUIDTable(name = "sammenligningsgrunnlag") {
             val avviksvurdering = reference("avviksvurdering_ref", Avviksvurderinger)
 
             val arbeidsgiverreferanse: Column<String> = varchar("arbeidsgiverreferanse", 16)
@@ -95,6 +92,7 @@ internal class Avviksvurdering {
             internal val yearMonth: YearMonth get() = YearMonth.of(år, måned)
         }
     }
+
     fun findLatest(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
         return transaction {
             EnAvviksvurdering.find {
@@ -165,11 +163,13 @@ internal class Avviksvurdering {
     private fun Transaction.update(id: UUID, beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto): AvviksvurderingDto = this.run {
         val enAvviksvurdering =
             requireNotNull(EnAvviksvurdering.findById(id)) { "Forventer å finne avviksvurdering med id=${id}" }
-        beregningsgrunnlag.omregnedeÅrsinntekter.forEach { (organisasjonsnummer, inntekt) ->
-            EttBeregningsgrunnlag.new {
-                this.organisasjonsnummer = organisasjonsnummer.value
-                this.inntekt = inntekt.value
-                this.avviksvurdering = enAvviksvurdering
+        beregningsgrunnlag.omregnedeÅrsinntekter.forEach { (arbeidsgiverreferanse, inntekt) ->
+            Beregningsgrunnlag.upsert(
+                Beregningsgrunnlag.avviksvurdering, Beregningsgrunnlag.organisasjonsnummer, Beregningsgrunnlag.inntekt
+            ) {
+                it[organisasjonsnummer] = arbeidsgiverreferanse.value
+                it[this.inntekt] = inntekt.value
+                it[avviksvurdering] = enAvviksvurdering.id
             }
         }
         enAvviksvurdering.dto()

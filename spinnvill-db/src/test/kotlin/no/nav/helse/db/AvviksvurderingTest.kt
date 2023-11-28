@@ -1,8 +1,9 @@
 package no.nav.helse.db
 
 import no.nav.helse.*
-import no.nav.helse.dto.*
+import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.helpers.januar
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.YearMonth
@@ -42,7 +43,7 @@ internal class AvviksvurderingTest {
     fun `Oppdater eksisterende avviksvurdering`() {
         val fødselsnummer = Fødselsnummer("12345678910")
         val skjæringstidspunkt = 1.januar
-        val sammenligningsgrunnlag= sammenligningsgrunnlag()
+        val sammenligningsgrunnlag = sammenligningsgrunnlag()
         val beregningsgrunnlag = beregningsgrunnlag()
 
         val id = UUID.randomUUID()
@@ -84,6 +85,42 @@ internal class AvviksvurderingTest {
         assertNotNull(avviksvurdering)
         assertEquals(expectedLatest.id, avviksvurdering.id)
         assertNull(avviksvurdering.beregningsgrunnlag)
+    }
+
+    @Test
+    fun `oppretter ikke nytt beregningsgrunnlag om det samme finnes fra før`() {
+        val avviksvurderingId = UUID.randomUUID()
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+        val beregningsgrunnlag = beregningsgrunnlag(200000.0)
+        val sammenligningsgrunnlag = sammenligningsgrunnlag(20000.0)
+
+        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, beregningsgrunnlag)
+        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, beregningsgrunnlag)
+
+        val antallBeregningsgrunnlag = transaction {
+            Avviksvurdering.Companion.EttBeregningsgrunnlag.find { Avviksvurdering.Companion.Beregningsgrunnlag.avviksvurdering eq avviksvurderingId}.count()
+        }
+
+        assertEquals(1, antallBeregningsgrunnlag)
+    }
+
+    @Test
+    fun `oppretter ikke nytt sammenligningsgrunnlag om det samme finnes fra før`() {
+        val avviksvurderingId = UUID.randomUUID()
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+        val beregningsgrunnlag = beregningsgrunnlag(200000.0)
+        val sammenligningsgrunnlag = sammenligningsgrunnlag(20000.0)
+
+        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, beregningsgrunnlag)
+        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, beregningsgrunnlag)
+
+        val antallSammenligningsgrunnlag = transaction {
+            Avviksvurdering.Companion.EttSammenligningsgrunnlag.find { Avviksvurdering.Companion.Sammenligningsgrunnlag.avviksvurdering eq avviksvurderingId}.count()
+        }
+
+        assertEquals(1, antallSammenligningsgrunnlag)
     }
 
     private fun beregningsgrunnlag(omregnetÅrsinntekt: Double = 20000.0): AvviksvurderingDto.BeregningsgrunnlagDto {

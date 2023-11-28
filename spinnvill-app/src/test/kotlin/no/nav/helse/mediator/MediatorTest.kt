@@ -1,5 +1,8 @@
 package no.nav.helse.mediator
 
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.*
 import no.nav.helse.db.TestDatabase
 import no.nav.helse.dto.AvviksvurderingDto
@@ -9,7 +12,6 @@ import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.YearMonth
@@ -124,6 +126,40 @@ internal class MediatorTest {
     }
 
     @Test
+    fun `gjør ikke ny avviksvurdering om beregningsgrunnlaget er likt som for forrige avviksvurdering`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+        val arbeidsgiverreferanse = Arbeidsgiverreferanse("987654321")
+
+        val beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
+            mapOf(arbeidsgiverreferanse to OmregnetÅrsinntekt(300000.0))
+        )
+        val avviksvurderingDto = AvviksvurderingDto(
+            id = UUID.randomUUID(),
+            fødselsnummer = fødselsnummer,
+            skjæringstidspunkt = skjæringstidspunkt,
+            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
+                mapOf(arbeidsgiverreferanse to listOf(AvviksvurderingDto.MånedligInntektDto(
+                    inntekt = InntektPerMåned(value = 20000.0),
+                    måned = YearMonth.from(skjæringstidspunkt),
+                    fordel = Fordel("En fordel"),
+                    beskrivelse = Beskrivelse("En beskrivelse"),
+                    inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+                )))
+            ),
+            beregningsgrunnlag = beregningsgrunnlag
+        )
+
+        val avviksvurdering = database.lagreAvviksvurdering(avviksvurderingDto)
+
+        testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", fødselsnummer.value, arbeidsgiverreferanse.value, skjæringstidspunkt, beregningsgrunnlag))
+
+        val sisteAvviksvurdering = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
+
+        assertEquals(avviksvurdering, sisteAvviksvurdering)
+    }
+
+    @Test
     fun `gjør ny avviksvurdering om beregningsgrunnlaget er forskjellig fra forrige avviksvurdering`() {
         val fødselsnummer = Fødselsnummer("12345678910")
         val skjæringstidspunkt = 1.januar
@@ -161,11 +197,23 @@ internal class MediatorTest {
         assertEquals(avviksvurdering.sammenligningsgrunnlag, sisteAvviksvurdering.sammenligningsgrunnlag)
     }
 
+    private companion object {
+        private val objectMapper = jacksonObjectMapper()
+            .registerModule(JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+    }
+
     private fun utkastTilVedtakJson(
         aktørId: String,
         fødselsnummer: String,
         organisasjonsnummer: String,
-        skjæringstidspunkt: LocalDate
+        skjæringstidspunkt: LocalDate,
+        beregningsgrunnlagDto: AvviksvurderingDto.BeregningsgrunnlagDto = AvviksvurderingDto.BeregningsgrunnlagDto(
+            mapOf(
+                Arbeidsgiverreferanse(organisasjonsnummer) to OmregnetÅrsinntekt(500000.0),
+                Arbeidsgiverreferanse("000000000") to OmregnetÅrsinntekt(200000.20)
+            )
+        )
     ): String {
         @Language("JSON")
         val json = """
@@ -196,22 +244,17 @@ internal class MediatorTest {
                   "ARBEIDSGIVERUTBETALING"
                 ],
                 "kanAvvises": true,
-                "omregnedeÅrsinntekter": [
-                  {
-                    "organisasjonsnummer": "$organisasjonsnummer",
-                    "beløp": 500000.0
-                  },
-                  {
-                    "organisasjonsnummer": "000000000",
-                    "beløp": 200000.20
-                  }
-                ]
+                "omregnedeÅrsinntekter":  ${beregningsgrunnlagDto.toJson()} 
               },
               "@id": "ba376523-62b1-49d7-8647-f902c739b634",
               "@opprettet": "2018-01-01T00:00:00.000"
             }
         """.trimIndent()
         return json
+    }
+
+    private fun AvviksvurderingDto.BeregningsgrunnlagDto.toJson(): String {
+        return objectMapper.writeValueAsString(this.omregnedeÅrsinntekter.map { mapOf("organisasjonsnummer" to it.key, "beløp" to it.value) })
     }
 
     private fun sammenligningsgrunnlagJson(
