@@ -228,6 +228,7 @@ class SammenligningsgrunnlagRiverTest {
               "fødselsnummer": "$fødselsnummer",
               "organisasjonsnummer": "$organisasjonsnummer",
               "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
+              "utkastTilVedtak": {},
               "InntekterForSammenligningsgrunnlag": {
                 "skjæringstidspunkt": "$skjæringstidspunkt",
                 "beregningStart": "2018-01",
@@ -262,6 +263,7 @@ class SammenligningsgrunnlagRiverTest {
               "fødselsnummer": "$fødselsnummer",
               "organisasjonsnummer": "$organisasjonsnummer",
               "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
+              "utkastTilVedtak": {},
               "InntekterForSammenligningsgrunnlag": {
                 "skjæringstidspunkt": "$skjæringstidspunkt",
                 "beregningStart": "2018-01",

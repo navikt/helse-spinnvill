@@ -1,6 +1,8 @@
 package no.nav.helse.mediator
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.*
@@ -197,6 +199,85 @@ internal class MediatorTest {
         assertEquals(avviksvurdering.sammenligningsgrunnlag, sisteAvviksvurdering.sammenligningsgrunnlag)
     }
 
+    @Test
+    fun `håndter utkast til vedtak på ny etter å ha mottatt sammenligningsgrunnlag`() {
+        val skjæringstidspunkt = 1.januar
+        val fødselsnummer = "12345678910".somFnr()
+        val organisasjonsnummer = "987654321".somArbeidsgiverref()
+        val beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
+            mapOf(
+                organisasjonsnummer to OmregnetÅrsinntekt(500000.0),
+            )
+        )
+
+        testRapid.sendTestMessage(utkastTilVedtakJson(
+            aktørId = "1234567891011",
+            fødselsnummer = fødselsnummer.value,
+            organisasjonsnummer = organisasjonsnummer.value,
+            skjæringstidspunkt = skjæringstidspunkt,
+            beregningsgrunnlagDto = beregningsgrunnlag
+        ))
+
+        håndterSammenligningsgrunnlagMelding()
+
+        val avviksvurdering = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
+
+        assertNotNull(avviksvurdering)
+        assertEquals(fødselsnummer, avviksvurdering.fødselsnummer)
+        assertEquals(skjæringstidspunkt, avviksvurdering.skjæringstidspunkt)
+        assertEquals(
+            mapOf(
+                organisasjonsnummer to listOf(
+                    AvviksvurderingDto.MånedligInntektDto(
+                        inntekt = InntektPerMåned(10000.0),
+                        måned = YearMonth.from(1.januar),
+                        fordel = null,
+                        beskrivelse = null,
+                        inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+                    )
+                )
+            ), avviksvurdering.sammenligningsgrunnlag.innrapporterteInntekter
+        )
+        assertEquals(beregningsgrunnlag, avviksvurdering.beregningsgrunnlag)
+    }
+
+    private fun håndterSammenligningsgrunnlagMelding() {
+        val melding = testRapid.inspektør.sisteBehov("InntekterForSammenligningsgrunnlag")?.deepCopy<ObjectNode>()
+
+        assertNotNull(melding)
+
+        val løsning =
+            mapOf(
+                "InntekterForSammenligningsgrunnlag" to listOf(
+                    mapOf(
+                        "årMåned" to YearMonth.from(1.januar),
+                        "inntektsliste" to listOf(
+                            mapOf(
+                                "beløp" to 10000.0,
+                                "inntektstype" to "LOENNSINNTEKT",
+                                "orgnummer" to "987654321"
+                            )
+                        )
+                    )
+                )
+            )
+
+        melding.replace("@løsning", objectMapper.valueToTree(løsning))
+
+        testRapid.sendTestMessage(objectMapper.writeValueAsString(melding))
+    }
+
+    private fun TestRapid.RapidInspector.meldinger() =
+        (0 until size).map { index -> message(index) }
+
+    private fun TestRapid.RapidInspector.hendelser(type: String) =
+        meldinger().filter { it.path("@event_name").asText() == type }
+
+    private fun TestRapid.RapidInspector.sisteBehov(vararg behov: String) =
+        hendelser("behov")
+            .last()
+            .takeIf { it.path("@behov").map(JsonNode::asText).containsAll(behov.toList()) && !it.hasNonNull("@løsning") }
+
     private companion object {
         private val objectMapper = jacksonObjectMapper()
             .registerModule(JavaTimeModule())
@@ -281,6 +362,7 @@ internal class MediatorTest {
                 "beregningStart": "2018-01",
                 "beregningSlutt": "2018-02"
               },
+              "utkastTilVedtak": {},
               "@id": "ecfe47f6-2063-451a-b7e1-182490cc3153",
               "@opprettet": "2018-01-01T00:00:00.000",
               "@løsning": {

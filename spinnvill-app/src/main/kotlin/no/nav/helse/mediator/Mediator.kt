@@ -61,6 +61,8 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
                 beregningsgrunnlag = null
             )
         )
+
+        rapidsConnection.queueReplayMessage(sammenligningsgrunnlagMessage.fødselsnummer, sammenligningsgrunnlagMessage.utkastTilVedtakJson)
     }
 
     private fun håndter(

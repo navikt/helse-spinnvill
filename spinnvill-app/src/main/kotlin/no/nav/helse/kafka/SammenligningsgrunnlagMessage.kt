@@ -1,7 +1,10 @@
 package no.nav.helse.kafka
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.Beskrivelse
 import no.nav.helse.Fordel
 import no.nav.helse.rapids_rivers.JsonMessage
@@ -11,6 +14,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 class SammenligningsgrunnlagMessage(packet: JsonMessage) {
+    val utkastTilVedtakJson: String = objectMapper.writeValueAsString(packet["utkastTilVedtak"])
     val skjæringstidspunkt: LocalDate = packet["InntekterForSammenligningsgrunnlag.skjæringstidspunkt"].asLocalDate()
     val fødselsnummer: String = packet["fødselsnummer"].asText()
     val sammenligningsgrunnlag: Map<String, List<Inntekt>> = mapSammenligningsgrunnlag(packet["@løsning.InntekterForSammenligningsgrunnlag"])
@@ -61,4 +65,10 @@ class SammenligningsgrunnlagMessage(packet: JsonMessage) {
                     beskrivelse = if (inntekt.path("beskrivelse").isTextual) Beskrivelse(inntekt["beskrivelse"].asText()) else null
                 )
             }
+
+    private companion object {
+        private val objectMapper = jacksonObjectMapper()
+            .registerModule(JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+    }
 }
