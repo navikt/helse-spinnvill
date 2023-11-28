@@ -1,5 +1,8 @@
 package no.nav.helse.mediator
 
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.avviksvurdering.BehovForSammenligningsgrunnlag
 import no.nav.helse.helpers.januar
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -14,7 +17,14 @@ class BehovProducerTest {
     private val testRapid = TestRapid()
     private val vedtaksperiodeId = UUID.randomUUID()
 
-    private val behovProducer = BehovProducer("1234567891011","12345678910", vedtaksperiodeId, "000000000", testRapid)
+    private val behovProducer = BehovProducer(
+        aktørId = "1234567891011",
+        fødselsnummer = "12345678910",
+        vedtaksperiodeId = vedtaksperiodeId,
+        organisasjonsnummer = "000000000",
+        utkastTilVedtakJson = objectMapper.valueToTree(mapOf("etUtkast" to "tilVedtak")),
+        rapidsConnection = testRapid
+    )
 
     @Test
     fun `Kan lage behov for sammenligningsgrunnlag`() {
@@ -40,5 +50,21 @@ class BehovProducerTest {
     fun `lager ikke behov når behovskø er tom`() {
         behovProducer.finalize()
         assertEquals(0, testRapid.inspektør.size)
+    }
+
+    @Test
+    fun `legger med utkast til vedtak på behov`() {
+        behovProducer.sammenligningsgrunnlag(
+            BehovForSammenligningsgrunnlag(1.januar, YearMonth.of(2018, Month.JANUARY), YearMonth.of(2018, Month.APRIL))
+        )
+        behovProducer.finalize()
+        val behov = testRapid.inspektør.message(0)
+        assertEquals("tilVedtak", behov["utkastTilVedtak"]["etUtkast"].asText())
+    }
+
+    private companion object {
+        private val objectMapper = jacksonObjectMapper()
+            .registerModule(JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     }
 }

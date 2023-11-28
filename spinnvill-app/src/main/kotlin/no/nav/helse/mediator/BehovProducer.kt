@@ -1,5 +1,6 @@
 package no.nav.helse.mediator
 
+import com.fasterxml.jackson.databind.JsonNode
 import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.avviksvurdering.BehovForSammenligningsgrunnlag
 import no.nav.helse.BehovObserver
@@ -13,6 +14,7 @@ class BehovProducer(
     private val fødselsnummer: String,
     private val vedtaksperiodeId: UUID,
     private val organisasjonsnummer: String,
+    private val utkastTilVedtakJson: JsonNode,
     private val rapidsConnection: RapidsConnection
 ): BehovObserver {
 
@@ -31,6 +33,7 @@ class BehovProducer(
                 "fødselsnummer" to fødselsnummer,
                 "vedtaksperiodeId" to vedtaksperiodeId,
                 "organisasjonsnummer" to organisasjonsnummer,
+                "utkastTilVedtak" to utkastTilVedtakJson
             ).apply {
                 putAll(behovskø)
             }

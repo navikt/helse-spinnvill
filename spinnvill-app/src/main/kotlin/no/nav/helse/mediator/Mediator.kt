@@ -34,6 +34,7 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
             fødselsnummer = utkastTilVedtakMessage.fødselsnummer,
             vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
             organisasjonsnummer = utkastTilVedtakMessage.organisasjonsnummer,
+            utkastTilVedtakJson = utkastTilVedtakMessage.toJson(),
             rapidsConnection = rapidsConnection
         )
         val beregningsgrunnlag = Beregningsgrunnlag.opprett(
