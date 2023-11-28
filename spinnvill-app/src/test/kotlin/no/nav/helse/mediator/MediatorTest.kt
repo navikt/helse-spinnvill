@@ -87,6 +87,40 @@ internal class MediatorTest {
         assertNotNull(database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt))
     }
 
+    @Test
+    fun `gjør en vellykket avviksvurdering`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+        val arbeidsgiverreferanse = Arbeidsgiverreferanse("987654321")
+
+        val avviksvurderingDto = AvviksvurderingDto(
+            id = UUID.randomUUID(),
+            fødselsnummer = fødselsnummer,
+            skjæringstidspunkt = skjæringstidspunkt,
+            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
+                mapOf(arbeidsgiverreferanse to listOf(AvviksvurderingDto.MånedligInntektDto(
+                    inntekt = InntektPerMåned(value = 20000.0),
+                    måned = YearMonth.from(skjæringstidspunkt),
+                    fordel = Fordel("En fordel"),
+                    beskrivelse = Beskrivelse("En beskrivelse"),
+                    inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+                )))
+            ),
+            beregningsgrunnlag = null
+        )
+
+        database.lagreAvviksvurdering(avviksvurderingDto)
+
+        testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", fødselsnummer.value, arbeidsgiverreferanse.value, skjæringstidspunkt))
+
+        assertEquals(0, testRapid.inspektør.size)
+
+        val fullstendigAvviksvurdering = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
+
+        assertNotNull(fullstendigAvviksvurdering)
+        assertNotNull(fullstendigAvviksvurdering.beregningsgrunnlag)
+    }
+
     private fun utkastTilVedtakJson(
         aktørId: String,
         fødselsnummer: String,

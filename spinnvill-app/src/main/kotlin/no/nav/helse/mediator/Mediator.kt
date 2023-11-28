@@ -71,6 +71,9 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
         val avviksvurdering = avviksvurdering(fødselsnummer, skjæringstidspunkt)
             ?: return beOmSammenligningsgrunnlag(skjæringstidspunkt, behovProducer)
         avviksvurdering.håndter(beregningsgrunnlag)
+        val builder = DatabaseDtoBuilder()
+        avviksvurdering.accept(builder)
+        database.lagreAvviksvurdering(builder.build())
     }
 
     private fun avviksvurdering(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurdering? {
