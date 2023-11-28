@@ -9,11 +9,13 @@ import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.*
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 
 internal class MediatorTest {
@@ -119,6 +121,44 @@ internal class MediatorTest {
 
         assertNotNull(fullstendigAvviksvurdering)
         assertNotNull(fullstendigAvviksvurdering.beregningsgrunnlag)
+    }
+
+    @Test
+    fun `gjør ny avviksvurdering om beregningsgrunnlaget er forskjellig fra forrige avviksvurdering`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+        val arbeidsgiverreferanse = Arbeidsgiverreferanse("987654321")
+
+        val avviksvurderingDto = AvviksvurderingDto(
+            id = UUID.randomUUID(),
+            fødselsnummer = fødselsnummer,
+            skjæringstidspunkt = skjæringstidspunkt,
+            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
+                mapOf(arbeidsgiverreferanse to listOf(AvviksvurderingDto.MånedligInntektDto(
+                    inntekt = InntektPerMåned(value = 20000.0),
+                    måned = YearMonth.from(skjæringstidspunkt),
+                    fordel = Fordel("En fordel"),
+                    beskrivelse = Beskrivelse("En beskrivelse"),
+                    inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+                )))
+            ),
+            beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
+                mapOf(arbeidsgiverreferanse to OmregnetÅrsinntekt(300000.0))
+            )
+        )
+
+        val avviksvurdering = database.lagreAvviksvurdering(avviksvurderingDto)
+
+        testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", fødselsnummer.value, arbeidsgiverreferanse.value, skjæringstidspunkt))
+
+        val sisteAvviksvurdering = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
+
+        assertNotNull(sisteAvviksvurdering)
+        assertNotEquals(avviksvurdering.id, sisteAvviksvurdering.id)
+        assertNotEquals(avviksvurdering.beregningsgrunnlag, sisteAvviksvurdering.beregningsgrunnlag)
+        assertEquals(avviksvurdering.fødselsnummer, sisteAvviksvurdering.fødselsnummer)
+        assertEquals(avviksvurdering.skjæringstidspunkt, sisteAvviksvurdering.skjæringstidspunkt)
+        assertEquals(avviksvurdering.sammenligningsgrunnlag, sisteAvviksvurdering.sammenligningsgrunnlag)
     }
 
     private fun utkastTilVedtakJson(

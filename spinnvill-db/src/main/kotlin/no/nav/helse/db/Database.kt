@@ -8,6 +8,7 @@ import java.time.LocalDate
 class Database private constructor(env: Map<String, String>) {
     private val dataSourceBuilder = DataSourceBuilder(env)
     private val avviksvurdering = Avviksvurdering()
+
     init {
         org.jetbrains.exposed.sql.Database.connect(datasource())
     }
@@ -17,8 +18,8 @@ class Database private constructor(env: Map<String, String>) {
     }
 
     internal fun datasource(): HikariDataSource = dataSourceBuilder.getDataSource()
-    fun lagreAvviksvurdering(avviksvurderingDto: AvviksvurderingDto) {
-        avviksvurdering.upsert(
+    fun lagreAvviksvurdering(avviksvurderingDto: AvviksvurderingDto): AvviksvurderingDto {
+        return avviksvurdering.upsert(
             id = avviksvurderingDto.id,
             fødselsnummer = avviksvurderingDto.fødselsnummer,
             skjæringstidspunkt = avviksvurderingDto.skjæringstidspunkt,

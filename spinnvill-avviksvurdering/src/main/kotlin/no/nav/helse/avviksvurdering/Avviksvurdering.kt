@@ -35,6 +35,12 @@ class Avviksvurdering(
         sammenligningsgrunnlag.accept(visitor)
     }
 
+    fun vurderBehovForNyVurdering(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurdering {
+        if (this.beregningsgrunnlag == Beregningsgrunnlag.INGEN) return this
+        if (this.beregningsgrunnlag != beregningsgrunnlag) return nyAvviksvurdering(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag)
+        return this
+    }
+
     internal companion object {
         internal fun nyAvviksvurdering(
             fødselsnummer: Fødselsnummer,
