@@ -8,7 +8,7 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
-class BehovProducer(
+internal class BehovProducer(
     private val aktørId: String,
     private val fødselsnummer: String,
     private val vedtaksperiodeId: UUID,
@@ -27,7 +27,7 @@ class BehovProducer(
         if (behovskø.isEmpty()) return
         val compositeBehov = JsonMessage.newNeed(
             behovskø.keys,
-            mutableMapOf<String, Any>(
+            mutableMapOf(
                 "aktørId" to aktørId,
                 "fødselsnummer" to fødselsnummer,
                 "vedtaksperiodeId" to vedtaksperiodeId,
@@ -48,6 +48,7 @@ class BehovProducer(
             compositeBehov
         )
         rapidsConnection.publish(fødselsnummer, compositeBehov)
+        behovskø.clear()
     }
     internal fun sammenligningsgrunnlag(behovForSammenligningsgrunnlag: BehovForSammenligningsgrunnlag) {
         behovskø["InntekterForSammenligningsgrunnlag"] = behovForSammenligningsgrunnlag.toMap()

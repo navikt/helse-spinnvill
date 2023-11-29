@@ -9,7 +9,7 @@ import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.time.Month
 import java.time.YearMonth
-import java.util.UUID
+import java.util.*
 import kotlin.test.assertEquals
 
 class BehovProducerTest {
@@ -50,6 +50,26 @@ class BehovProducerTest {
     fun `lager ikke behov når behovskø er tom`() {
         behovProducer.finalize()
         assertEquals(0, testRapid.inspektør.size)
+    }
+
+    @Test
+    fun `behovkø tømmes etter hver finalize`() {
+        behovProducer.sammenligningsgrunnlag(
+            BehovForSammenligningsgrunnlag(1.januar, YearMonth.of(2018, Month.JANUARY), YearMonth.of(2018, Month.APRIL))
+        )
+        behovProducer.finalize()
+        behovProducer.finalize()
+        assertEquals(1, testRapid.inspektør.size)
+    }
+
+    @Test
+    fun `ikke send ut behov før finalize blir kalt`() {
+        behovProducer.sammenligningsgrunnlag(
+            BehovForSammenligningsgrunnlag(1.januar, YearMonth.of(2018, Month.JANUARY), YearMonth.of(2018, Month.APRIL))
+        )
+        assertEquals(0, testRapid.inspektør.size)
+        behovProducer.finalize()
+        assertEquals(1, testRapid.inspektør.size)
     }
 
     @Test
