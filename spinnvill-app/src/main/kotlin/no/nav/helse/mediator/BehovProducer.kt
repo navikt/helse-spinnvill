@@ -3,7 +3,6 @@ package no.nav.helse.mediator
 import com.fasterxml.jackson.databind.JsonNode
 import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.avviksvurdering.BehovForSammenligningsgrunnlag
-import no.nav.helse.BehovObserver
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
@@ -16,7 +15,7 @@ class BehovProducer(
     private val organisasjonsnummer: String,
     private val utkastTilVedtakJson: JsonNode,
     private val rapidsConnection: RapidsConnection
-): BehovObserver {
+) {
 
     private companion object {
         private val logg = LoggerFactory.getLogger(this::class.java)
@@ -50,7 +49,7 @@ class BehovProducer(
         )
         rapidsConnection.publish(fødselsnummer, compositeBehov)
     }
-    override fun sammenligningsgrunnlag(behovForSammenligningsgrunnlag: BehovForSammenligningsgrunnlag) {
+    internal fun sammenligningsgrunnlag(behovForSammenligningsgrunnlag: BehovForSammenligningsgrunnlag) {
         behovskø["InntekterForSammenligningsgrunnlag"] = behovForSammenligningsgrunnlag.toMap()
     }
 
