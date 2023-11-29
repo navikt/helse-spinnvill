@@ -49,6 +49,7 @@ internal class SubsumsjonProducer(
     }
 
     internal fun finalize() {
+        if (subsumsjonskø.isEmpty()) return
         val meldinger = subsumsjonskø.map {
             JsonMessage.newMessage("subsumsjon", mapOf(
                     "subsumsjon" to mutableMapOf(
