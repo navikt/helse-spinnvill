@@ -1,11 +1,13 @@
 package no.nav.helse.mediator.producer
 
+import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.KriterieObserver
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
 
@@ -14,6 +16,11 @@ internal class VarselProducer(
     private val vedtaksperiodeId: UUID,
     private val rapidsConnection: RapidsConnection
 ): KriterieObserver {
+    private companion object {
+        private val logg = LoggerFactory.getLogger(this::class.java)
+        private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
+    }
+
     private val varselkø = mutableListOf<VarselDto>()
 
     override fun avvikVurdert(
@@ -54,8 +61,16 @@ internal class VarselProducer(
                     )
                 }
             )
+        ).toJson()
+        logg.info("Sender ut ${varselkø.size} varsler for {}",
+            kv("vedtaksperiodeId", vedtaksperiodeId),
         )
-        rapidsConnection.publish(fødselsnummer.value, message.toJson())
+        sikkerlogg.info("Sender ut ${varselkø.size} varsler for {}, {}. Varsler: {}",
+            kv("fødselsnummer", fødselsnummer),
+            kv("vedtaksperiodeId", vedtaksperiodeId),
+            message
+        )
+        rapidsConnection.publish(fødselsnummer.value, message)
         varselkø.clear()
     }
 

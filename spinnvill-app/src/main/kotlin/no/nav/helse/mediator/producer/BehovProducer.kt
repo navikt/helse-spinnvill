@@ -16,11 +16,11 @@ internal class BehovProducer(
     private val utkastTilVedtakJson: JsonNode,
     private val rapidsConnection: RapidsConnection
 ) {
-
     private companion object {
         private val logg = LoggerFactory.getLogger(this::class.java)
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
     }
+
     private val behovskø = mutableMapOf<String, Map<String, Any>>()
 
     internal fun finalize() {
