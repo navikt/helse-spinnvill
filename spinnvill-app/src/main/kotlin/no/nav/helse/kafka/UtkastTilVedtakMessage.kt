@@ -21,6 +21,7 @@ class UtkastTilVedtakMessage(private val packet: JsonMessage) {
         return objectMapper.readTree(packet.toJson())
     }
 
+    val vilkårsgrunnlagId: UUID = packet["Godkjenning.vilkårsgrunnlagId"].asUUID()
     val skjæringstidspunkt: LocalDate = packet["Godkjenning.skjæringstidspunkt"].asLocalDate()
     val fødselsnummer: String = packet["fødselsnummer"].asText()
     val aktørId: String = packet["aktørId"].asText()

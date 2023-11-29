@@ -320,6 +320,7 @@ internal class MediatorTest {
                 "periodeFom": "$skjæringstidspunkt",
                 "periodeTom": "${skjæringstidspunkt.plusDays(30)}",
                 "skjæringstidspunkt": "$skjæringstidspunkt",
+                "vilkårsgrunnlagId": "87b9339d-a67d-49b0-af36-c93d6f9249ae",
                 "periodetype": "FØRSTEGANGSBEHANDLING",
                 "førstegangsbehandling": true,
                 "utbetalingtype": "UTBETALING",

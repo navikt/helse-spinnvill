@@ -14,7 +14,8 @@ internal class UtkastTilVedtakRiver(rapidsConnection: RapidsConnection, private 
                 it.demandAll("@behov", listOf("Godkjenning"))
                 it.rejectKey("@løsning")
 
-                it.requireKey("fødselsnummer", "organisasjonsnummer", "aktørId", "vedtaksperiodeId", "Godkjenning.skjæringstidspunkt")
+                it.requireKey("fødselsnummer", "organisasjonsnummer", "aktørId", "vedtaksperiodeId")
+                it.requireKey("Godkjenning.vilkårsgrunnlagId", "Godkjenning.skjæringstidspunkt")
                 it.requireArray("Godkjenning.omregnedeÅrsinntekter") {
                     requireKey("organisasjonsnummer", "beløp")
                 }
@@ -28,12 +29,6 @@ internal class UtkastTilVedtakRiver(rapidsConnection: RapidsConnection, private 
             kv("Fødselsnummer", packet["fødselsnummer"].asText())
         )
         messageHandler.håndter(UtkastTilVedtakMessage(packet))
-        //hentDataFraDb
-        //lag sykefraværstilfelle
-        //fisk ut beregningsgrunnlaget fra utkast til vedtak (omregnede årsinntekter)
-        //spør sykefraværstilfelle om det trenger data
-        //hvis ja lag og send ut behov
-        //hvis nei få avviksprosenten fra sykefraværstilfelle
     }
 
     private companion object {
