@@ -7,6 +7,7 @@ import no.nav.helse.db.Database
 import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.kafka.*
 import no.nav.helse.mediator.producer.BehovProducer
+import no.nav.helse.mediator.producer.SubsumsjonProducer
 import no.nav.helse.mediator.producer.VarselProducer
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
@@ -14,7 +15,11 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.util.*
 
-class Mediator(private val rapidsConnection: RapidsConnection, private val database: Database) : MessageHandler {
+class Mediator(
+    private val versjonAvKode: VersjonAvKode,
+    private val rapidsConnection: RapidsConnection,
+    private val database: Database
+) : MessageHandler {
 
     init {
         UtkastTilVedtakRiver(rapidsConnection, this)
@@ -41,6 +46,14 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
             vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
             rapidsConnection = rapidsConnection
         )
+        val subsumsjonProducer = SubsumsjonProducer(
+            fødselsnummer = utkastTilVedtakMessage.fødselsnummer.somFnr(),
+            organisasjonsnummer = utkastTilVedtakMessage.organisasjonsnummer.somArbeidsgiverref(),
+            vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
+            vilkårsgrunnlagId = utkastTilVedtakMessage.vilkårsgrunnlagId,
+            versjonAvKode = versjonAvKode,
+            rapidsConnection = rapidsConnection
+        )
         val beregningsgrunnlag = Beregningsgrunnlag.opprett(
             utkastTilVedtakMessage.beregningsgrunnlag.entries.associate {
                 Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value)
@@ -51,10 +64,12 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
             fødselsnummer = Fødselsnummer(utkastTilVedtakMessage.fødselsnummer),
             skjæringstidspunkt = utkastTilVedtakMessage.skjæringstidspunkt,
             behovProducer = behovProducer,
-            varselProducer = varselProducer
+            varselProducer = varselProducer,
+            subsumsjonProducer = subsumsjonProducer
         )
         behovProducer.finalize()
         varselProducer.finalize()
+        subsumsjonProducer.finalize()
     }
 
     override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
@@ -76,11 +91,13 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
         behovProducer: BehovProducer,
-        varselProducer: VarselProducer
+        varselProducer: VarselProducer,
+        subsumsjonProducer: SubsumsjonProducer
     ) {
         val avviksvurdering = avviksvurdering(fødselsnummer, skjæringstidspunkt)?.vurderBehovForNyVurdering(beregningsgrunnlag)
             ?: return beOmSammenligningsgrunnlag(skjæringstidspunkt, behovProducer)
         avviksvurdering.register(varselProducer)
+        avviksvurdering.register(subsumsjonProducer)
         avviksvurdering.håndter(beregningsgrunnlag)
         val builder = DatabaseDtoBuilder()
         avviksvurdering.accept(builder)

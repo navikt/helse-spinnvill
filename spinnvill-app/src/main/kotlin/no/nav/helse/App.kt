@@ -18,6 +18,14 @@ class App {
     }
 
     init {
-        Mediator(rapidsConnection, database)
+        Mediator(
+            versjonAvKode = VersjonAvKode(versjonAvKode(System.getenv())),
+            rapidsConnection = rapidsConnection,
+            database = database
+        )
+    }
+
+    private fun versjonAvKode(env: Map<String, String>): String {
+        return env["NAIS_APP_IMAGE"] ?: throw IllegalArgumentException("NAIS_APP_IMAGE env variable is missing")
     }
 }

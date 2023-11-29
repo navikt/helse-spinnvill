@@ -28,7 +28,7 @@ internal class MediatorTest {
     private val database = TestDatabase.database()
 
     init {
-        Mediator(testRapid, database)
+        Mediator(VersjonAvKode("1.0.0"), testRapid, database)
     }
 
     @BeforeEach
@@ -124,8 +124,9 @@ internal class MediatorTest {
         assertNotNull(fullstendigAvviksvurdering)
         assertNotNull(fullstendigAvviksvurdering.beregningsgrunnlag)
 
-        assertEquals(1, testRapid.inspektør.size)
+        assertEquals(2, testRapid.inspektør.size)
         assertEquals(1, testRapid.inspektør.hendelser("nye_varsler").size)
+        assertEquals(1, testRapid.inspektør.hendelser("subsumsjon").size)
     }
 
     @Test
