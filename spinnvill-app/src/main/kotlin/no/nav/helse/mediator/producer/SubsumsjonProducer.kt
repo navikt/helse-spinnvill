@@ -59,7 +59,10 @@ internal class SubsumsjonProducer(
                         }
                     )
                 ),
-                output = emptyMap(),
+                output = mapOf(
+                    "avviksprosent" to avviksprosent,
+                    "harAkseptabeltAvvik" to harAkseptabeltAvvik
+                ),
                 sporing = emptyMap()
             )
         )

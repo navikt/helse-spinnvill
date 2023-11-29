@@ -134,6 +134,8 @@ internal class SubsumsjonProducerTest {
         }
 
         assertEquals(25.0, input["maksimaltTillattAvvikPåÅrsinntekt"].asDouble())
+        assertEquals(26.0, output["avviksprosent"].asDouble())
+        assertEquals(false, output["harAkseptabeltAvvik"].asBoolean())
     }
 
     private fun assertPresent(jsonNode: JsonNode?) {
