@@ -92,7 +92,11 @@ internal class SubsumsjonProducer(
                         "utfall" to it.utfall,
                         "input" to it.input,
                         "output" to it.output,
-                        "sporing" to it.sporing,
+                        "sporing" to mapOf(
+                            "organisasjonsnummer" to listOf(organisasjonsnummer.value),
+                            "vedtaksperiode" to listOf(vedtaksperiodeId.toString()),
+                            "vilkårsgrunnlag" to listOf(vilkårsgrunnlagId.toString())
+                        ),
                         "versjonAvKode" to versjonAvKode
                     ).apply {
                         compute("ledd") { _, _ -> it.ledd }

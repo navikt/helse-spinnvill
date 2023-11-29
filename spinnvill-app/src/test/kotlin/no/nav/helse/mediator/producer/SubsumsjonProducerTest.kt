@@ -90,6 +90,13 @@ internal class SubsumsjonProducerTest {
         assertPresent(subsumsjon["output"])
         assertPresent(subsumsjon["sporing"])
         assertEquals(versjonAvKode.value, subsumsjon["versjonAvKode"].asText())
+
+        assertPresent(subsumsjon["sporing"])
+
+        val sporing = subsumsjon["sporing"]
+        assertEquals(listOf(vedtaksperiodeId.toString()), sporing["vedtaksperiode"].map { it.asText() })
+        assertEquals(listOf(vilkårsgrunnlagId.toString()), sporing["vilkårsgrunnlag"].map { it.asText() })
+        assertEquals(listOf(organisasjonsnummer.value), sporing["organisasjonsnummer"].map { it.asText() })
     }
 
     @Test
@@ -148,13 +155,6 @@ internal class SubsumsjonProducerTest {
         assertEquals(25.0, input["maksimaltTillattAvvikPåÅrsinntekt"].asDouble())
         assertEquals(26.0, output["avviksprosent"].asDouble())
         assertEquals(false, output["harAkseptabeltAvvik"].asBoolean())
-
-        assertPresent(subsumsjon["sporing"])
-
-        val sporing = subsumsjon["sporing"]
-        assertEquals(listOf(vedtaksperiodeId.toString()), sporing["vedtaksperiode"].map { it.asText() })
-        assertEquals(listOf(vilkårsgrunnlagId.toString()), sporing["vilkårsgrunnlag"].map { it.asText() })
-        assertEquals(listOf(organisasjonsnummer.value), sporing["organisasjonsnummer"].map { it.asText() })
     }
 
     private fun assertPresent(jsonNode: JsonNode?) {
