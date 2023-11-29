@@ -1,4 +1,4 @@
-package no.nav.helse.mediator
+package no.nav.helse.mediator.producer
 
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.KriterieObserver

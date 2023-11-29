@@ -1,4 +1,4 @@
-package no.nav.helse.mediator
+package no.nav.helse.mediator.producer
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.nav.helse.Fødselsnummer

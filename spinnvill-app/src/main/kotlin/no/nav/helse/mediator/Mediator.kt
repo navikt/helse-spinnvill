@@ -6,6 +6,8 @@ import no.nav.helse.avviksvurdering.*
 import no.nav.helse.db.Database
 import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.kafka.*
+import no.nav.helse.mediator.producer.BehovProducer
+import no.nav.helse.mediator.producer.VarselProducer
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
