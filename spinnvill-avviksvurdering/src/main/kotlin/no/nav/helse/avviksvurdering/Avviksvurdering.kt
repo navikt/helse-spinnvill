@@ -16,7 +16,7 @@ class Avviksvurdering(
 
     private val observers = mutableListOf<KriterieObserver>()
 
-    internal fun register(vararg observers: KriterieObserver) {
+    fun register(vararg observers: KriterieObserver) {
         this.observers.addAll(observers)
     }
 

@@ -1,10 +1,7 @@
 package no.nav.helse.mediator
 
 import net.logstash.logback.argument.StructuredArguments.kv
-import no.nav.helse.Arbeidsgiverreferanse
-import no.nav.helse.Fødselsnummer
-import no.nav.helse.InntektPerMåned
-import no.nav.helse.OmregnetÅrsinntekt
+import no.nav.helse.*
 import no.nav.helse.avviksvurdering.*
 import no.nav.helse.db.Database
 import no.nav.helse.dto.AvviksvurderingDto
@@ -37,6 +34,11 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
             utkastTilVedtakJson = utkastTilVedtakMessage.toJson(),
             rapidsConnection = rapidsConnection
         )
+        val varselProducer = VarselProducer(
+            fødselsnummer = utkastTilVedtakMessage.fødselsnummer.somFnr(),
+            vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
+            rapidsConnection = rapidsConnection
+        )
         val beregningsgrunnlag = Beregningsgrunnlag.opprett(
             utkastTilVedtakMessage.beregningsgrunnlag.entries.associate {
                 Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value)
@@ -46,9 +48,11 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
             beregningsgrunnlag = beregningsgrunnlag,
             fødselsnummer = Fødselsnummer(utkastTilVedtakMessage.fødselsnummer),
             skjæringstidspunkt = utkastTilVedtakMessage.skjæringstidspunkt,
-            behovProducer = behovProducer
+            behovProducer = behovProducer,
+            varselProducer = varselProducer
         )
         behovProducer.finalize()
+        varselProducer.finalize()
     }
 
     override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
@@ -69,10 +73,12 @@ class Mediator(private val rapidsConnection: RapidsConnection, private val datab
         beregningsgrunnlag: Beregningsgrunnlag,
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
-        behovProducer: BehovProducer
+        behovProducer: BehovProducer,
+        varselProducer: VarselProducer
     ) {
         val avviksvurdering = avviksvurdering(fødselsnummer, skjæringstidspunkt)?.vurderBehovForNyVurdering(beregningsgrunnlag)
             ?: return beOmSammenligningsgrunnlag(skjæringstidspunkt, behovProducer)
+        avviksvurdering.register(varselProducer)
         avviksvurdering.håndter(beregningsgrunnlag)
         val builder = DatabaseDtoBuilder()
         avviksvurdering.accept(builder)

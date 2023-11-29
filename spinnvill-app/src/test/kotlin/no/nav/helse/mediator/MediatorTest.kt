@@ -79,7 +79,7 @@ internal class MediatorTest {
 
         testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", fødselsnummer.value, arbeidsgiverreferanse.value, skjæringstidspunkt))
 
-        assertEquals(0, testRapid.inspektør.size)
+        assertEquals(0, testRapid.inspektør.behov("InntekterForSammenligningsgrunnlag").size)
     }
 
     @Test
@@ -119,12 +119,13 @@ internal class MediatorTest {
 
         testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", fødselsnummer.value, arbeidsgiverreferanse.value, skjæringstidspunkt))
 
-        assertEquals(0, testRapid.inspektør.size)
-
         val fullstendigAvviksvurdering = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
 
         assertNotNull(fullstendigAvviksvurdering)
         assertNotNull(fullstendigAvviksvurdering.beregningsgrunnlag)
+
+        assertEquals(1, testRapid.inspektør.size)
+        assertEquals(1, testRapid.inspektør.hendelser("nye_varsler").size)
     }
 
     @Test
@@ -277,6 +278,10 @@ internal class MediatorTest {
         hendelser("behov")
             .last()
             .takeIf { it.path("@behov").map(JsonNode::asText).containsAll(behov.toList()) && !it.hasNonNull("@løsning") }
+
+    private fun TestRapid.RapidInspector.behov(behov: String) =
+        hendelser("behov")
+            .filter { it.path("@behov").map(JsonNode::asText).containsAll(listOf(behov)) }
 
     private companion object {
         private val objectMapper = jacksonObjectMapper()
