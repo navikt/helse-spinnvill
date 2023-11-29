@@ -6,11 +6,13 @@ import no.nav.helse.helpers.beregningsgrunnlag
 import no.nav.helse.helpers.dummyBeregningsgrunnlag
 import no.nav.helse.helpers.dummySammenligningsgrunnlag
 import no.nav.helse.helpers.sammenligningsgrunnlag
+import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.isMissingOrNull
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.YearMonth
 import java.util.*
 
 internal class SubsumsjonProducerTest {
@@ -111,6 +113,25 @@ internal class SubsumsjonProducerTest {
         assertEquals("a1", omregnedeÅrsinntekterNode[0]["arbeidsgiverreferanse"].asText())
         assertEquals(600000.0, omregnedeÅrsinntekterNode[0]["inntekt"].asDouble())
 
+        assertPresent(input["sammenligningsgrunnlag"])
+
+        val sammenligningsgrunnlagNode = input["sammenligningsgrunnlag"]
+        assertEquals(600000.0, sammenligningsgrunnlagNode["totalbeløp"].asDouble())
+        assertPresent(sammenligningsgrunnlagNode["månedligeInntekter"])
+
+        val månedligeInntekterNode = sammenligningsgrunnlagNode["månedligeInntekter"]
+        assertEquals(12, månedligeInntekterNode.size())
+        (0..11).forEach {
+            assertPresent(månedligeInntekterNode[it]["måned"])
+            assertEquals(YearMonth.of(2018, it + 1), månedligeInntekterNode[it]["måned"].asYearMonth())
+            assertPresent(månedligeInntekterNode[it]["inntekter"])
+            val månedligInntekt = månedligeInntekterNode[it]["inntekter"][0]
+            assertEquals("a1", månedligInntekt["arbeidsgiverreferanse"].asText())
+            assertEquals(50000.0, månedligInntekt["inntekt"].asDouble())
+            assertEquals("En fordel", månedligInntekt["fordel"].asText())
+            assertEquals("En beskrivelse", månedligInntekt["beskrivelse"].asText())
+            assertEquals("LØNNSINNTEKT", månedligInntekt["inntektstype"].asText())
+        }
     }
 
     private fun assertPresent(jsonNode: JsonNode?) {

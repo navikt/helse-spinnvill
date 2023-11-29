@@ -10,6 +10,7 @@ class Sammenligningsgrunnlag(private val inntekter: List<ArbeidsgiverInntekt>) {
     }
 
     fun accept(visitor: Visitor) {
+        visitor.visitSammenligningsgrunnlag(sammenligningsgrunnlag)
         inntekter.forEach { it.accept(visitor) }
     }
 

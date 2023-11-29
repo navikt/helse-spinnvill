@@ -10,4 +10,5 @@ interface Visitor {
     fun visitAvviksvurdering(id: UUID, fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate) {}
     fun visitBeregningsgrunnlag(totaltOmregnetÅrsinntekt: Double, omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>) {}
     fun visitArbeidsgiverInntekt(arbeidsgiverreferanse: Arbeidsgiverreferanse, inntekter: List<ArbeidsgiverInntekt.MånedligInntekt>) {}
+    fun visitSammenligningsgrunnlag(sammenligningsgrunnlag: Double) {}
 }
