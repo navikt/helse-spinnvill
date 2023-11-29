@@ -17,6 +17,8 @@ value class Beskrivelse(val value: String)
 
 @JvmInline
 value class OmregnetÅrsinntekt(val value: Double)
+@JvmInline
+value class VersjonAvKode(val value: String)
 
 fun String.somFnr() = Fødselsnummer(this)
 fun String.somArbeidsgiverref() = Arbeidsgiverreferanse(this)
