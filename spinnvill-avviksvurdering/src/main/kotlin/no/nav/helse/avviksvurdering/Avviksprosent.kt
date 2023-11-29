@@ -12,7 +12,7 @@ internal class Avviksprosent private constructor(private val prosent: Double): C
 
     internal companion object {
         private const val EPSILON = 0.0001
-        private val MAKSIMALT_TILLATT_AVVIK = Avviksprosent(25.0)
+        internal val MAKSIMALT_TILLATT_AVVIK = Avviksprosent(25.0)
 
         internal fun avvik(beregningsgrunnlag: Double, sammenligningsgrunnlag: Double): Avviksprosent {
             val avviksprosent =

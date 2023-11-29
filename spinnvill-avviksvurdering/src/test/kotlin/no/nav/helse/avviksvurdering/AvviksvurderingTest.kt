@@ -72,7 +72,8 @@ internal class AvviksvurderingTest {
             harAkseptabeltAvvik: Boolean,
             avviksprosent: Double,
             beregningsgrunnlag: Beregningsgrunnlag,
-            sammenligningsgrunnlag: Sammenligningsgrunnlag
+            sammenligningsgrunnlag: Sammenligningsgrunnlag,
+            maksimaltTillattAvvik: Double
         ) {
             avviksvurderinger.add(harAkseptabeltAvvik to avviksprosent)
         }

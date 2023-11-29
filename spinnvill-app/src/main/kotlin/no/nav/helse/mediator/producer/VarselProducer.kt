@@ -20,7 +20,8 @@ internal class VarselProducer(
         harAkseptabeltAvvik: Boolean,
         avviksprosent: Double,
         beregningsgrunnlag: Beregningsgrunnlag,
-        sammenligningsgrunnlag: Sammenligningsgrunnlag
+        sammenligningsgrunnlag: Sammenligningsgrunnlag,
+        maksimaltTillattAvvik: Double
     ) {
         if (harAkseptabeltAvvik) return
         varselkø.add(VarselDto(

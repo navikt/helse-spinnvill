@@ -8,6 +8,7 @@ interface KriterieObserver {
         harAkseptabeltAvvik: Boolean,
         avviksprosent: Double,
         beregningsgrunnlag: Beregningsgrunnlag,
-        sammenligningsgrunnlag: Sammenligningsgrunnlag
+        sammenligningsgrunnlag: Sammenligningsgrunnlag,
+        maksimaltTillattAvvik: Double
     ) {}
 }

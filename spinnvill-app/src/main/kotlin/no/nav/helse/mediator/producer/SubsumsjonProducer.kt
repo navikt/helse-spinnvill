@@ -24,7 +24,8 @@ internal class SubsumsjonProducer(
         harAkseptabeltAvvik: Boolean,
         avviksprosent: Double,
         beregningsgrunnlag: Beregningsgrunnlag,
-        sammenligningsgrunnlag: Sammenligningsgrunnlag
+        sammenligningsgrunnlag: Sammenligningsgrunnlag,
+        maksimaltTillattAvvik: Double,
     ) {
         val beregningsgrunnlagDto = BeregningsgrunnlagBuilder().build(beregningsgrunnlag)
         val sammenligningsgrunnlagDto = SammenligningsgrunnlagBuilder().build(sammenligningsgrunnlag)
@@ -38,6 +39,7 @@ internal class SubsumsjonProducer(
                 lovverksversjon = LocalDate.of(2019, 1, 1),
                 utfall = Utfall.VILKAR_BEREGNET,
                 input = mapOf(
+                    "maksimaltTillattAvvikPåÅrsinntekt" to maksimaltTillattAvvik,
                     "grunnlagForSykepengegrunnlag" to mapOf(
                         "totalbeløp" to beregningsgrunnlagDto.totalbeløp,
                         "omregnedeÅrsinntekter" to beregningsgrunnlagDto.omregnedeÅrsinntekter.map {

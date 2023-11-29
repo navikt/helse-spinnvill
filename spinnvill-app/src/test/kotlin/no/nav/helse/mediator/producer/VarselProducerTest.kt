@@ -24,14 +24,14 @@ class VarselProducerTest {
 
     @Test
     fun `ikke produser varsel hvis avviket er akseptabelt`() {
-        varselProducer.avvikVurdert(true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
+        varselProducer.avvikVurdert(true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         varselProducer.finalize()
         assertEquals(0, testRapid.inspektør.size)
     }
 
     @Test
     fun `varselkø tømmes etter hver finalize`() {
-        varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
+        varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         varselProducer.finalize()
         varselProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
@@ -39,7 +39,7 @@ class VarselProducerTest {
 
     @Test
     fun `ikke send ut varsler før finalize blir kalt`() {
-        varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
+        varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         assertEquals(0, testRapid.inspektør.size)
         varselProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
@@ -47,7 +47,7 @@ class VarselProducerTest {
 
     @Test
     fun `produser riktig format på varsel`() {
-        varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
+        varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         varselProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
         val message = testRapid.inspektør.message(0)
@@ -71,7 +71,7 @@ class VarselProducerTest {
 
     @Test
     fun `produser varsel hvis avviket ikke er akseptabelt`() {
-        varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
+        varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         varselProducer.finalize()
         val message = testRapid.inspektør.message(0)
         val varsel = message["aktiviteter"][0]

@@ -29,21 +29,21 @@ internal class SubsumsjonProducerTest {
 
     @Test
     fun `produser subsumsjonsmelding hvis avviket er akseptabelt`() {
-        subsumsjonProducer.avvikVurdert(true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
+        subsumsjonProducer.avvikVurdert(true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         subsumsjonProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
     }
 
     @Test
     fun `produser subsumsjonsmelding hvis avviket ikke er akseptabelt`() {
-        subsumsjonProducer.avvikVurdert(false, 42.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
+        subsumsjonProducer.avvikVurdert(false, 42.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         subsumsjonProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
     }
 
     @Test
     fun `subsumsjonskø tømmes etter hver finalize`() {
-        subsumsjonProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
+        subsumsjonProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         subsumsjonProducer.finalize()
         subsumsjonProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
@@ -51,7 +51,7 @@ internal class SubsumsjonProducerTest {
 
     @Test
     fun `ikke send ut subsumsjonsmeldinger før finalize blir kalt`() {
-        subsumsjonProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
+        subsumsjonProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         assertEquals(0, testRapid.inspektør.size)
         subsumsjonProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
@@ -59,7 +59,7 @@ internal class SubsumsjonProducerTest {
 
     @Test
     fun `produserer riktig format på subsumsjonsmelding`() {
-        subsumsjonProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
+        subsumsjonProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         subsumsjonProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
         val message = testRapid.inspektør.message(0)
@@ -87,7 +87,7 @@ internal class SubsumsjonProducerTest {
     fun `lag subsumsjonsmelding for avviksvurdering`() {
         val beregningsgrunnlag = beregningsgrunnlag("a1" to 600000.0)
         val sammenligningsgrunnlag = sammenligningsgrunnlag("a1" to 50000.0)
-        subsumsjonProducer.avvikVurdert(false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag)
+        subsumsjonProducer.avvikVurdert(false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0)
         subsumsjonProducer.finalize()
         val message = testRapid.inspektør.message(0)
         assertEquals("subsumsjon", message["@event_name"].asText())
@@ -121,10 +121,10 @@ internal class SubsumsjonProducerTest {
 
         val månedligeInntekterNode = sammenligningsgrunnlagNode["månedligeInntekter"]
         assertEquals(12, månedligeInntekterNode.size())
-        (0..11).forEach {
-            assertPresent(månedligeInntekterNode[it]["måned"])
-            assertEquals(YearMonth.of(2018, it + 1), månedligeInntekterNode[it]["måned"].asYearMonth())
-            assertPresent(månedligeInntekterNode[it]["inntekter"])
+        månedligeInntekterNode.forEachIndexed { it, node ->
+            assertPresent(node["måned"])
+            assertEquals(YearMonth.of(2018, it + 1), node["måned"].asYearMonth())
+            assertPresent(node["inntekter"])
             val månedligInntekt = månedligeInntekterNode[it]["inntekter"][0]
             assertEquals("a1", månedligInntekt["arbeidsgiverreferanse"].asText())
             assertEquals(50000.0, månedligInntekt["inntekt"].asDouble())
@@ -132,6 +132,8 @@ internal class SubsumsjonProducerTest {
             assertEquals("En beskrivelse", månedligInntekt["beskrivelse"].asText())
             assertEquals("LØNNSINNTEKT", månedligInntekt["inntektstype"].asText())
         }
+
+        assertEquals(25.0, input["maksimaltTillattAvvikPåÅrsinntekt"].asDouble())
     }
 
     private fun assertPresent(jsonNode: JsonNode?) {

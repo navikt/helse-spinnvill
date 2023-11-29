@@ -29,7 +29,8 @@ class Avviksvurdering(
                 harAkseptabeltAvvik = avviksprosent.harAkseptabeltAvvik(),
                 avviksprosent = avviksprosent.avrundetTilToDesimaler(),
                 beregningsgrunnlag = beregningsgrunnlag,
-                sammenligningsgrunnlag = sammenligningsgrunnlag
+                sammenligningsgrunnlag = sammenligningsgrunnlag,
+                maksimaltTillattAvvik = Avviksprosent.MAKSIMALT_TILLATT_AVVIK.avrundetTilToDesimaler()
             )
         }
     }
