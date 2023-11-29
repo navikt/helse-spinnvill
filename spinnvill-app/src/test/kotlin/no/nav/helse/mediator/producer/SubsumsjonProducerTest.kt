@@ -17,10 +17,19 @@ import java.util.*
 
 internal class SubsumsjonProducerTest {
     private val fødselsnummer = Fødselsnummer("12345678910")
+    private val organisasjonsnummer = Arbeidsgiverreferanse("987654321")
     private val vedtaksperiodeId = UUID.randomUUID()
+    private val vilkårsgrunnlagId = UUID.randomUUID()
     private val testRapid = TestRapid()
     private val versjonAvKode = VersjonAvKode("hello")
-    private val subsumsjonProducer = SubsumsjonProducer(fødselsnummer, versjonAvKode, testRapid)
+    private val subsumsjonProducer = SubsumsjonProducer(
+        fødselsnummer = fødselsnummer,
+        organisasjonsnummer = organisasjonsnummer,
+        vedtaksperiodeId = vedtaksperiodeId,
+        vilkårsgrunnlagId = vilkårsgrunnlagId,
+        versjonAvKode = versjonAvKode,
+        rapidsConnection = testRapid
+    )
 
     @BeforeEach
     fun beforeEach() {
@@ -95,9 +104,12 @@ internal class SubsumsjonProducerTest {
         val subsumsjon = message["subsumsjon"]
 
         assertEquals("8-30", subsumsjon["paragraf"].asText())
+        assertNull(subsumsjon["bokstav"])
         assertEquals(2, subsumsjon["ledd"].asInt())
         assertEquals(1, subsumsjon["punktum"].asInt())
         assertEquals("VILKAR_BEREGNET", subsumsjon["utfall"].asText())
+        assertEquals("folketrygdloven", subsumsjon["lovverk"].asText())
+        assertEquals("2019-01-01", subsumsjon["lovverksversjon"].asText())
 
         assertPresent(subsumsjon["input"])
         val input = subsumsjon["input"]
@@ -136,6 +148,13 @@ internal class SubsumsjonProducerTest {
         assertEquals(25.0, input["maksimaltTillattAvvikPåÅrsinntekt"].asDouble())
         assertEquals(26.0, output["avviksprosent"].asDouble())
         assertEquals(false, output["harAkseptabeltAvvik"].asBoolean())
+
+        assertPresent(subsumsjon["sporing"])
+
+        val sporing = subsumsjon["sporing"]
+        assertEquals(listOf(vedtaksperiodeId.toString()), sporing["vedtaksperiode"].map { it.asText() })
+        assertEquals(listOf(vilkårsgrunnlagId.toString()), sporing["vilkårsgrunnlag"].map { it.asText() })
+        assertEquals(listOf(organisasjonsnummer.value), sporing["organisasjonsnummer"].map { it.asText() })
     }
 
     private fun assertPresent(jsonNode: JsonNode?) {

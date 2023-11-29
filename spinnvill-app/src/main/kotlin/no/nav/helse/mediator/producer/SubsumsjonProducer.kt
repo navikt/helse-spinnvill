@@ -15,6 +15,9 @@ import kotlin.properties.Delegates
 
 internal class SubsumsjonProducer(
     private val fødselsnummer: Fødselsnummer,
+    private val organisasjonsnummer: Arbeidsgiverreferanse,
+    private val vedtaksperiodeId: UUID,
+    private val vilkårsgrunnlagId: UUID,
     private val versjonAvKode: VersjonAvKode,
     private val rapidsConnection: RapidsConnection
 ) : KriterieObserver {
@@ -63,7 +66,11 @@ internal class SubsumsjonProducer(
                     "avviksprosent" to avviksprosent,
                     "harAkseptabeltAvvik" to harAkseptabeltAvvik
                 ),
-                sporing = emptyMap()
+                sporing = mapOf(
+                    "organisasjonsnummer" to listOf(organisasjonsnummer.value),
+                    "vedtaksperiode" to listOf(vedtaksperiodeId.toString()),
+                    "vilkårsgrunnlag" to listOf(vilkårsgrunnlagId.toString())
+                )
             )
         )
     }
