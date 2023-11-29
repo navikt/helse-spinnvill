@@ -136,9 +136,9 @@ internal class SubsumsjonProducerTest {
 
         val sammenligningsgrunnlagNode = input["sammenligningsgrunnlag"]
         assertEquals(600000.0, sammenligningsgrunnlagNode["totalbeløp"].asDouble())
-        assertPresent(sammenligningsgrunnlagNode["månedligeInntekter"])
+        assertPresent(sammenligningsgrunnlagNode["innrapporterteMånedsinntekter"])
 
-        val månedligeInntekterNode = sammenligningsgrunnlagNode["månedligeInntekter"]
+        val månedligeInntekterNode = sammenligningsgrunnlagNode["innrapporterteMånedsinntekter"]
         assertEquals(12, månedligeInntekterNode.size())
         månedligeInntekterNode.forEachIndexed { it, node ->
             assertPresent(node["måned"])

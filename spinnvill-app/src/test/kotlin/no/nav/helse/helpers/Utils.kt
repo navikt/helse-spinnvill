@@ -13,10 +13,9 @@ internal fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) = Be
     arbeidsgivere.toMap().entries.associate { Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value) }
 )
 
-internal fun sammenligningsgrunnlag(arbeidsgiverInntekt: Pair<String, Double>): Sammenligningsgrunnlag {
-    val (arbeidsgiver, inntekt) = arbeidsgiverInntekt
+internal fun sammenligningsgrunnlag(vararg arbeidsgiverInntekt: Pair<String, Double>): Sammenligningsgrunnlag {
     return Sammenligningsgrunnlag(
-        listOf(
+        arbeidsgiverInntekt.map {(arbeidsgiver, inntekt) ->
             ArbeidsgiverInntekt(Arbeidsgiverreferanse(arbeidsgiver), List(12) {
                 ArbeidsgiverInntekt.MånedligInntekt(
                     inntekt = InntektPerMåned(inntekt),
@@ -26,6 +25,7 @@ internal fun sammenligningsgrunnlag(arbeidsgiverInntekt: Pair<String, Double>): 
                     inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
                 )
             })
-        )
+
+        }
     )
 }
