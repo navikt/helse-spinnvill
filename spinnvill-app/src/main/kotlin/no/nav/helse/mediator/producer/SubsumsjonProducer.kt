@@ -1,8 +1,10 @@
 package no.nav.helse.mediator.producer
 
-import no.nav.helse.Fødselsnummer
-import no.nav.helse.KriterieObserver
-import no.nav.helse.VersjonAvKode
+import no.nav.helse.*
+import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
+import no.nav.helse.avviksvurdering.Beregningsgrunnlag
+import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
+import no.nav.helse.avviksvurdering.Visitor
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import java.time.LocalDate
@@ -16,7 +18,13 @@ internal class SubsumsjonProducer(
 ) : KriterieObserver {
     private val subsumsjonskø = mutableListOf<SubsumsjonsmeldingDto>()
 
-    override fun avvikVurdert(harAkseptabeltAvvik: Boolean, avviksprosent: Double) {
+    override fun avvikVurdert(
+        harAkseptabeltAvvik: Boolean,
+        avviksprosent: Double,
+        beregningsgrunnlag: Beregningsgrunnlag,
+        sammenligningsgrunnlag: Sammenligningsgrunnlag
+    ) {
+        val beregningsgrunnlagDto = BeregningsgrunnlagBuilder().build(beregningsgrunnlag)
         subsumsjonskø.add(
             SubsumsjonsmeldingDto(
                 paragraf = "8-30",
@@ -26,7 +34,17 @@ internal class SubsumsjonProducer(
                 lovverk = "folketrygdloven",
                 lovverksversjon = LocalDate.of(2019, 1, 1),
                 utfall = Utfall.VILKAR_BEREGNET,
-                input = emptyMap(),
+                input = mapOf(
+                    "grunnlagForSykepengegrunnlag" to mapOf(
+                        "totalbeløp" to beregningsgrunnlagDto.totalbeløp,
+                        "omregnedeÅrsinntekter" to beregningsgrunnlagDto.omregnedeÅrsinntekter.map {
+                            mapOf(
+                                "arbeidsgiverreferanse" to it.key.value,
+                                "inntekt" to it.value
+                            )
+                        }
+                    ),
+                ),
                 output = emptyMap(),
                 sporing = emptyMap()
             )
@@ -63,6 +81,11 @@ internal class SubsumsjonProducer(
         subsumsjonskø.clear()
     }
 
+    private data class BeregningsgrunnlagDto(
+        val totalbeløp: Double,
+        val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, Double>
+    )
+
     private data class SubsumsjonsmeldingDto(
         val paragraf: String,
         val ledd: String?,
@@ -81,5 +104,25 @@ internal class SubsumsjonProducer(
 
     private enum class Utfall {
         VILKAR_OPPFYLT, VILKAR_IKKE_OPPFYLT, VILKAR_UAVKLART, VILKAR_BEREGNET
+    }
+
+    private class BeregningsgrunnlagBuilder: Visitor {
+        private lateinit var beregningsgrunnlagDto: BeregningsgrunnlagDto
+        override fun visitBeregningsgrunnlag(
+            totaltOmregnetÅrsinntekt: Double,
+            omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
+        ) {
+            beregningsgrunnlagDto = BeregningsgrunnlagDto(
+                totalbeløp = totaltOmregnetÅrsinntekt,
+                omregnedeÅrsinntekter = omregnedeÅrsinntekter.mapValues { (_, inntekt) ->
+                    inntekt.value
+                }
+            )
+        }
+
+        fun build(beregningsgrunnlag: Beregningsgrunnlag): BeregningsgrunnlagDto {
+            beregningsgrunnlag.accept(this)
+            return beregningsgrunnlagDto
+        }
     }
 }

@@ -28,6 +28,7 @@ class DatabaseDtoBuilder : Visitor {
     }
 
     override fun visitBeregningsgrunnlag(
+        totaltOmregnetÅrsinntekt: Double,
         omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
     ) {
         this.omregnedeÅrsinntekter = omregnedeÅrsinntekter

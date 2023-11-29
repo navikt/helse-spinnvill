@@ -1,8 +1,11 @@
 package no.nav.helse.mediator.producer
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.nav.helse.Fødselsnummer
-import no.nav.helse.VersjonAvKode
+import no.nav.helse.*
+import no.nav.helse.helpers.beregningsgrunnlag
+import no.nav.helse.helpers.dummyBeregningsgrunnlag
+import no.nav.helse.helpers.dummySammenligningsgrunnlag
+import no.nav.helse.helpers.sammenligningsgrunnlag
 import no.nav.helse.rapids_rivers.isMissingOrNull
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.*
@@ -24,21 +27,21 @@ internal class SubsumsjonProducerTest {
 
     @Test
     fun `produser subsumsjonsmelding hvis avviket er akseptabelt`() {
-        subsumsjonProducer.avvikVurdert(true, 20.0)
+        subsumsjonProducer.avvikVurdert(true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
         subsumsjonProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
     }
 
     @Test
     fun `produser subsumsjonsmelding hvis avviket ikke er akseptabelt`() {
-        subsumsjonProducer.avvikVurdert(false, 42.0)
+        subsumsjonProducer.avvikVurdert(false, 42.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
         subsumsjonProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
     }
 
     @Test
     fun `subsumsjonskø tømmes etter hver finalize`() {
-        subsumsjonProducer.avvikVurdert(false, 26.0)
+        subsumsjonProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
         subsumsjonProducer.finalize()
         subsumsjonProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
@@ -46,7 +49,7 @@ internal class SubsumsjonProducerTest {
 
     @Test
     fun `ikke send ut subsumsjonsmeldinger før finalize blir kalt`() {
-        subsumsjonProducer.avvikVurdert(false, 26.0)
+        subsumsjonProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
         assertEquals(0, testRapid.inspektør.size)
         subsumsjonProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
@@ -54,7 +57,7 @@ internal class SubsumsjonProducerTest {
 
     @Test
     fun `produserer riktig format på subsumsjonsmelding`() {
-        subsumsjonProducer.avvikVurdert(false, 26.0)
+        subsumsjonProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
         subsumsjonProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
         val message = testRapid.inspektør.message(0)
@@ -76,6 +79,38 @@ internal class SubsumsjonProducerTest {
         assertPresent(subsumsjon["output"])
         assertPresent(subsumsjon["sporing"])
         assertEquals(versjonAvKode.value, subsumsjon["versjonAvKode"].asText())
+    }
+
+    @Test
+    fun `lag subsumsjonsmelding for avviksvurdering`() {
+        val beregningsgrunnlag = beregningsgrunnlag("a1" to 600000.0)
+        val sammenligningsgrunnlag = sammenligningsgrunnlag("a1" to 50000.0)
+        subsumsjonProducer.avvikVurdert(false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag)
+        subsumsjonProducer.finalize()
+        val message = testRapid.inspektør.message(0)
+        assertEquals("subsumsjon", message["@event_name"].asText())
+
+        val subsumsjon = message["subsumsjon"]
+
+        assertEquals("8-30", subsumsjon["paragraf"].asText())
+        assertEquals(2, subsumsjon["ledd"].asInt())
+        assertEquals(1, subsumsjon["punktum"].asInt())
+        assertEquals("VILKAR_BEREGNET", subsumsjon["utfall"].asText())
+
+        assertPresent(subsumsjon["input"])
+        val input = subsumsjon["input"]
+        val output = subsumsjon["output"]
+
+        assertPresent(input["grunnlagForSykepengegrunnlag"])
+
+        val beregningsgrunnlagNode = input["grunnlagForSykepengegrunnlag"]
+        assertEquals(600000.0, beregningsgrunnlagNode["totalbeløp"].asDouble())
+        assertPresent(beregningsgrunnlagNode["omregnedeÅrsinntekter"])
+
+        val omregnedeÅrsinntekterNode = beregningsgrunnlagNode["omregnedeÅrsinntekter"]
+        assertEquals("a1", omregnedeÅrsinntekterNode[0]["arbeidsgiverreferanse"].asText())
+        assertEquals(600000.0, omregnedeÅrsinntekterNode[0]["inntekt"].asDouble())
+
     }
 
     private fun assertPresent(jsonNode: JsonNode?) {

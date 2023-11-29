@@ -28,7 +28,7 @@ class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter:
     }
 
     fun accept(visitor: Visitor) {
-        visitor.visitBeregningsgrunnlag(omregnedeÅrsinntekter)
+        visitor.visitBeregningsgrunnlag(totalOmregnetÅrsinntekt, omregnedeÅrsinntekter)
     }
 
     companion object {

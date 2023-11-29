@@ -2,6 +2,8 @@ package no.nav.helse.mediator.producer
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.nav.helse.Fødselsnummer
+import no.nav.helse.helpers.dummyBeregningsgrunnlag
+import no.nav.helse.helpers.dummySammenligningsgrunnlag
 import no.nav.helse.rapids_rivers.isMissingOrNull
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.*
@@ -22,14 +24,14 @@ class VarselProducerTest {
 
     @Test
     fun `ikke produser varsel hvis avviket er akseptabelt`() {
-        varselProducer.avvikVurdert(true, 20.0)
+        varselProducer.avvikVurdert(true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
         varselProducer.finalize()
         assertEquals(0, testRapid.inspektør.size)
     }
 
     @Test
     fun `varselkø tømmes etter hver finalize`() {
-        varselProducer.avvikVurdert(false, 26.0)
+        varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
         varselProducer.finalize()
         varselProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
@@ -37,7 +39,7 @@ class VarselProducerTest {
 
     @Test
     fun `ikke send ut varsler før finalize blir kalt`() {
-        varselProducer.avvikVurdert(false, 26.0)
+        varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
         assertEquals(0, testRapid.inspektør.size)
         varselProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
@@ -45,7 +47,7 @@ class VarselProducerTest {
 
     @Test
     fun `produser riktig format på varsel`() {
-        varselProducer.avvikVurdert(false, 26.0)
+        varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
         varselProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
         val message = testRapid.inspektør.message(0)
@@ -69,7 +71,7 @@ class VarselProducerTest {
 
     @Test
     fun `produser varsel hvis avviket ikke er akseptabelt`() {
-        varselProducer.avvikVurdert(false, 26.0)
+        varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag)
         varselProducer.finalize()
         val message = testRapid.inspektør.message(0)
         val varsel = message["aktiviteter"][0]

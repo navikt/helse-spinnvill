@@ -68,7 +68,12 @@ internal class AvviksvurderingTest {
             avviksvurderinger.clear()
         }
 
-        override fun avvikVurdert(harAkseptabeltAvvik: Boolean, avviksprosent: Double) {
+        override fun avvikVurdert(
+            harAkseptabeltAvvik: Boolean,
+            avviksprosent: Double,
+            beregningsgrunnlag: Beregningsgrunnlag,
+            sammenligningsgrunnlag: Sammenligningsgrunnlag
+        ) {
             avviksvurderinger.add(harAkseptabeltAvvik to avviksprosent)
         }
     }
