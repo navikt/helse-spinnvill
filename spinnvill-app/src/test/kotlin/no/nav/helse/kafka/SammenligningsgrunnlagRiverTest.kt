@@ -163,6 +163,33 @@ class SammenligningsgrunnlagRiverTest {
         )
         assertEquals(0, messageHandler.messages.size)
     }
+    @Test
+    fun `Leser ikke inn sammenligningsgrunnlag hvis det ikke er final`() {
+        testRapid.sendTestMessage(
+            sammenligningsgrunnlagJsonMed(
+                aktørId = AKTØRID,
+                fødselsnummer = FØDSELSNUMMER,
+                organisasjonsnummer = ORGANISASJONSNUMMER,
+                skjæringstidspunkt = 1.januar,
+                inntekter = inntekterForSammenligningsgrunnlag(
+                    YearMonth.of(2023, 1) to listOf(inntekt(fordel = null))
+                ),
+                final = false
+            )
+        )
+        testRapid.sendTestMessage(
+            sammenligningsgrunnlagJsonMed(
+                aktørId = AKTØRID,
+                fødselsnummer = FØDSELSNUMMER,
+                organisasjonsnummer = ORGANISASJONSNUMMER,
+                skjæringstidspunkt = 1.januar,
+                inntekter = inntekterForSammenligningsgrunnlag(
+                    YearMonth.of(2023, 1) to listOf(inntekt(fordel = null))
+                )
+            )
+        )
+        assertEquals(1, messageHandler.messages.size)
+    }
 
     private fun inntekterForSammenligningsgrunnlag(
         vararg inntekter: Pair<YearMonth?, List<Inntekt>?>
@@ -213,7 +240,8 @@ class SammenligningsgrunnlagRiverTest {
         fødselsnummer: String,
         organisasjonsnummer: String,
         skjæringstidspunkt: LocalDate,
-        inntekter: List<InntektForSammenligningsgrunnlag>
+        inntekter: List<InntektForSammenligningsgrunnlag>,
+        final: Boolean = true
     ): String {
         @Language("JSON")
         val json = """
@@ -238,7 +266,8 @@ class SammenligningsgrunnlagRiverTest {
               "@opprettet": "2018-01-01T00:00:00.000",
               "@løsning": {
                 "InntekterForSammenligningsgrunnlag": ${inntekter.toJson()}
-              }
+              },
+              "@final": $final
             }
         """.trimIndent()
         return json

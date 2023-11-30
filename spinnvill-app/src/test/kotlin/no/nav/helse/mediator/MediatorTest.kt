@@ -265,6 +265,7 @@ internal class MediatorTest {
             )
 
         melding.replace("@løsning", objectMapper.valueToTree(løsning))
+        melding.replace("@final", objectMapper.valueToTree(true))
 
         testRapid.sendTestMessage(objectMapper.writeValueAsString(melding))
     }
@@ -349,7 +350,8 @@ internal class MediatorTest {
         aktørId: String,
         fødselsnummer: String,
         organisasjonsnummer: String,
-        skjæringstidspunkt: LocalDate
+        skjæringstidspunkt: LocalDate,
+        final: Boolean = true
     ): String {
         @Language("JSON")
         val json = """
@@ -372,6 +374,7 @@ internal class MediatorTest {
               "utkastTilVedtak": {},
               "@id": "ecfe47f6-2063-451a-b7e1-182490cc3153",
               "@opprettet": "2018-01-01T00:00:00.000",
+              "@final": $final,
               "@løsning": {
                 "InntekterForSammenligningsgrunnlag": [
                   {
