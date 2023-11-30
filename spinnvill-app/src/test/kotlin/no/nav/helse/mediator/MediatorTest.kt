@@ -243,6 +243,34 @@ internal class MediatorTest {
         assertEquals(beregningsgrunnlag, avviksvurdering.beregningsgrunnlag)
     }
 
+    @Test
+    fun `bruker ikke nytt sammenligningsgrunnlag hvis vi har en eksisterende vilkårsvurdering for samme fnr og skjæringstidspunkt`() {
+        val skjæringstidspunkt = 1.januar
+        val fødselsnummer = "12345678910".somFnr()
+        val organisasjonsnummer = "987654321".somArbeidsgiverref()
+        val beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
+            mapOf(
+                organisasjonsnummer to OmregnetÅrsinntekt(500000.0),
+            )
+        )
+
+        testRapid.sendTestMessage(utkastTilVedtakJson(
+            aktørId = "1234567891011",
+            fødselsnummer = fødselsnummer.value,
+            organisasjonsnummer = organisasjonsnummer.value,
+            skjæringstidspunkt = skjæringstidspunkt,
+            beregningsgrunnlagDto = beregningsgrunnlag
+        ))
+
+        håndterSammenligningsgrunnlagMelding()
+        val avviksvurdering1 = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
+
+        håndterSammenligningsgrunnlagMelding()
+        val avviksvurdering2 = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
+
+        assertEquals(avviksvurdering1, avviksvurdering2)
+    }
+
     private fun håndterSammenligningsgrunnlagMelding() {
         val melding = testRapid.inspektør.sisteBehov("InntekterForSammenligningsgrunnlag")?.deepCopy<ObjectNode>()
 

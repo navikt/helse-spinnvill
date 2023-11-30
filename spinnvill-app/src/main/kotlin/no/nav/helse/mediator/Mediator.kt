@@ -73,17 +73,30 @@ class Mediator(
     }
 
     override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
+        val fødselsnummer = Fødselsnummer(sammenligningsgrunnlagMessage.fødselsnummer)
+        val skjæringstidspunkt = sammenligningsgrunnlagMessage.skjæringstidspunkt
+
+        if (avviksvurdering(fødselsnummer, skjæringstidspunkt) != null) {
+            logg.warn("Ignorerer duplikat sammenligningsgrunnlag for eksisterende avviksvurdering")
+            sikkerlogg.warn(
+                "Ignorerer duplikat sammenligningsgrunnlag for {} {}",
+                kv("fødselsnummer", fødselsnummer.value),
+                kv("skjæringstidspunkg", skjæringstidspunkt)
+            )
+            return
+        }
+
         database.lagreAvviksvurdering(
             AvviksvurderingDto(
                 id = UUID.randomUUID(),
-                fødselsnummer = Fødselsnummer(sammenligningsgrunnlagMessage.fødselsnummer),
-                skjæringstidspunkt = sammenligningsgrunnlagMessage.skjæringstidspunkt,
+                fødselsnummer = fødselsnummer,
+                skjæringstidspunkt = skjæringstidspunkt,
                 sammenligningsgrunnlag = sammenligningsgrunnlagMessage.sammenligningsgrunnlag.dto(),
                 beregningsgrunnlag = null
             )
         )
 
-        rapidsConnection.queueReplayMessage(sammenligningsgrunnlagMessage.fødselsnummer, sammenligningsgrunnlagMessage.utkastTilVedtakJson)
+        rapidsConnection.queueReplayMessage(fødselsnummer.value, sammenligningsgrunnlagMessage.utkastTilVedtakJson)
     }
 
     private fun håndter(
@@ -94,8 +107,9 @@ class Mediator(
         varselProducer: VarselProducer,
         subsumsjonProducer: SubsumsjonProducer
     ) {
-        val avviksvurdering = avviksvurdering(fødselsnummer, skjæringstidspunkt)?.vurderBehovForNyVurdering(beregningsgrunnlag)
-            ?: return beOmSammenligningsgrunnlag(skjæringstidspunkt, behovProducer)
+        val avviksvurdering =
+            avviksvurdering(fødselsnummer, skjæringstidspunkt)?.vurderBehovForNyVurdering(beregningsgrunnlag)
+                ?: return beOmSammenligningsgrunnlag(skjæringstidspunkt, behovProducer)
         avviksvurdering.register(varselProducer)
         avviksvurdering.register(subsumsjonProducer)
         avviksvurdering.håndter(beregningsgrunnlag)
@@ -158,7 +172,13 @@ class Mediator(
             AvviksvurderingDto.SammenligningsgrunnlagDto(
                 this.entries.associate { (organisasjonsnummer, inntekter) ->
                     Arbeidsgiverreferanse(organisasjonsnummer) to inntekter.map {
-                        AvviksvurderingDto.MånedligInntektDto(InntektPerMåned(it.beløp), it.årMåned, it.fordel, it.beskrivelse, it.inntektstype.tilDto())
+                        AvviksvurderingDto.MånedligInntektDto(
+                            InntektPerMåned(it.beløp),
+                            it.årMåned,
+                            it.fordel,
+                            it.beskrivelse,
+                            it.inntektstype.tilDto()
+                        )
                     }
                 }
             )
