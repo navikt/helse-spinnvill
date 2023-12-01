@@ -36,7 +36,6 @@ internal class SubsumsjonProducer(
         sammenligningsgrunnlag: Sammenligningsgrunnlag,
         maksimaltTillattAvvik: Double,
     ) {
-
         subsumsjonskø.add(
             AvviksvurderingSubsumsjonBuilder(
                 harAkseptabeltAvvik = harAkseptabeltAvvik,

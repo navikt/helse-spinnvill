@@ -33,10 +33,10 @@ internal class AvviksvurderingSubsumsjonBuilder(
                 "maksimaltTillattAvvikPåÅrsinntekt" to maksimaltTillattAvvik,
                 "grunnlagForSykepengegrunnlag" to mapOf(
                     "totalbeløp" to beregningsgrunnlagDto.totalbeløp,
-                    "omregnedeÅrsinntekter" to beregningsgrunnlagDto.omregnedeÅrsinntekter.map {
+                    "omregnedeÅrsinntekter" to beregningsgrunnlagDto.omregnedeÅrsinntekter.map { (arbeidsgiverreferanse, omregnetÅrsinntekt) ->
                         mapOf(
-                            "arbeidsgiverreferanse" to it.key.value,
-                            "inntekt" to it.value
+                            "arbeidsgiverreferanse" to arbeidsgiverreferanse.value,
+                            "inntekt" to omregnetÅrsinntekt.value
                         )
                     }
                 ),
@@ -67,7 +67,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
 
     private data class BeregningsgrunnlagDto(
         val totalbeløp: Double,
-        val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, Double>
+        val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
     )
 
     private data class SammenligningsgrunnlagDto(
@@ -91,9 +91,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
         ) {
             beregningsgrunnlagDto = BeregningsgrunnlagDto(
                 totalbeløp = totaltOmregnetÅrsinntekt,
-                omregnedeÅrsinntekter = omregnedeÅrsinntekter.mapValues { (_, inntekt) ->
-                    inntekt.value
-                }
+                omregnedeÅrsinntekter = omregnedeÅrsinntekter
             )
         }
 
