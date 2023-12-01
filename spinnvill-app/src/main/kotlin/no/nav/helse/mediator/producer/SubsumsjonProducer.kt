@@ -44,7 +44,7 @@ internal class SubsumsjonProducer(
                 maksimaltTillattAvvik = maksimaltTillattAvvik,
                 beregningsgrunnlag = beregningsgrunnlag,
                 sammenligningsgrunnlag = sammenligningsgrunnlag
-            ).build()
+            ).buildSubsumsjon()
         )
     }
 

@@ -20,7 +20,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
     private val beregningsgrunnlagDto = BeregningsgrunnlagBuilder().build(beregningsgrunnlag)
     private val sammenligningsgrunnlagDto = SammenligningsgrunnlagBuilder().build(sammenligningsgrunnlag)
 
-    internal fun build(): SubsumsjonProducer.SubsumsjonsmeldingDto {
+    internal fun buildSubsumsjon(): SubsumsjonProducer.SubsumsjonsmeldingDto {
         return SubsumsjonProducer.SubsumsjonsmeldingDto(
             paragraf = "8-30",
             ledd = 2,
