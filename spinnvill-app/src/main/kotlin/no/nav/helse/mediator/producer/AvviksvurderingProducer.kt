@@ -59,7 +59,7 @@ class AvviksvurderingProducer(
                             ),
                             "sammenligningsgrunnlag" to mapOf(
                                 "totalbeløp" to it.sammenligningsgrunnlagTotalbeløp,
-                                "innraporterteInntekter" to it.innrapporterteInntekter.map { (arbeidsgiverreferanse, inntekter) ->
+                                "innrapporterteInntekter" to it.innrapporterteInntekter.map { (arbeidsgiverreferanse, inntekter) ->
                                     mapOf(
                                         "arbeidsgiverreferanse" to arbeidsgiverreferanse,
                                         "inntekter" to inntekter.map { (årMåned, beløp) ->

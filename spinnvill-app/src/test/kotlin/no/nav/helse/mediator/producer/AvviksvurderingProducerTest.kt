@@ -126,8 +126,8 @@ class AvviksvurderingProducerTest {
         assertPresent(avviksvurdering["sammenligningsgrunnlag"])
         val sammenligningsgrunnlag = avviksvurdering["sammenligningsgrunnlag"]
         assertPresent(sammenligningsgrunnlag["totalbeløp"])
-        assertPresent(sammenligningsgrunnlag["innraporterteInntekter"])
-        val innrapporterteInntekter = sammenligningsgrunnlag["innraporterteInntekter"]
+        assertPresent(sammenligningsgrunnlag["innrapporterteInntekter"])
+        val innrapporterteInntekter = sammenligningsgrunnlag["innrapporterteInntekter"]
         assertEquals(1, innrapporterteInntekter.size())
         val enInnrapportertInntekt = innrapporterteInntekter.first()
         assertPresent(enInnrapportertInntekt["arbeidsgiverreferanse"])
