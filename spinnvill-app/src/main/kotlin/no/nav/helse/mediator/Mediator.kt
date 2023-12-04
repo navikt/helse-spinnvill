@@ -6,6 +6,7 @@ import no.nav.helse.avviksvurdering.*
 import no.nav.helse.db.Database
 import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.kafka.*
+import no.nav.helse.mediator.producer.AvviksvurderingProducer
 import no.nav.helse.mediator.producer.BehovProducer
 import no.nav.helse.mediator.producer.SubsumsjonProducer
 import no.nav.helse.mediator.producer.VarselProducer
@@ -54,6 +55,12 @@ class Mediator(
             versjonAvKode = versjonAvKode,
             rapidsConnection = rapidsConnection
         )
+        val avviksvurderingProducer = AvviksvurderingProducer(
+            fødselsnummer = utkastTilVedtakMessage.fødselsnummer.somFnr(),
+            aktørId = utkastTilVedtakMessage.aktørId.somAktørId(),
+            skjæringstidspunkt = utkastTilVedtakMessage.skjæringstidspunkt,
+            rapidsConnection = rapidsConnection
+        )
         val beregningsgrunnlag = Beregningsgrunnlag.opprett(
             utkastTilVedtakMessage.beregningsgrunnlag.entries.associate {
                 Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value)
@@ -65,11 +72,13 @@ class Mediator(
             skjæringstidspunkt = utkastTilVedtakMessage.skjæringstidspunkt,
             behovProducer = behovProducer,
             varselProducer = varselProducer,
-            subsumsjonProducer = subsumsjonProducer
+            subsumsjonProducer = subsumsjonProducer,
+            avviksvurderingProducer = avviksvurderingProducer
         )
         behovProducer.finalize()
         varselProducer.finalize()
         subsumsjonProducer.finalize()
+        avviksvurderingProducer.finalize()
     }
 
     override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
@@ -105,13 +114,15 @@ class Mediator(
         skjæringstidspunkt: LocalDate,
         behovProducer: BehovProducer,
         varselProducer: VarselProducer,
-        subsumsjonProducer: SubsumsjonProducer
+        subsumsjonProducer: SubsumsjonProducer,
+        avviksvurderingProducer: AvviksvurderingProducer
     ) {
         val avviksvurdering =
             avviksvurdering(fødselsnummer, skjæringstidspunkt)?.vurderBehovForNyVurdering(beregningsgrunnlag)
                 ?: return beOmSammenligningsgrunnlag(skjæringstidspunkt, behovProducer)
         avviksvurdering.register(varselProducer)
         avviksvurdering.register(subsumsjonProducer)
+        avviksvurdering.register(avviksvurderingProducer)
         avviksvurdering.håndter(beregningsgrunnlag)
         val builder = DatabaseDtoBuilder()
         avviksvurdering.accept(builder)

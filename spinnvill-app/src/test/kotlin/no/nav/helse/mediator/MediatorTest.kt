@@ -124,9 +124,10 @@ internal class MediatorTest {
         assertNotNull(fullstendigAvviksvurdering)
         assertNotNull(fullstendigAvviksvurdering.beregningsgrunnlag)
 
-        assertEquals(2, testRapid.inspektør.size)
+        assertEquals(3, testRapid.inspektør.size)
         assertEquals(1, testRapid.inspektør.hendelser("nye_varsler").size)
         assertEquals(1, testRapid.inspektør.hendelser("subsumsjon").size)
+        assertEquals(1, testRapid.inspektør.hendelser("avviksvurdering").size)
     }
 
     @Test
@@ -161,6 +162,7 @@ internal class MediatorTest {
         val sisteAvviksvurdering = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
 
         assertEquals(avviksvurdering, sisteAvviksvurdering)
+        assertEquals(0, testRapid.inspektør.size)
     }
 
     @Test

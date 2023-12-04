@@ -11,9 +11,9 @@ import java.time.YearMonth
 
 class AvviksvurderingProducer(
     private val fødselsnummer: Fødselsnummer,
-    private val rapidsConnection: RapidsConnection,
     private val aktørId: AktørId,
-    private val skjæringstidspunkt: LocalDate
+    private val skjæringstidspunkt: LocalDate,
+    private val rapidsConnection: RapidsConnection,
 ) : KriterieObserver {
     private val avviksvurderingKø = mutableListOf<AvviksvurderingDto>()
     override fun avvikVurdert(
