@@ -7,6 +7,7 @@ import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import no.nav.helse.helpers.januar
 import no.nav.helse.rapids_rivers.asLocalDate
+import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.isMissingOrNull
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions
@@ -39,6 +40,7 @@ class AvviksvurderingProducerTest {
         avviksvurderingProducer.finalize()
         assertEquals(1, testRapid.inspektør.size)
     }
+
     @Test
     fun `produser avviksvurdering for uakseptebelt avvik`() {
         avviksvurderingProducer.avvikVurdert(
@@ -90,17 +92,24 @@ class AvviksvurderingProducerTest {
                     "987654321".somArbeidsgiverref() to OmregnetÅrsinntekt(
                         400000.0
                     )
-                )),
-            sammenligningsgrunnlag = Sammenligningsgrunnlag(listOf(ArbeidsgiverInntekt(
-                arbeidsgiverreferanse = "987654321".somArbeidsgiverref(),
-                inntekter = listOf(ArbeidsgiverInntekt.MånedligInntekt(
-                    inntekt = InntektPerMåned(30000.0),
-                    måned = YearMonth.from(1.januar),
-                    fordel = null,
-                    beskrivelse = null,
-                    inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
-                ))
-            ))),
+                )
+            ),
+            sammenligningsgrunnlag = Sammenligningsgrunnlag(
+                listOf(
+                    ArbeidsgiverInntekt(
+                        arbeidsgiverreferanse = "987654321".somArbeidsgiverref(),
+                        inntekter = listOf(
+                            ArbeidsgiverInntekt.MånedligInntekt(
+                                inntekt = InntektPerMåned(30000.0),
+                                måned = YearMonth.from(1.januar),
+                                fordel = null,
+                                beskrivelse = null,
+                                inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                            )
+                        )
+                    )
+                )
+            ),
             maksimaltTillattAvvik = 25.0
         )
         avviksvurderingProducer.finalize()
@@ -137,6 +146,87 @@ class AvviksvurderingProducerTest {
         val enInntekt = inntekter.first()
         assertPresent(enInntekt["årMåned"])
         assertPresent(enInntekt["beløp"])
+    }
+
+    @Test
+    fun `lager en avviksvurderingmelding`() {
+        val arbeidsgiver1 = "987654321".somArbeidsgiverref()
+        val arbeidsgiver2 = "987654322".somArbeidsgiverref()
+        val omregnetÅrsinntekt1 = OmregnetÅrsinntekt(
+            400000.0
+        )
+        val omregnetÅrsinntekt2 = OmregnetÅrsinntekt(
+            400000.0
+        )
+
+        val avviksprosent = 24.9
+        avviksvurderingProducer.avvikVurdert(
+            avviksprosent = avviksprosent,
+            harAkseptabeltAvvik = true,
+            beregningsgrunnlag = Beregningsgrunnlag.opprett(
+                mapOf(
+                    arbeidsgiver1 to omregnetÅrsinntekt1,
+                    arbeidsgiver2 to omregnetÅrsinntekt2
+                )
+            ),
+            sammenligningsgrunnlag = Sammenligningsgrunnlag(
+                listOf(
+                    ArbeidsgiverInntekt(
+                        arbeidsgiverreferanse = arbeidsgiver1,
+                        inntekter = listOf(
+                            ArbeidsgiverInntekt.MånedligInntekt(
+                                inntekt = InntektPerMåned(30000.0),
+                                måned = YearMonth.from(1.januar),
+                                fordel = null,
+                                beskrivelse = null,
+                                inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                            )
+                        )
+                    ),
+                    ArbeidsgiverInntekt(
+                        arbeidsgiverreferanse = arbeidsgiver2,
+                        inntekter = listOf(
+                            ArbeidsgiverInntekt.MånedligInntekt(
+                                inntekt = InntektPerMåned(30000.0),
+                                måned = YearMonth.from(1.januar),
+                                fordel = null,
+                                beskrivelse = null,
+                                inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                            )
+                        )
+                    )
+                )
+            ),
+            maksimaltTillattAvvik = 25.0
+        )
+        avviksvurderingProducer.finalize()
+
+        val message = testRapid.inspektør.message(0)
+        val avviksvurdering = message["avviksvurdering"]
+        assertEquals(avviksprosent, avviksvurdering["avviksprosent"].asDouble())
+        val beregningsgrunnlag = avviksvurdering["beregningsgrunnlag"]
+        assertEquals(800000.0, beregningsgrunnlag["totalbeløp"].asDouble())
+        val omregnedeÅrsinntekter = beregningsgrunnlag["omregnedeÅrsinntekter"]
+        assertEquals(2, omregnedeÅrsinntekter.size())
+        val inntekt1 = omregnedeÅrsinntekter[0]
+        assertEquals(arbeidsgiver1.value, inntekt1["arbeidsgiverreferanse"].asText())
+        val inntekt2 = omregnedeÅrsinntekter[1]
+        assertEquals(arbeidsgiver2.value, inntekt2["arbeidsgiverreferanse"].asText())
+
+        val sammenligningsgrunnlag = avviksvurdering["sammenligningsgrunnlag"]
+        assertEquals(60000.0, sammenligningsgrunnlag["totalbeløp"].asDouble())
+        val innrapporterteInntekter = sammenligningsgrunnlag["innrapporterteInntekter"]
+        val innrapportertInntekt1 = innrapporterteInntekter[0]
+        assertEquals(arbeidsgiver1.value, innrapportertInntekt1["arbeidsgiverreferanse"].asText())
+        val inntekter1 = innrapportertInntekt1["inntekter"]
+        assertEquals(YearMonth.from(1.januar), inntekter1.first()["årMåned"].asYearMonth())
+        assertEquals(30000.0, inntekter1.first()["beløp"].asDouble())
+
+        val innrapportertInntekt2 = innrapporterteInntekter[1]
+        assertEquals(arbeidsgiver2.value, innrapportertInntekt2["arbeidsgiverreferanse"].asText())
+        val inntekter2 = innrapportertInntekt2["inntekter"]
+        assertEquals(YearMonth.from(1.januar), inntekter2.first()["årMåned"].asYearMonth())
+        assertEquals(30000.0, inntekter2.first()["beløp"].asDouble())
     }
 
     private fun assertPresent(jsonNode: JsonNode?) {
