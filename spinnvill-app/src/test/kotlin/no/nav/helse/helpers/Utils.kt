@@ -14,17 +14,26 @@ internal fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) = Be
 )
 
 internal fun sammenligningsgrunnlag(vararg arbeidsgiverInntekt: Pair<String, Double>): Sammenligningsgrunnlag {
+    return sammenligningsgrunnlag(List(12) { YearMonth.of(2018, it + 1) }, *arbeidsgiverInntekt)
+}
+
+internal fun sammenligningsgrunnlag(
+    måneder: List<YearMonth>,
+    vararg arbeidsgiverInntekt: Pair<String, Double>
+): Sammenligningsgrunnlag {
     return Sammenligningsgrunnlag(
-        arbeidsgiverInntekt.map {(arbeidsgiver, inntekt) ->
-            ArbeidsgiverInntekt(Arbeidsgiverreferanse(arbeidsgiver), List(12) {
-                ArbeidsgiverInntekt.MånedligInntekt(
-                    inntekt = InntektPerMåned(inntekt),
-                    måned = YearMonth.of(2018, it + 1),
-                    fordel = Fordel("En fordel"),
-                    beskrivelse = Beskrivelse("En beskrivelse"),
-                    inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
-                )
-            })
+        arbeidsgiverInntekt.map { (arbeidsgiver, inntekt) ->
+            ArbeidsgiverInntekt(
+                Arbeidsgiverreferanse(arbeidsgiver),
+                måneder.map {
+                    ArbeidsgiverInntekt.MånedligInntekt(
+                        inntekt = InntektPerMåned(inntekt),
+                        måned = it,
+                        fordel = Fordel("En fordel"),
+                        beskrivelse = Beskrivelse("En beskrivelse"),
+                        inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                    )
+                })
 
         }
     )

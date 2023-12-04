@@ -17,19 +17,21 @@ internal class AvviksvurderingSubsumsjonBuilder(
     sammenligningsgrunnlag: Sammenligningsgrunnlag,
 ) {
     private val beregningsgrunnlagDto = BeregningsgrunnlagBuilder().build(beregningsgrunnlag)
-    private val sammenligningsgrunnlagDto = SammenligningsgrunnlagBuilder().buildForSubsumsjon(sammenligningsgrunnlag)
+    private val sammenligningsgrunnlagBuilder = SammenligningsgrunnlagBuilder(sammenligningsgrunnlag)
 
     internal fun buildAvviksvurdering(): AvviksvurderingProducer.AvviksvurderingDto {
+        val sammenligningsgrunnlagDto = sammenligningsgrunnlagBuilder.buildForAvviksvurdering()
         return AvviksvurderingProducer.AvviksvurderingDto(
             avviksprosent = avviksprosent,
             beregningsgrunnlagTotalbeløp = beregningsgrunnlagDto.totalbeløp,
             omregnedeÅrsinntekter = beregningsgrunnlagDto.omregnedeÅrsinntekter,
             sammenligningsgrunnlagTotalbeløp = sammenligningsgrunnlagDto.totalbeløp,
-            innrapporterteInntekter = sammenligningsgrunnlagDto.månedligeInntekter.tilInnrapporterteInntekter()
+            innrapporterteInntekter = sammenligningsgrunnlagDto.arbeidsgiverligeInntekter
         )
     }
 
     internal fun buildSubsumsjon(): SubsumsjonProducer.SubsumsjonsmeldingDto {
+        val sammenligningsgrunnlagDto = sammenligningsgrunnlagBuilder.buildForSubsumsjon()
         return SubsumsjonProducer.SubsumsjonsmeldingDto(
             paragraf = "8-30",
             ledd = 2,
@@ -74,24 +76,19 @@ internal class AvviksvurderingSubsumsjonBuilder(
         )
     }
 
-    private fun Map<YearMonth, List<MånedligInntekt>>.tilInnrapporterteInntekter(): List<AvviksvurderingProducer.AvviksvurderingDto.InnrapportertInntekt> =
-        entries.flatMap { (yearMonth, månedligInntektList) ->
-            månedligInntektList.map {
-                AvviksvurderingProducer.AvviksvurderingDto.InnrapportertInntekt(
-                    arbeidsgiverreferanse = it.arbeidsgiverreferanse,
-                    inntekter = mapOf(yearMonth to it.inntekt)
-                )
-            }
-        }
-
     private data class BeregningsgrunnlagDto(
         val totalbeløp: Double,
         val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
     )
 
-    private data class SammenligningsgrunnlagDto(
+    private data class SammenligningsgrunnlagSubsumsjonDto(
         val totalbeløp: Double,
         val månedligeInntekter: Map<YearMonth, List<MånedligInntekt>>
+    )
+
+    private data class SammenligningsgrunnlagAvviksvurderingDto(
+        val totalbeløp: Double,
+        val arbeidsgiverligeInntekter: List<AvviksvurderingProducer.AvviksvurderingDto.InnrapportertInntektDto>
     )
 
     private data class MånedligInntekt(
@@ -128,7 +125,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
         }
     }
 
-    private class SammenligningsgrunnlagBuilder : Visitor {
+    private class SammenligningsgrunnlagBuilder(private val sammenligningsgrunnlag: Sammenligningsgrunnlag) : Visitor {
         private var totalbeløp by Delegates.notNull<Double>()
         private val arbeidsgiverInntekter = mutableMapOf<Arbeidsgiverreferanse, MutableList<ArbeidsgiverligInntekt>>()
 
@@ -151,10 +148,10 @@ internal class AvviksvurderingSubsumsjonBuilder(
             })
         }
 
-        fun buildForSubsumsjon(sammenligningsgrunnlag: Sammenligningsgrunnlag): SammenligningsgrunnlagDto {
+        fun buildForSubsumsjon(): SammenligningsgrunnlagSubsumsjonDto {
             sammenligningsgrunnlag.accept(this)
 
-            return SammenligningsgrunnlagDto(
+            return SammenligningsgrunnlagSubsumsjonDto(
                 totalbeløp = totalbeløp,
                 månedligeInntekter = arbeidsgiverInntekter
                     .flatMap { (arbeidsgiverreferanse, inntekter) ->
@@ -168,7 +165,26 @@ internal class AvviksvurderingSubsumsjonBuilder(
                             )
                         }
                     }
-                    .groupBy( { it.first }) { it.second }
+                    .groupBy({ it.first }) { it.second }
+            )
+        }
+
+        fun buildForAvviksvurdering(): SammenligningsgrunnlagAvviksvurderingDto {
+            sammenligningsgrunnlag.accept(this)
+
+            return SammenligningsgrunnlagAvviksvurderingDto(
+                totalbeløp = totalbeløp,
+                arbeidsgiverligeInntekter = arbeidsgiverInntekter.map { (arbeidsgiverreferanse, inntekter) ->
+                    AvviksvurderingProducer.AvviksvurderingDto.InnrapportertInntektDto(
+                        arbeidsgiverreferanse,
+                        inntekter.map {
+                            AvviksvurderingProducer.AvviksvurderingDto.MånedligInntektDto(
+                                it.måned,
+                                it.inntekt
+                            )
+                        }
+                    )
+                }
             )
         }
 

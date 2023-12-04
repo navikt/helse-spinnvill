@@ -84,11 +84,16 @@ class AvviksvurderingProducer(
         val beregningsgrunnlagTotalbeløp: Double,
         val sammenligningsgrunnlagTotalbeløp: Double,
         val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>,
-        val innrapporterteInntekter: List<InnrapportertInntekt>
+        val innrapporterteInntekter: List<InnrapportertInntektDto>
     ) {
-        data class InnrapportertInntekt(
+        data class InnrapportertInntektDto(
             val arbeidsgiverreferanse: Arbeidsgiverreferanse,
-            val inntekter: Map<YearMonth, InntektPerMåned>
+            val inntekter: List<MånedligInntektDto>
+        )
+
+        data class MånedligInntektDto(
+            val måned: YearMonth,
+            val beløp: InntektPerMåned,
         )
     }
 }
