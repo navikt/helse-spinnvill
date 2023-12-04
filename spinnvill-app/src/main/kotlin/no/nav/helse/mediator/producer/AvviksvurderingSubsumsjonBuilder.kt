@@ -1,13 +1,10 @@
 package no.nav.helse.mediator.producer
 
-import no.nav.helse.Arbeidsgiverreferanse
-import no.nav.helse.InntektPerMåned
-import no.nav.helse.OmregnetÅrsinntekt
+import no.nav.helse.*
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import no.nav.helse.avviksvurdering.Visitor
-import no.nav.helse.somArbeidsgiverref
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.properties.Delegates
@@ -20,7 +17,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
     sammenligningsgrunnlag: Sammenligningsgrunnlag,
 ) {
     private val beregningsgrunnlagDto = BeregningsgrunnlagBuilder().build(beregningsgrunnlag)
-    private val sammenligningsgrunnlagDto = SammenligningsgrunnlagBuilder().build(sammenligningsgrunnlag)
+    private val sammenligningsgrunnlagDto = SammenligningsgrunnlagBuilder().buildForSubsumsjon(sammenligningsgrunnlag)
 
     internal fun buildAvviksvurdering(): AvviksvurderingProducer.AvviksvurderingDto {
         return AvviksvurderingProducer.AvviksvurderingDto(
@@ -32,11 +29,6 @@ internal class AvviksvurderingSubsumsjonBuilder(
         )
     }
 
-    private fun Map<YearMonth, List<MånedligInntekt>>.tilInnrapporterteInntekter(): List<AvviksvurderingProducer.AvviksvurderingDto.InnrapportertInntekt> {
-        return entries.flatMap { (yearMonth, månedligInntektList) ->
-            månedligInntektList.map { AvviksvurderingProducer.AvviksvurderingDto.InnrapportertInntekt(it.arbeidsgiverreferanse.somArbeidsgiverref(), mapOf(yearMonth to InntektPerMåned(it.inntekt))) }
-        }
-    }
     internal fun buildSubsumsjon(): SubsumsjonProducer.SubsumsjonsmeldingDto {
         return SubsumsjonProducer.SubsumsjonsmeldingDto(
             paragraf = "8-30",
@@ -64,10 +56,10 @@ internal class AvviksvurderingSubsumsjonBuilder(
                             "måned" to måned,
                             "inntekter" to inntekter.map {
                                 mapOf(
-                                    "arbeidsgiverreferanse" to it.arbeidsgiverreferanse,
-                                    "inntekt" to it.inntekt,
-                                    "fordel" to it.fordel,
-                                    "beskrivelse" to it.beskrivelse,
+                                    "arbeidsgiverreferanse" to it.arbeidsgiverreferanse.value,
+                                    "inntekt" to it.inntekt.value,
+                                    "fordel" to it.fordel?.value,
+                                    "beskrivelse" to it.beskrivelse?.value,
                                     "inntektstype" to it.inntektstype,
                                 )
                             }
@@ -82,6 +74,16 @@ internal class AvviksvurderingSubsumsjonBuilder(
         )
     }
 
+    private fun Map<YearMonth, List<MånedligInntekt>>.tilInnrapporterteInntekter(): List<AvviksvurderingProducer.AvviksvurderingDto.InnrapportertInntekt> =
+        entries.flatMap { (yearMonth, månedligInntektList) ->
+            månedligInntektList.map {
+                AvviksvurderingProducer.AvviksvurderingDto.InnrapportertInntekt(
+                    arbeidsgiverreferanse = it.arbeidsgiverreferanse,
+                    inntekter = mapOf(yearMonth to it.inntekt)
+                )
+            }
+        }
+
     private data class BeregningsgrunnlagDto(
         val totalbeløp: Double,
         val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
@@ -93,10 +95,18 @@ internal class AvviksvurderingSubsumsjonBuilder(
     )
 
     private data class MånedligInntekt(
-        val arbeidsgiverreferanse: String,
-        val inntekt: Double,
-        val fordel: String?,
-        val beskrivelse: String?,
+        val arbeidsgiverreferanse: Arbeidsgiverreferanse,
+        val inntekt: InntektPerMåned,
+        val fordel: Fordel?,
+        val beskrivelse: Beskrivelse?,
+        val inntektstype: String
+    )
+
+    private data class ArbeidsgiverligInntekt(
+        val måned: YearMonth,
+        val inntekt: InntektPerMåned,
+        val fordel: Fordel?,
+        val beskrivelse: Beskrivelse?,
         val inntektstype: String
     )
 
@@ -120,7 +130,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
 
     private class SammenligningsgrunnlagBuilder : Visitor {
         private var totalbeløp by Delegates.notNull<Double>()
-        private val inntekter = mutableMapOf<YearMonth, MutableList<MånedligInntekt>>()
+        private val arbeidsgiverInntekter = mutableMapOf<Arbeidsgiverreferanse, MutableList<ArbeidsgiverligInntekt>>()
 
         override fun visitSammenligningsgrunnlag(sammenligningsgrunnlag: Double) {
             totalbeløp = sammenligningsgrunnlag
@@ -130,30 +140,35 @@ internal class AvviksvurderingSubsumsjonBuilder(
             arbeidsgiverreferanse: Arbeidsgiverreferanse,
             inntekter: List<ArbeidsgiverInntekt.MånedligInntekt>
         ) {
-            val inntekterPerMåned = inntekter.groupBy {
-                it.måned
-            }.mapValues { (_, inntekter) ->
-                inntekter.map {
-                    MånedligInntekt(
-                        arbeidsgiverreferanse.value,
-                        it.inntekt.value,
-                        it.fordel?.value,
-                        it.beskrivelse?.value,
-                        it.inntektstype.toSubsumsjonString()
-                    )
-                }
-            }
-
-            inntekterPerMåned.forEach { (måned, inntekter) ->
-                this.inntekter.getOrPut(måned) { mutableListOf() }.addAll(inntekter)
-            }
+            arbeidsgiverInntekter.getOrPut(arbeidsgiverreferanse) { mutableListOf() }.addAll(inntekter.map {
+                ArbeidsgiverligInntekt(
+                    måned = it.måned,
+                    inntekt = it.inntekt,
+                    fordel = it.fordel,
+                    beskrivelse = it.beskrivelse,
+                    inntektstype = it.inntektstype.toSubsumsjonString()
+                )
+            })
         }
 
-        fun build(sammenligningsgrunnlag: Sammenligningsgrunnlag): SammenligningsgrunnlagDto {
+        fun buildForSubsumsjon(sammenligningsgrunnlag: Sammenligningsgrunnlag): SammenligningsgrunnlagDto {
             sammenligningsgrunnlag.accept(this)
+
             return SammenligningsgrunnlagDto(
                 totalbeløp = totalbeløp,
-                månedligeInntekter = inntekter
+                månedligeInntekter = arbeidsgiverInntekter
+                    .flatMap { (arbeidsgiverreferanse, inntekter) ->
+                        inntekter.map { inntekt ->
+                            inntekt.måned to MånedligInntekt(
+                                arbeidsgiverreferanse = arbeidsgiverreferanse,
+                                inntekt = inntekt.inntekt,
+                                fordel = inntekt.fordel,
+                                beskrivelse = inntekt.beskrivelse,
+                                inntektstype = inntekt.inntektstype
+                            )
+                        }
+                    }
+                    .groupBy( { it.first }) { it.second }
             )
         }
 
