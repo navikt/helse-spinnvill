@@ -2,6 +2,8 @@ package no.nav.helse
 
 @JvmInline
 value class Fødselsnummer(val value: String)
+@JvmInline
+value class AktørId(val value: String)
 
 @JvmInline
 value class Arbeidsgiverreferanse(val value: String)

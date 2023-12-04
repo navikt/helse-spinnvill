@@ -1,11 +1,13 @@
 package no.nav.helse.mediator.producer
 
 import no.nav.helse.Arbeidsgiverreferanse
+import no.nav.helse.InntektPerMåned
 import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import no.nav.helse.avviksvurdering.Visitor
+import no.nav.helse.somArbeidsgiverref
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.properties.Delegates
@@ -20,6 +22,21 @@ internal class AvviksvurderingSubsumsjonBuilder(
     private val beregningsgrunnlagDto = BeregningsgrunnlagBuilder().build(beregningsgrunnlag)
     private val sammenligningsgrunnlagDto = SammenligningsgrunnlagBuilder().build(sammenligningsgrunnlag)
 
+    internal fun buildAvviksvurdering(): AvviksvurderingProducer.AvviksvurderingDto {
+        return AvviksvurderingProducer.AvviksvurderingDto(
+            avviksprosent = avviksprosent,
+            beregningsgrunnlagTotalbeløp = beregningsgrunnlagDto.totalbeløp,
+            omregnedeÅrsinntekter = beregningsgrunnlagDto.omregnedeÅrsinntekter,
+            sammenligningsgrunnlagTotalbeløp = sammenligningsgrunnlagDto.totalbeløp,
+            innrapporterteInntekter = sammenligningsgrunnlagDto.månedligeInntekter.tilInnrapporterteInntekter()
+        )
+    }
+
+    private fun Map<YearMonth, List<MånedligInntekt>>.tilInnrapporterteInntekter(): List<AvviksvurderingProducer.AvviksvurderingDto.InnrapportertInntekt> {
+        return entries.flatMap { (yearMonth, månedligInntektList) ->
+            månedligInntektList.map { AvviksvurderingProducer.AvviksvurderingDto.InnrapportertInntekt(it.arbeidsgiverreferanse.somArbeidsgiverref(), mapOf(yearMonth to InntektPerMåned(it.inntekt))) }
+        }
+    }
     internal fun buildSubsumsjon(): SubsumsjonProducer.SubsumsjonsmeldingDto {
         return SubsumsjonProducer.SubsumsjonsmeldingDto(
             paragraf = "8-30",
@@ -83,7 +100,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
         val inntektstype: String
     )
 
-    private class BeregningsgrunnlagBuilder: Visitor {
+    private class BeregningsgrunnlagBuilder : Visitor {
         private lateinit var beregningsgrunnlagDto: BeregningsgrunnlagDto
         override fun visitBeregningsgrunnlag(
             totaltOmregnetÅrsinntekt: Double,
@@ -100,7 +117,8 @@ internal class AvviksvurderingSubsumsjonBuilder(
             return beregningsgrunnlagDto
         }
     }
-    private class SammenligningsgrunnlagBuilder: Visitor {
+
+    private class SammenligningsgrunnlagBuilder : Visitor {
         private var totalbeløp by Delegates.notNull<Double>()
         private val inntekter = mutableMapOf<YearMonth, MutableList<MånedligInntekt>>()
 
@@ -114,7 +132,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
         ) {
             val inntekterPerMåned = inntekter.groupBy {
                 it.måned
-            }.mapValues {(_, inntekter) ->
+            }.mapValues { (_, inntekter) ->
                 inntekter.map {
                     MånedligInntekt(
                         arbeidsgiverreferanse.value,
