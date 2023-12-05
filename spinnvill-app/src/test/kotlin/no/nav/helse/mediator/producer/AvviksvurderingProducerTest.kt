@@ -1,32 +1,23 @@
 package no.nav.helse.mediator.producer
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.nav.helse.*
+import no.nav.helse.InntektPerMåned
+import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import no.nav.helse.helpers.januar
-import no.nav.helse.rapids_rivers.asLocalDate
+import no.nav.helse.helpers.toJson
 import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.isMissingOrNull
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import no.nav.helse.somArbeidsgiverref
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.YearMonth
 
 class AvviksvurderingProducerTest {
-    private val testRapid = TestRapid()
-    private val fødselsnummer = Fødselsnummer("12345678910")
-    private val aktørId = AktørId("1234567891011")
-    private val skjæringstidspunkt = 1.januar
-    private val avviksvurderingProducer =
-        AvviksvurderingProducer(
-            fødselsnummer = fødselsnummer,
-            aktørId = aktørId,
-            skjæringstidspunkt = skjæringstidspunkt,
-            rapidsConnection = testRapid
-        )
+    private val avviksvurderingProducer = AvviksvurderingProducer()
 
     @Test
     fun `produser avviksvurdering for akseptebelt avvik`() {
@@ -37,8 +28,8 @@ class AvviksvurderingProducerTest {
             sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
             maksimaltTillattAvvik = 25.0
         )
-        avviksvurderingProducer.finalize()
-        assertEquals(1, testRapid.inspektør.size)
+
+        assertEquals(1, avviksvurderingProducer.finalize().size)
     }
 
     @Test
@@ -50,8 +41,8 @@ class AvviksvurderingProducerTest {
             sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
             maksimaltTillattAvvik = 25.0
         )
-        avviksvurderingProducer.finalize()
-        assertEquals(1, testRapid.inspektør.size)
+
+        assertEquals(1, avviksvurderingProducer.finalize().size)
     }
 
     @Test
@@ -63,23 +54,10 @@ class AvviksvurderingProducerTest {
             sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
             maksimaltTillattAvvik = 25.0
         )
-        avviksvurderingProducer.finalize()
-        avviksvurderingProducer.finalize()
-        assertEquals(1, testRapid.inspektør.size)
-    }
-
-    @Test
-    fun `ikke send ut avviksvurderingsmelding før finalize blir kalt`() {
-        avviksvurderingProducer.avvikVurdert(
-            avviksprosent = 24.9,
-            harAkseptabeltAvvik = true,
-            beregningsgrunnlag = Beregningsgrunnlag.INGEN,
-            sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
-            maksimaltTillattAvvik = 25.0
-        )
-        assertEquals(0, testRapid.inspektør.size)
-        avviksvurderingProducer.finalize()
-        assertEquals(1, testRapid.inspektør.size)
+        val meldinger = avviksvurderingProducer.finalize()
+        val meldingerEtterClear = avviksvurderingProducer.finalize()
+        assertEquals(1, meldinger.size)
+        assertEquals(0, meldingerEtterClear.size)
     }
 
     @Test
@@ -112,15 +90,14 @@ class AvviksvurderingProducerTest {
             ),
             maksimaltTillattAvvik = 25.0
         )
-        avviksvurderingProducer.finalize()
-        assertEquals(1, testRapid.inspektør.size)
-        val message = testRapid.inspektør.message(0)
-        assertEquals("avviksvurdering", message["@event_name"].asText())
-        assertEquals(fødselsnummer.value, message["fødselsnummer"].asText())
-        assertEquals(aktørId.value, message["aktørId"].asText())
-        assertEquals(skjæringstidspunkt, message["skjæringstidspunkt"].asLocalDate())
-        assertPresent(message["avviksvurdering"])
-        val avviksvurdering = message["avviksvurdering"]
+        val messages = avviksvurderingProducer.finalize()
+        assertEquals(1, messages.size)
+        val message = messages[0]
+        check(message is Message.Hendelse)
+        val json = message.innhold.toJson()
+        assertEquals("avviksvurdering", message.navn)
+        assertPresent(json["avviksvurdering"])
+        val avviksvurdering = json["avviksvurdering"]
         assertPresent(avviksvurdering["opprettet"])
         assertPresent(avviksvurdering["avviksprosent"])
         assertPresent(avviksvurdering["beregningsgrunnlag"])
@@ -199,9 +176,8 @@ class AvviksvurderingProducerTest {
             ),
             maksimaltTillattAvvik = 25.0
         )
-        avviksvurderingProducer.finalize()
 
-        val message = testRapid.inspektør.message(0)
+        val message = avviksvurderingProducer.finalize()[0].innhold.toJson()
         val avviksvurdering = message["avviksvurdering"]
         assertEquals(avviksprosent, avviksvurdering["avviksprosent"].asDouble())
         val beregningsgrunnlag = avviksvurdering["beregningsgrunnlag"]

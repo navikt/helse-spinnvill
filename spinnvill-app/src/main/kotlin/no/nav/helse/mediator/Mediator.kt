@@ -6,10 +6,7 @@ import no.nav.helse.avviksvurdering.*
 import no.nav.helse.db.Database
 import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.kafka.*
-import no.nav.helse.mediator.producer.AvviksvurderingProducer
-import no.nav.helse.mediator.producer.BehovProducer
-import no.nav.helse.mediator.producer.SubsumsjonProducer
-import no.nav.helse.mediator.producer.VarselProducer
+import no.nav.helse.mediator.producer.*
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
@@ -34,33 +31,25 @@ class Mediator(
             kv("fødselsnummer", utkastTilVedtakMessage.fødselsnummer),
             kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId)
         )
-        val behovProducer = BehovProducer(
-            aktørId = utkastTilVedtakMessage.aktørId,
-            fødselsnummer = utkastTilVedtakMessage.fødselsnummer,
-            vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
-            organisasjonsnummer = utkastTilVedtakMessage.organisasjonsnummer,
-            utkastTilVedtakJson = utkastTilVedtakMessage.toJson(),
-            rapidsConnection = rapidsConnection
-        )
-        val varselProducer = VarselProducer(
-            fødselsnummer = utkastTilVedtakMessage.fødselsnummer.somFnr(),
-            vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
-            rapidsConnection = rapidsConnection
-        )
-        val subsumsjonProducer = SubsumsjonProducer(
-            fødselsnummer = utkastTilVedtakMessage.fødselsnummer.somFnr(),
-            organisasjonsnummer = utkastTilVedtakMessage.organisasjonsnummer.somArbeidsgiverref(),
-            vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
-            vilkårsgrunnlagId = utkastTilVedtakMessage.vilkårsgrunnlagId,
-            versjonAvKode = versjonAvKode,
-            rapidsConnection = rapidsConnection
-        )
-        val avviksvurderingProducer = AvviksvurderingProducer(
-            fødselsnummer = utkastTilVedtakMessage.fødselsnummer.somFnr(),
+        val meldingProducer = MeldingProducer(
             aktørId = utkastTilVedtakMessage.aktørId.somAktørId(),
+            fødselsnummer = utkastTilVedtakMessage.fødselsnummer.somFnr(),
+            vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
+            organisasjonsnummer = utkastTilVedtakMessage.organisasjonsnummer.somArbeidsgiverref(),
             skjæringstidspunkt = utkastTilVedtakMessage.skjæringstidspunkt,
             rapidsConnection = rapidsConnection
         )
+        val behovProducer = BehovProducer(utkastTilVedtakJson = utkastTilVedtakMessage.toJson())
+        val varselProducer = VarselProducer(vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId)
+        val subsumsjonProducer = SubsumsjonProducer(
+            fødselsnummer = utkastTilVedtakMessage.fødselsnummer.somFnr(),
+            vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
+            organisasjonsnummer = utkastTilVedtakMessage.organisasjonsnummer.somArbeidsgiverref(),
+            vilkårsgrunnlagId = utkastTilVedtakMessage.vilkårsgrunnlagId,
+            versjonAvKode = versjonAvKode
+        )
+        val avviksvurderingProducer = AvviksvurderingProducer()
+        meldingProducer.nyProducer(behovProducer, varselProducer, subsumsjonProducer, avviksvurderingProducer)
         val beregningsgrunnlag = Beregningsgrunnlag.opprett(
             utkastTilVedtakMessage.beregningsgrunnlag.entries.associate {
                 Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value)
@@ -75,10 +64,7 @@ class Mediator(
             subsumsjonProducer = subsumsjonProducer,
             avviksvurderingProducer = avviksvurderingProducer
         )
-        behovProducer.finalize()
-        varselProducer.finalize()
-        subsumsjonProducer.finalize()
-        avviksvurderingProducer.finalize()
+        meldingProducer.finalize()
     }
 
     override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {

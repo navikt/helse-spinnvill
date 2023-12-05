@@ -1,62 +1,43 @@
 package no.nav.helse.mediator.producer
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.nav.helse.Fødselsnummer
 import no.nav.helse.helpers.dummyBeregningsgrunnlag
 import no.nav.helse.helpers.dummySammenligningsgrunnlag
+import no.nav.helse.helpers.toJson
 import no.nav.helse.rapids_rivers.isMissingOrNull
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.*
 
 class VarselProducerTest {
-    private val fødselsnummer = Fødselsnummer("12345678910")
     private val vedtaksperiodeId = UUID.randomUUID()
-    private val testRapid = TestRapid()
-    private val varselProducer = VarselProducer(fødselsnummer, vedtaksperiodeId, testRapid)
-
-    @BeforeEach
-    fun beforeEach() {
-        testRapid.reset()
-    }
+    private val varselProducer = VarselProducer(vedtaksperiodeId)
 
     @Test
     fun `ikke produser varsel hvis avviket er akseptabelt`() {
         varselProducer.avvikVurdert(true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         varselProducer.finalize()
-        assertEquals(0, testRapid.inspektør.size)
+        assertEquals(0, varselProducer.finalize().size)
     }
 
     @Test
     fun `varselkø tømmes etter hver finalize`() {
         varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        varselProducer.finalize()
-        varselProducer.finalize()
-        assertEquals(1, testRapid.inspektør.size)
-    }
-
-    @Test
-    fun `ikke send ut varsler før finalize blir kalt`() {
-        varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        assertEquals(0, testRapid.inspektør.size)
-        varselProducer.finalize()
-        assertEquals(1, testRapid.inspektør.size)
+        assertEquals(1, varselProducer.finalize().size)
+        assertEquals(0, varselProducer.finalize().size)
     }
 
     @Test
     fun `produser riktig format på varsel`() {
         varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        varselProducer.finalize()
-        assertEquals(1, testRapid.inspektør.size)
-        val message = testRapid.inspektør.message(0)
-        assertEquals("nye_varsler", message["@event_name"].asText())
-        assertEquals(fødselsnummer.value, message["fødselsnummer"].asText())
-        assertPresent(message["@id"])
-        assertPresent(message["@opprettet"])
-        assertEquals(1, message["aktiviteter"].size())
-        val varsel = message["aktiviteter"].first()
+        val messages = varselProducer.finalize()
+        assertEquals(1, messages.size)
+        val message = messages[0]
+        check(message is Message.Hendelse)
+        assertEquals("nye_varsler", message.navn)
+        val json = message.innhold.toJson()
+        assertEquals(1, json["aktiviteter"].size())
+        val varsel = json["aktiviteter"].first()
         assertPresent(varsel)
         assertPresent(varsel["melding"])
         assertPresent(varsel["id"])
@@ -72,9 +53,9 @@ class VarselProducerTest {
     @Test
     fun `produser varsel hvis avviket ikke er akseptabelt`() {
         varselProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        varselProducer.finalize()
-        val message = testRapid.inspektør.message(0)
-        val varsel = message["aktiviteter"][0]
+        val messages = varselProducer.finalize()
+        val json = messages[0].innhold.toJson()
+        val varsel = json["aktiviteter"][0]
         assertPresent(varsel)
         assertEquals("RV_IV_2", varsel["varselkode"].asText())
     }

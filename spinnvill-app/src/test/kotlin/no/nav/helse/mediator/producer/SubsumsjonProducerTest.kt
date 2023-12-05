@@ -1,11 +1,10 @@
 package no.nav.helse.mediator.producer
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.nav.helse.*
-import no.nav.helse.helpers.beregningsgrunnlag
-import no.nav.helse.helpers.dummyBeregningsgrunnlag
-import no.nav.helse.helpers.dummySammenligningsgrunnlag
-import no.nav.helse.helpers.sammenligningsgrunnlag
+import no.nav.helse.Arbeidsgiverreferanse
+import no.nav.helse.Fødselsnummer
+import no.nav.helse.VersjonAvKode
+import no.nav.helse.helpers.*
 import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.isMissingOrNull
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -28,7 +27,6 @@ internal class SubsumsjonProducerTest {
         vedtaksperiodeId = vedtaksperiodeId,
         vilkårsgrunnlagId = vilkårsgrunnlagId,
         versjonAvKode = versjonAvKode,
-        rapidsConnection = testRapid
     )
 
     @BeforeEach
@@ -39,44 +37,33 @@ internal class SubsumsjonProducerTest {
     @Test
     fun `produser subsumsjonsmelding hvis avviket er akseptabelt`() {
         subsumsjonProducer.avvikVurdert(true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        subsumsjonProducer.finalize()
-        assertEquals(1, testRapid.inspektør.size)
+        assertEquals(1, subsumsjonProducer.finalize().size)
     }
 
     @Test
     fun `produser subsumsjonsmelding hvis avviket ikke er akseptabelt`() {
         subsumsjonProducer.avvikVurdert(false, 42.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        subsumsjonProducer.finalize()
-        assertEquals(1, testRapid.inspektør.size)
+        assertEquals(1, subsumsjonProducer.finalize().size)
     }
 
     @Test
     fun `subsumsjonskø tømmes etter hver finalize`() {
         subsumsjonProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        subsumsjonProducer.finalize()
-        subsumsjonProducer.finalize()
-        assertEquals(1, testRapid.inspektør.size)
-    }
-
-    @Test
-    fun `ikke send ut subsumsjonsmeldinger før finalize blir kalt`() {
-        subsumsjonProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        assertEquals(0, testRapid.inspektør.size)
-        subsumsjonProducer.finalize()
-        assertEquals(1, testRapid.inspektør.size)
+        assertEquals(1, subsumsjonProducer.finalize().size)
+        assertEquals(0, subsumsjonProducer.finalize().size)
     }
 
     @Test
     fun `produserer riktig format på subsumsjonsmelding`() {
         subsumsjonProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        subsumsjonProducer.finalize()
-        assertEquals(1, testRapid.inspektør.size)
-        val message = testRapid.inspektør.message(0)
-        assertEquals("subsumsjon", message["@event_name"].asText())
-        assertPresent(message["@id"])
-        assertPresent(message["@opprettet"])
-        assertPresent(message["subsumsjon"])
-        val subsumsjon = message["subsumsjon"]
+        val messages = subsumsjonProducer.finalize()
+        assertEquals(1, messages.size)
+        val message = messages[0]
+        check(message is Message.Hendelse)
+        val json = message.innhold.toJson()
+        assertEquals("subsumsjon", message.navn)
+        assertPresent(json["subsumsjon"])
+        val subsumsjon = json["subsumsjon"]
         assertEquals(fødselsnummer.value, subsumsjon["fodselsnummer"].asText())
         assertPresent(subsumsjon["id"])
         assertPresent(subsumsjon["tidsstempel"])
@@ -104,12 +91,11 @@ internal class SubsumsjonProducerTest {
         val beregningsgrunnlag = beregningsgrunnlag("a1" to 600000.0)
         val sammenligningsgrunnlag = sammenligningsgrunnlag("a1" to 50000.0)
         subsumsjonProducer.avvikVurdert(false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0)
-        subsumsjonProducer.finalize()
-        val message = testRapid.inspektør.message(0)
-        assertEquals("subsumsjon", message["@event_name"].asText())
+        val message = subsumsjonProducer.finalize()[0]
+        check(message is Message.Hendelse)
+        assertEquals("subsumsjon", message.navn)
 
-        val subsumsjon = message["subsumsjon"]
-
+        val subsumsjon = message.innhold.toJson()["subsumsjon"]
         assertEquals("8-30", subsumsjon["paragraf"].asText())
         assertNull(subsumsjon["bokstav"])
         assertEquals(2, subsumsjon["ledd"].asInt())

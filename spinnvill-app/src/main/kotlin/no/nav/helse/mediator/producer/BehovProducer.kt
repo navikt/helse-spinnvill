@@ -1,54 +1,25 @@
 package no.nav.helse.mediator.producer
 
 import com.fasterxml.jackson.databind.JsonNode
-import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.avviksvurdering.BehovForSammenligningsgrunnlag
-import no.nav.helse.rapids_rivers.JsonMessage
-import no.nav.helse.rapids_rivers.RapidsConnection
-import org.slf4j.LoggerFactory
-import java.util.UUID
 
 internal class BehovProducer(
-    private val aktørId: String,
-    private val fødselsnummer: String,
-    private val vedtaksperiodeId: UUID,
-    private val organisasjonsnummer: String,
     private val utkastTilVedtakJson: JsonNode,
-    private val rapidsConnection: RapidsConnection
-) {
-    private companion object {
-        private val logg = LoggerFactory.getLogger(this::class.java)
-        private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
-    }
-
+): Producer {
     private val behovskø = mutableMapOf<String, Map<String, Any>>()
 
-    internal fun finalize() {
-        if (behovskø.isEmpty()) return
-        val compositeBehov = JsonMessage.newNeed(
-            behovskø.keys,
-            mutableMapOf(
-                "aktørId" to aktørId,
-                "fødselsnummer" to fødselsnummer,
-                "vedtaksperiodeId" to vedtaksperiodeId,
-                "organisasjonsnummer" to organisasjonsnummer,
+    override fun finalize(): List<Message> {
+        if (behovskø.isEmpty()) return emptyList()
+        val compositeBehov = Message.Behov(
+            behov = behovskø.keys.toSet(),
+            innhold = mutableMapOf<String, Any>(
                 "utkastTilVedtak" to utkastTilVedtakJson
             ).apply {
                 putAll(behovskø)
             }
-        ).toJson()
-        logg.info("Etterspør {} for {}",
-            kv("behov", behovskø.keys),
-            kv("vedtaksperiodeId", vedtaksperiodeId),
         )
-        sikkerlogg.info("Etterspør {} for {}, {}. Behov: {}",
-            kv("behov", behovskø.keys),
-            kv("fødselsnummer", fødselsnummer),
-            kv("vedtaksperiodeId", vedtaksperiodeId),
-            compositeBehov
-        )
-        rapidsConnection.publish(fødselsnummer, compositeBehov)
         behovskø.clear()
+        return listOf(compositeBehov)
     }
     internal fun sammenligningsgrunnlag(behovForSammenligningsgrunnlag: BehovForSammenligningsgrunnlag) {
         behovskø["InntekterForSammenligningsgrunnlag"] = behovForSammenligningsgrunnlag.toMap()
