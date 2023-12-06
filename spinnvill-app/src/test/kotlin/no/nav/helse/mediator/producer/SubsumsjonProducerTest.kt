@@ -19,7 +19,6 @@ internal class SubsumsjonProducerTest {
     private val organisasjonsnummer = Arbeidsgiverreferanse("987654321")
     private val vedtaksperiodeId = UUID.randomUUID()
     private val vilkårsgrunnlagId = UUID.randomUUID()
-    private val testRapid = TestRapid()
     private val versjonAvKode = VersjonAvKode("hello")
     private val subsumsjonProducer = SubsumsjonProducer(
         fødselsnummer = fødselsnummer,
@@ -28,11 +27,6 @@ internal class SubsumsjonProducerTest {
         vilkårsgrunnlagId = vilkårsgrunnlagId,
         versjonAvKode = versjonAvKode,
     )
-
-    @BeforeEach
-    fun beforeEach() {
-        testRapid.reset()
-    }
 
     @Test
     fun `produser subsumsjonsmelding hvis avviket er akseptabelt`() {
