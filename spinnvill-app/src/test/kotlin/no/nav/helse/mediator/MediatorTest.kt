@@ -17,7 +17,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.YearMonth
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
@@ -87,7 +86,7 @@ internal class MediatorTest {
 
 
     @Test
-    fun `send utkst til vedtak hvis det ikke gjøres ny avviksvurdering`() {
+    fun `send utkast til vedtak hvis det ikke gjøres ny avviksvurdering`() {
         mottaUtkastTilVedtak()
         mottaSammenligningsgrunnlag()
 
@@ -101,40 +100,14 @@ internal class MediatorTest {
 
     @Test
     fun `sender ikke behov for sammenligningsgrunnlag når det finnes en ekisterende avviksvurdering`() {
-        val fødselsnummer = Fødselsnummer("12345678910")
-        val skjæringstidspunkt = 1.januar
-        val arbeidsgiverreferanse = Arbeidsgiverreferanse("987654321")
+        mottaUtkastTilVedtak()
+        mottaSammenligningsgrunnlag()
 
-        val avviksvurderingDto = AvviksvurderingDto(
-            id = UUID.randomUUID(),
-            fødselsnummer = fødselsnummer,
-            skjæringstidspunkt = skjæringstidspunkt,
-            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
-                mapOf(
-                    arbeidsgiverreferanse to listOf(
-                        AvviksvurderingDto.MånedligInntektDto(
-                            inntekt = InntektPerMåned(value = 20000.0),
-                            måned = YearMonth.from(skjæringstidspunkt),
-                            fordel = Fordel("En fordel"),
-                            beskrivelse = Beskrivelse("En beskrivelse"),
-                            inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
-                        )
-                    )
-                )
-            ),
+        testRapid.reset()
+
+        mottaUtkastTilVedtak(
             beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
-                mapOf(arbeidsgiverreferanse to OmregnetÅrsinntekt(400000.0))
-            )
-        )
-
-        database.lagreAvviksvurdering(avviksvurderingDto)
-
-        testRapid.sendTestMessage(
-            utkastTilVedtakJson(
-                "1234567891011",
-                fødselsnummer.value,
-                arbeidsgiverreferanse.value,
-                skjæringstidspunkt
+                mapOf(ORGANISASJONSNUMMER.somArbeidsgiverref() to OmregnetÅrsinntekt(900000.0))
             )
         )
 
@@ -143,20 +116,10 @@ internal class MediatorTest {
 
     @Test
     fun `motta sammenligningsgrunnlag`() {
-        val fødselsnummer = Fødselsnummer("12345678910")
-        val arbeidsgiverreferanse = Arbeidsgiverreferanse("987654321")
-        val skjæringstidspunkt = 1.januar
+        mottaUtkastTilVedtak()
+        mottaSammenligningsgrunnlag()
 
-        testRapid.sendTestMessage(
-            sammenligningsgrunnlagJson(
-                "1234567891011",
-                fødselsnummer.value,
-                arbeidsgiverreferanse.value,
-                skjæringstidspunkt
-            )
-        )
-
-        assertNotNull(database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt))
+        assertNotNull(database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT))
     }
 
     @Test
@@ -197,93 +160,40 @@ internal class MediatorTest {
 
     @Test
     fun `gjør ikke ny avviksvurdering om beregningsgrunnlaget er likt som for forrige avviksvurdering`() {
-        val fødselsnummer = Fødselsnummer("12345678910")
-        val skjæringstidspunkt = 1.januar
-        val arbeidsgiverreferanse = Arbeidsgiverreferanse("987654321")
+        mottaUtkastTilVedtak()
+        mottaSammenligningsgrunnlag()
 
-        val beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
-            mapOf(arbeidsgiverreferanse to OmregnetÅrsinntekt(300000.0))
-        )
-        val avviksvurderingDto = AvviksvurderingDto(
-            id = UUID.randomUUID(),
-            fødselsnummer = fødselsnummer,
-            skjæringstidspunkt = skjæringstidspunkt,
-            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
-                mapOf(
-                    arbeidsgiverreferanse to listOf(
-                        AvviksvurderingDto.MånedligInntektDto(
-                            inntekt = InntektPerMåned(value = 20000.0),
-                            måned = YearMonth.from(skjæringstidspunkt),
-                            fordel = Fordel("En fordel"),
-                            beskrivelse = Beskrivelse("En beskrivelse"),
-                            inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
-                        )
-                    )
-                )
-            ),
-            beregningsgrunnlag = beregningsgrunnlag
-        )
+        testRapid.reset()
 
-        val avviksvurdering = database.lagreAvviksvurdering(avviksvurderingDto)
+        val avviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
 
-        testRapid.sendTestMessage(
-            utkastTilVedtakJson(
-                "1234567891011",
-                fødselsnummer.value,
-                arbeidsgiverreferanse.value,
-                skjæringstidspunkt,
-                beregningsgrunnlag
-            )
-        )
+        mottaUtkastTilVedtak()
 
-        val sisteAvviksvurdering = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
+        val sisteAvviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
 
         assertEquals(avviksvurdering, sisteAvviksvurdering)
         assertEquals(1, testRapid.inspektør.size)
+        assertNotNull(testRapid.inspektør.sisteBehovAvType("Godkjenning"))
         assertNull(testRapid.inspektør.sisteBehovAvType("InntekterForSammenligningsgrunnlag"))
     }
 
     @Test
     fun `gjør ny avviksvurdering om beregningsgrunnlaget er forskjellig fra forrige avviksvurdering`() {
-        val fødselsnummer = Fødselsnummer("12345678910")
-        val skjæringstidspunkt = 1.januar
-        val arbeidsgiverreferanse = Arbeidsgiverreferanse("987654321")
+        mottaUtkastTilVedtak()
+        mottaSammenligningsgrunnlag()
 
-        val avviksvurderingDto = AvviksvurderingDto(
-            id = UUID.randomUUID(),
-            fødselsnummer = fødselsnummer,
-            skjæringstidspunkt = skjæringstidspunkt,
-            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
-                mapOf(
-                    arbeidsgiverreferanse to listOf(
-                        AvviksvurderingDto.MånedligInntektDto(
-                            inntekt = InntektPerMåned(value = 20000.0),
-                            måned = YearMonth.from(skjæringstidspunkt),
-                            fordel = Fordel("En fordel"),
-                            beskrivelse = Beskrivelse("En beskrivelse"),
-                            inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
-                        )
-                    )
-                )
-            ),
+        testRapid.reset()
+        val avviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
+
+        mottaUtkastTilVedtak(
             beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
-                mapOf(arbeidsgiverreferanse to OmregnetÅrsinntekt(300000.0))
+                mapOf(ORGANISASJONSNUMMER.somArbeidsgiverref() to OmregnetÅrsinntekt(900000.0))
             )
         )
 
-        val avviksvurdering = database.lagreAvviksvurdering(avviksvurderingDto)
+        val sisteAvviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
 
-        testRapid.sendTestMessage(
-            utkastTilVedtakJson(
-                "1234567891011",
-                fødselsnummer.value,
-                arbeidsgiverreferanse.value,
-                skjæringstidspunkt
-            )
-        )
-
-        val sisteAvviksvurdering = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
-
+        assertNotNull(avviksvurdering)
         assertNotNull(sisteAvviksvurdering)
         assertNotEquals(avviksvurdering.id, sisteAvviksvurdering.id)
         assertNotEquals(avviksvurdering.beregningsgrunnlag, sisteAvviksvurdering.beregningsgrunnlag)
@@ -293,75 +203,14 @@ internal class MediatorTest {
     }
 
     @Test
-    fun `håndter utkast til vedtak på ny etter å ha mottatt sammenligningsgrunnlag`() {
-        val skjæringstidspunkt = 1.januar
-        val fødselsnummer = "12345678910".somFnr()
-        val organisasjonsnummer = "987654321".somArbeidsgiverref()
-        val beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
-            mapOf(
-                organisasjonsnummer to OmregnetÅrsinntekt(500000.0),
-            )
-        )
-
-        testRapid.sendTestMessage(
-            utkastTilVedtakJson(
-                aktørId = "1234567891011",
-                fødselsnummer = fødselsnummer.value,
-                organisasjonsnummer = organisasjonsnummer.value,
-                skjæringstidspunkt = skjæringstidspunkt,
-                beregningsgrunnlagDto = beregningsgrunnlag
-            )
-        )
-
-        håndterSammenligningsgrunnlagMelding()
-
-        val avviksvurdering = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
-
-        assertNotNull(avviksvurdering)
-        assertEquals(fødselsnummer, avviksvurdering.fødselsnummer)
-        assertEquals(skjæringstidspunkt, avviksvurdering.skjæringstidspunkt)
-        assertEquals(
-            mapOf(
-                organisasjonsnummer to listOf(
-                    AvviksvurderingDto.MånedligInntektDto(
-                        inntekt = InntektPerMåned(10000.0),
-                        måned = YearMonth.from(1.januar),
-                        fordel = null,
-                        beskrivelse = null,
-                        inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
-                    )
-                )
-            ), avviksvurdering.sammenligningsgrunnlag.innrapporterteInntekter
-        )
-        assertEquals(beregningsgrunnlag, avviksvurdering.beregningsgrunnlag)
-    }
-
-    @Test
     fun `bruker ikke nytt sammenligningsgrunnlag hvis vi har en eksisterende vilkårsvurdering for samme fnr og skjæringstidspunkt`() {
-        val skjæringstidspunkt = 1.januar
-        val fødselsnummer = "12345678910".somFnr()
-        val organisasjonsnummer = "987654321".somArbeidsgiverref()
-        val beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
-            mapOf(
-                organisasjonsnummer to OmregnetÅrsinntekt(500000.0),
-            )
-        )
+        mottaUtkastTilVedtak()
 
-        testRapid.sendTestMessage(
-            utkastTilVedtakJson(
-                aktørId = "1234567891011",
-                fødselsnummer = fødselsnummer.value,
-                organisasjonsnummer = organisasjonsnummer.value,
-                skjæringstidspunkt = skjæringstidspunkt,
-                beregningsgrunnlagDto = beregningsgrunnlag
-            )
-        )
+        mottaSammenligningsgrunnlag()
+        val avviksvurdering1 = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
 
-        håndterSammenligningsgrunnlagMelding()
-        val avviksvurdering1 = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
-
-        håndterSammenligningsgrunnlagMelding()
-        val avviksvurdering2 = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
+        mottaSammenligningsgrunnlag()
+        val avviksvurdering2 = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
 
         assertEquals(avviksvurdering1, avviksvurdering2)
     }
@@ -403,33 +252,6 @@ internal class MediatorTest {
         testRapid.sendTestMessage(objectMapper.writeValueAsString(løsning))
     }
 
-
-    private fun håndterSammenligningsgrunnlagMelding() {
-        val melding = testRapid.inspektør.sisteBehovAvType("InntekterForSammenligningsgrunnlag")?.deepCopy<ObjectNode>()
-
-        assertNotNull(melding)
-
-        val løsning =
-            mapOf(
-                "InntekterForSammenligningsgrunnlag" to listOf(
-                    mapOf(
-                        "årMåned" to YearMonth.from(1.januar),
-                        "inntektsliste" to listOf(
-                            mapOf(
-                                "beløp" to 10000.0,
-                                "inntektstype" to "LOENNSINNTEKT",
-                                "orgnummer" to "987654321"
-                            )
-                        )
-                    )
-                )
-            )
-
-        melding.replace("@løsning", objectMapper.valueToTree(løsning))
-        melding.replace("@final", objectMapper.valueToTree(true))
-
-        testRapid.sendTestMessage(objectMapper.writeValueAsString(melding))
-    }
 
     private fun TestRapid.RapidInspector.meldinger() =
         (0 until size).map { index -> message(index) }
@@ -512,89 +334,4 @@ internal class MediatorTest {
         })
     }
 
-    private fun sammenligningsgrunnlagJson(
-        aktørId: String,
-        fødselsnummer: String,
-        organisasjonsnummer: String,
-        skjæringstidspunkt: LocalDate,
-        final: Boolean = true
-    ): String {
-        @Language("JSON")
-        val json = """
-            {
-              "@event_name": "behov",
-              "@behovId": "ed8f2e02-15b1-45a7-88e4-3b2f0b9cda73",
-              "@behov": [
-                "InntekterForSammenligningsgrunnlag"
-              ],
-              "meldingsreferanseId": "ff032457-203f-43ec-8850-b72a57ad9e52",
-              "aktørId": "$aktørId",
-              "fødselsnummer": "$fødselsnummer",
-              "organisasjonsnummer": "$organisasjonsnummer",
-              "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
-              "InntekterForSammenligningsgrunnlag": {
-                "skjæringstidspunkt": "$skjæringstidspunkt",
-                "beregningStart": "2018-01",
-                "beregningSlutt": "2018-02"
-              },
-              "utkastTilVedtak": {},
-              "@id": "ecfe47f6-2063-451a-b7e1-182490cc3153",
-              "@opprettet": "2018-01-01T00:00:00.000",
-              "@final": $final,
-              "@løsning": {
-                "InntekterForSammenligningsgrunnlag": [
-                  {
-                    "årMåned": "2018-01",
-                    "arbeidsforholdliste": [],
-                    "inntektsliste": [
-                      {
-                        "beløp": 20000.00,
-                        "inntektstype": "LOENNSINNTEKT",
-                        "orgnummer": "$organisasjonsnummer",
-                        "fødselsnummer": null,
-                        "aktørId": null,
-                        "beskrivelse": "skattepliktigDelForsikringer",
-                        "fordel": "naturalytelse"
-                      },
-                      {
-                        "beløp": 50000.00,
-                        "inntektstype": "LOENNSINNTEKT",
-                        "orgnummer": "000000000",
-                        "fødselsnummer": null,
-                        "aktørId": null,
-                        "beskrivelse": "fastloenn",
-                        "fordel": "kontantytelse"
-                      }
-                    ]
-                  },
-                  {
-                    "årMåned": "2018-02",
-                    "arbeidsforholdliste": [],
-                    "inntektsliste": [
-                      {
-                        "beløp": 20000.00,
-                        "inntektstype": "LOENNSINNTEKT",
-                        "orgnummer": "$organisasjonsnummer",
-                        "fødselsnummer": null,
-                        "aktørId": null,
-                        "beskrivelse": "skattepliktigDelForsikringer",
-                        "fordel": "naturalytelse"
-                      },
-                      {
-                        "beløp": 50000.00,
-                        "inntektstype": "LOENNSINNTEKT",
-                        "orgnummer": "000000000",
-                        "fødselsnummer": null,
-                        "aktørId": null,
-                        "beskrivelse": "fastloenn",
-                        "fordel": "kontantytelse"
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
-        """.trimIndent()
-        return json
-    }
 }
