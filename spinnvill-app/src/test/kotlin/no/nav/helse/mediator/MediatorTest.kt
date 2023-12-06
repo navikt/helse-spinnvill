@@ -21,6 +21,7 @@ import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 internal class MediatorTest {
 
@@ -46,10 +47,113 @@ internal class MediatorTest {
 
         assertEquals(1, testRapid.inspektør.size)
         assertEquals("behov", testRapid.inspektør.field(0, "@event_name").asText())
-        assertEquals(beregningsperiodeFom, testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("beregningStart").asYearMonth())
-        assertEquals(beregningsperiodeTom, testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("beregningSlutt").asYearMonth())
-        assertEquals(skjæringstidspunkt, testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("skjæringstidspunkt").asLocalDate())
+        assertEquals(
+            beregningsperiodeFom,
+            testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("beregningStart").asYearMonth()
+        )
+        assertEquals(
+            beregningsperiodeTom,
+            testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("beregningSlutt").asYearMonth()
+        )
+        assertEquals(
+            skjæringstidspunkt,
+            testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("skjæringstidspunkt").asLocalDate()
+        )
     }
+
+    @Test
+    fun `ikke send utkast til vedtak ved behov for sammenligningsgrunnlag`() {
+        val skjæringstidspunkt = 1.januar
+        testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", "12345678910", "987654321", skjæringstidspunkt))
+
+        assertEquals(1, testRapid.inspektør.size)
+        assertNotEquals("Godkjenning", testRapid.inspektør.field(0, "@event_name").asText())
+    }
+
+    @Test
+    fun `sendt utkast til vedtak ved avviksvurdering`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+        val arbeidsgiverreferanse = Arbeidsgiverreferanse("987654321")
+
+        val avviksvurderingDto = AvviksvurderingDto(
+            id = UUID.randomUUID(),
+            fødselsnummer = fødselsnummer,
+            skjæringstidspunkt = skjæringstidspunkt,
+            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
+                mapOf(
+                    arbeidsgiverreferanse to listOf(
+                        AvviksvurderingDto.MånedligInntektDto(
+                            inntekt = InntektPerMåned(value = 20000.0),
+                            måned = YearMonth.from(skjæringstidspunkt),
+                            fordel = Fordel("En fordel"),
+                            beskrivelse = Beskrivelse("En beskrivelse"),
+                            inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+                        )
+                    )
+                )
+            ),
+            beregningsgrunnlag = null
+        )
+
+        database.lagreAvviksvurdering(avviksvurderingDto)
+
+        testRapid.sendTestMessage(
+            utkastTilVedtakJson(
+                "1234567891011",
+                fødselsnummer.value,
+                arbeidsgiverreferanse.value,
+                skjæringstidspunkt
+            )
+        )
+
+        assertEquals(1, testRapid.inspektør.behov("Godkjenning").size)
+    }
+
+    @Test
+    fun `send utkst til vedtak hvis det ikke gjøres ny avviksvurdering`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+        val arbeidsgiverreferanse = Arbeidsgiverreferanse("987654321")
+
+        val beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
+            mapOf(arbeidsgiverreferanse to OmregnetÅrsinntekt(300000.0))
+        )
+        val avviksvurderingDto = AvviksvurderingDto(
+            id = UUID.randomUUID(),
+            fødselsnummer = fødselsnummer,
+            skjæringstidspunkt = skjæringstidspunkt,
+            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
+                mapOf(
+                    arbeidsgiverreferanse to listOf(
+                        AvviksvurderingDto.MånedligInntektDto(
+                            inntekt = InntektPerMåned(value = 20000.0),
+                            måned = YearMonth.from(skjæringstidspunkt),
+                            fordel = Fordel("En fordel"),
+                            beskrivelse = Beskrivelse("En beskrivelse"),
+                            inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+                        )
+                    )
+                )
+            ),
+            beregningsgrunnlag = beregningsgrunnlag
+        )
+
+        database.lagreAvviksvurdering(avviksvurderingDto)
+
+        testRapid.sendTestMessage(
+            utkastTilVedtakJson(
+                "1234567891011",
+                fødselsnummer.value,
+                arbeidsgiverreferanse.value,
+                skjæringstidspunkt,
+                beregningsgrunnlag
+            )
+        )
+
+        assertEquals(1, testRapid.inspektør.behov("Godkjenning").size)
+    }
+
 
     @Test
     fun `sender ikke behov for sammenligningsgrunnlag når det finnes en ekisterende avviksvurdering`() {
@@ -62,13 +166,17 @@ internal class MediatorTest {
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = skjæringstidspunkt,
             sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
-                mapOf(arbeidsgiverreferanse to listOf(AvviksvurderingDto.MånedligInntektDto(
-                    inntekt = InntektPerMåned(value = 20000.0),
-                    måned = YearMonth.from(skjæringstidspunkt),
-                    fordel = Fordel("En fordel"),
-                    beskrivelse = Beskrivelse("En beskrivelse"),
-                    inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
-                )))
+                mapOf(
+                    arbeidsgiverreferanse to listOf(
+                        AvviksvurderingDto.MånedligInntektDto(
+                            inntekt = InntektPerMåned(value = 20000.0),
+                            måned = YearMonth.from(skjæringstidspunkt),
+                            fordel = Fordel("En fordel"),
+                            beskrivelse = Beskrivelse("En beskrivelse"),
+                            inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+                        )
+                    )
+                )
             ),
             beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
                 mapOf(arbeidsgiverreferanse to OmregnetÅrsinntekt(400000.0))
@@ -77,7 +185,14 @@ internal class MediatorTest {
 
         database.lagreAvviksvurdering(avviksvurderingDto)
 
-        testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", fødselsnummer.value, arbeidsgiverreferanse.value, skjæringstidspunkt))
+        testRapid.sendTestMessage(
+            utkastTilVedtakJson(
+                "1234567891011",
+                fødselsnummer.value,
+                arbeidsgiverreferanse.value,
+                skjæringstidspunkt
+            )
+        )
 
         assertEquals(0, testRapid.inspektør.behov("InntekterForSammenligningsgrunnlag").size)
     }
@@ -88,7 +203,14 @@ internal class MediatorTest {
         val arbeidsgiverreferanse = Arbeidsgiverreferanse("987654321")
         val skjæringstidspunkt = 1.januar
 
-        testRapid.sendTestMessage(sammenligningsgrunnlagJson("1234567891011", fødselsnummer.value, arbeidsgiverreferanse.value, skjæringstidspunkt))
+        testRapid.sendTestMessage(
+            sammenligningsgrunnlagJson(
+                "1234567891011",
+                fødselsnummer.value,
+                arbeidsgiverreferanse.value,
+                skjæringstidspunkt
+            )
+        )
 
         assertNotNull(database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt))
     }
@@ -104,30 +226,42 @@ internal class MediatorTest {
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = skjæringstidspunkt,
             sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
-                mapOf(arbeidsgiverreferanse to listOf(AvviksvurderingDto.MånedligInntektDto(
-                    inntekt = InntektPerMåned(value = 20000.0),
-                    måned = YearMonth.from(skjæringstidspunkt),
-                    fordel = Fordel("En fordel"),
-                    beskrivelse = Beskrivelse("En beskrivelse"),
-                    inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
-                )))
+                mapOf(
+                    arbeidsgiverreferanse to listOf(
+                        AvviksvurderingDto.MånedligInntektDto(
+                            inntekt = InntektPerMåned(value = 20000.0),
+                            måned = YearMonth.from(skjæringstidspunkt),
+                            fordel = Fordel("En fordel"),
+                            beskrivelse = Beskrivelse("En beskrivelse"),
+                            inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+                        )
+                    )
+                )
             ),
             beregningsgrunnlag = null
         )
 
         database.lagreAvviksvurdering(avviksvurderingDto)
 
-        testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", fødselsnummer.value, arbeidsgiverreferanse.value, skjæringstidspunkt))
+        testRapid.sendTestMessage(
+            utkastTilVedtakJson(
+                "1234567891011",
+                fødselsnummer.value,
+                arbeidsgiverreferanse.value,
+                skjæringstidspunkt
+            )
+        )
 
         val fullstendigAvviksvurdering = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
 
         assertNotNull(fullstendigAvviksvurdering)
         assertNotNull(fullstendigAvviksvurdering.beregningsgrunnlag)
 
-        assertEquals(3, testRapid.inspektør.size)
+        assertEquals(4, testRapid.inspektør.size)
         assertEquals(1, testRapid.inspektør.hendelser("nye_varsler").size)
         assertEquals(1, testRapid.inspektør.hendelser("subsumsjon").size)
         assertEquals(1, testRapid.inspektør.hendelser("avviksvurdering").size)
+        assertEquals(1, testRapid.inspektør.behov("Godkjenning").size)
     }
 
     @Test
@@ -144,25 +278,38 @@ internal class MediatorTest {
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = skjæringstidspunkt,
             sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
-                mapOf(arbeidsgiverreferanse to listOf(AvviksvurderingDto.MånedligInntektDto(
-                    inntekt = InntektPerMåned(value = 20000.0),
-                    måned = YearMonth.from(skjæringstidspunkt),
-                    fordel = Fordel("En fordel"),
-                    beskrivelse = Beskrivelse("En beskrivelse"),
-                    inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
-                )))
+                mapOf(
+                    arbeidsgiverreferanse to listOf(
+                        AvviksvurderingDto.MånedligInntektDto(
+                            inntekt = InntektPerMåned(value = 20000.0),
+                            måned = YearMonth.from(skjæringstidspunkt),
+                            fordel = Fordel("En fordel"),
+                            beskrivelse = Beskrivelse("En beskrivelse"),
+                            inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+                        )
+                    )
+                )
             ),
             beregningsgrunnlag = beregningsgrunnlag
         )
 
         val avviksvurdering = database.lagreAvviksvurdering(avviksvurderingDto)
 
-        testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", fødselsnummer.value, arbeidsgiverreferanse.value, skjæringstidspunkt, beregningsgrunnlag))
+        testRapid.sendTestMessage(
+            utkastTilVedtakJson(
+                "1234567891011",
+                fødselsnummer.value,
+                arbeidsgiverreferanse.value,
+                skjæringstidspunkt,
+                beregningsgrunnlag
+            )
+        )
 
         val sisteAvviksvurdering = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
 
         assertEquals(avviksvurdering, sisteAvviksvurdering)
-        assertEquals(0, testRapid.inspektør.size)
+        assertEquals(1, testRapid.inspektør.size)
+        assertNull(testRapid.inspektør.sisteBehovAvType("InntekterForSammenligningsgrunnlag"))
     }
 
     @Test
@@ -176,13 +323,17 @@ internal class MediatorTest {
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = skjæringstidspunkt,
             sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
-                mapOf(arbeidsgiverreferanse to listOf(AvviksvurderingDto.MånedligInntektDto(
-                    inntekt = InntektPerMåned(value = 20000.0),
-                    måned = YearMonth.from(skjæringstidspunkt),
-                    fordel = Fordel("En fordel"),
-                    beskrivelse = Beskrivelse("En beskrivelse"),
-                    inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
-                )))
+                mapOf(
+                    arbeidsgiverreferanse to listOf(
+                        AvviksvurderingDto.MånedligInntektDto(
+                            inntekt = InntektPerMåned(value = 20000.0),
+                            måned = YearMonth.from(skjæringstidspunkt),
+                            fordel = Fordel("En fordel"),
+                            beskrivelse = Beskrivelse("En beskrivelse"),
+                            inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
+                        )
+                    )
+                )
             ),
             beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
                 mapOf(arbeidsgiverreferanse to OmregnetÅrsinntekt(300000.0))
@@ -191,7 +342,14 @@ internal class MediatorTest {
 
         val avviksvurdering = database.lagreAvviksvurdering(avviksvurderingDto)
 
-        testRapid.sendTestMessage(utkastTilVedtakJson("1234567891011", fødselsnummer.value, arbeidsgiverreferanse.value, skjæringstidspunkt))
+        testRapid.sendTestMessage(
+            utkastTilVedtakJson(
+                "1234567891011",
+                fødselsnummer.value,
+                arbeidsgiverreferanse.value,
+                skjæringstidspunkt
+            )
+        )
 
         val sisteAvviksvurdering = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
 
@@ -214,13 +372,15 @@ internal class MediatorTest {
             )
         )
 
-        testRapid.sendTestMessage(utkastTilVedtakJson(
-            aktørId = "1234567891011",
-            fødselsnummer = fødselsnummer.value,
-            organisasjonsnummer = organisasjonsnummer.value,
-            skjæringstidspunkt = skjæringstidspunkt,
-            beregningsgrunnlagDto = beregningsgrunnlag
-        ))
+        testRapid.sendTestMessage(
+            utkastTilVedtakJson(
+                aktørId = "1234567891011",
+                fødselsnummer = fødselsnummer.value,
+                organisasjonsnummer = organisasjonsnummer.value,
+                skjæringstidspunkt = skjæringstidspunkt,
+                beregningsgrunnlagDto = beregningsgrunnlag
+            )
+        )
 
         håndterSammenligningsgrunnlagMelding()
 
@@ -256,13 +416,15 @@ internal class MediatorTest {
             )
         )
 
-        testRapid.sendTestMessage(utkastTilVedtakJson(
-            aktørId = "1234567891011",
-            fødselsnummer = fødselsnummer.value,
-            organisasjonsnummer = organisasjonsnummer.value,
-            skjæringstidspunkt = skjæringstidspunkt,
-            beregningsgrunnlagDto = beregningsgrunnlag
-        ))
+        testRapid.sendTestMessage(
+            utkastTilVedtakJson(
+                aktørId = "1234567891011",
+                fødselsnummer = fødselsnummer.value,
+                organisasjonsnummer = organisasjonsnummer.value,
+                skjæringstidspunkt = skjæringstidspunkt,
+                beregningsgrunnlagDto = beregningsgrunnlag
+            )
+        )
 
         håndterSammenligningsgrunnlagMelding()
         val avviksvurdering1 = database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)
@@ -274,7 +436,7 @@ internal class MediatorTest {
     }
 
     private fun håndterSammenligningsgrunnlagMelding() {
-        val melding = testRapid.inspektør.sisteBehov("InntekterForSammenligningsgrunnlag")?.deepCopy<ObjectNode>()
+        val melding = testRapid.inspektør.sisteBehovAvType("InntekterForSammenligningsgrunnlag")?.deepCopy<ObjectNode>()
 
         assertNotNull(melding)
 
@@ -306,10 +468,10 @@ internal class MediatorTest {
     private fun TestRapid.RapidInspector.hendelser(type: String) =
         meldinger().filter { it.path("@event_name").asText() == type }
 
-    private fun TestRapid.RapidInspector.sisteBehov(vararg behov: String) =
-        hendelser("behov")
-            .last()
-            .takeIf { it.path("@behov").map(JsonNode::asText).containsAll(behov.toList()) && !it.hasNonNull("@løsning") }
+    private fun TestRapid.RapidInspector.sisteBehovAvType(vararg behov: String) =
+        hendelser("behov").lastOrNull {
+            it.path("@behov").map(JsonNode::asText).containsAll(behov.toList()) && !it.hasNonNull("@løsning")
+        }
 
     private fun TestRapid.RapidInspector.behov(behov: String) =
         hendelser("behov")
@@ -373,7 +535,12 @@ internal class MediatorTest {
     }
 
     private fun AvviksvurderingDto.BeregningsgrunnlagDto.toJson(): String {
-        return objectMapper.writeValueAsString(this.omregnedeÅrsinntekter.map { mapOf("organisasjonsnummer" to it.key, "beløp" to it.value) })
+        return objectMapper.writeValueAsString(this.omregnedeÅrsinntekter.map {
+            mapOf(
+                "organisasjonsnummer" to it.key,
+                "beløp" to it.value
+            )
+        })
     }
 
     private fun sammenligningsgrunnlagJson(

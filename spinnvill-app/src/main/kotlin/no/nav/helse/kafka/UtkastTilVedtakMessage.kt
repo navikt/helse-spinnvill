@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.asLocalDate
 import java.time.LocalDate
@@ -20,6 +21,9 @@ class UtkastTilVedtakMessage(private val packet: JsonMessage) {
     fun toJson(): JsonNode {
         return objectMapper.readTree(packet.toJson())
     }
+
+    fun finalize(): Map<String, Any> =
+        objectMapper.readValue<Map<String, Any>>(packet.apply { packet["behandlingStartet"] = true }.toJson())
 
     val vilkårsgrunnlagId: UUID = packet["Godkjenning.vilkårsgrunnlagId"].asUUID()
     val skjæringstidspunkt: LocalDate = packet["Godkjenning.skjæringstidspunkt"].asLocalDate()

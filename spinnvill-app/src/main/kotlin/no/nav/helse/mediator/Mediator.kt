@@ -49,7 +49,8 @@ class Mediator(
             versjonAvKode = versjonAvKode
         )
         val avviksvurderingProducer = AvviksvurderingProducer()
-        meldingProducer.nyProducer(behovProducer, varselProducer, subsumsjonProducer, avviksvurderingProducer)
+        val utkastTilVedtakProducer = UtkastTilVedtakProducer(utkastTilVedtakMessage)
+        meldingProducer.nyProducer(behovProducer, varselProducer, subsumsjonProducer, avviksvurderingProducer, utkastTilVedtakProducer)
         val beregningsgrunnlag = Beregningsgrunnlag.opprett(
             utkastTilVedtakMessage.beregningsgrunnlag.entries.associate {
                 Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value)
@@ -62,7 +63,8 @@ class Mediator(
             behovProducer = behovProducer,
             varselProducer = varselProducer,
             subsumsjonProducer = subsumsjonProducer,
-            avviksvurderingProducer = avviksvurderingProducer
+            avviksvurderingProducer = avviksvurderingProducer,
+            utkastTilVedtakProducer = utkastTilVedtakProducer
         )
         meldingProducer.finalize()
     }
@@ -101,7 +103,8 @@ class Mediator(
         behovProducer: BehovProducer,
         varselProducer: VarselProducer,
         subsumsjonProducer: SubsumsjonProducer,
-        avviksvurderingProducer: AvviksvurderingProducer
+        avviksvurderingProducer: AvviksvurderingProducer,
+        utkastTilVedtakProducer: UtkastTilVedtakProducer
     ) {
         val avviksvurdering =
             avviksvurdering(fødselsnummer, skjæringstidspunkt)?.vurderBehovForNyVurdering(beregningsgrunnlag)
@@ -110,6 +113,7 @@ class Mediator(
         avviksvurdering.register(subsumsjonProducer)
         avviksvurdering.register(avviksvurderingProducer)
         avviksvurdering.håndter(beregningsgrunnlag)
+        utkastTilVedtakProducer.håndter()
         val builder = DatabaseDtoBuilder()
         avviksvurdering.accept(builder)
         database.lagreAvviksvurdering(builder.build())
