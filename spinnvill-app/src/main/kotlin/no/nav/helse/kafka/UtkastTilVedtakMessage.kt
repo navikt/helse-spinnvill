@@ -1,9 +1,6 @@
 package no.nav.helse.kafka
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.asLocalDate
@@ -11,13 +8,6 @@ import java.time.LocalDate
 import java.util.*
 
 class UtkastTilVedtakMessage(private val packet: JsonMessage) {
-
-    private companion object {
-        private val objectMapper = jacksonObjectMapper()
-            .registerModule(JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-    }
-
     fun toJson(): JsonNode {
         return objectMapper.readTree(packet.toJson())
     }

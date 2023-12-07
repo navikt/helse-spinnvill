@@ -1,14 +1,11 @@
 package no.nav.helse.kafka
 
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.helpers.januar
+import no.nav.helse.helpers.objectMapper
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.lang.IllegalStateException
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.test.assertEquals
@@ -17,7 +14,7 @@ class SammenligningsgrunnlagRiverTest {
 
     private val testRapid = TestRapid()
 
-    private val messageHandler = object: MessageHandler {
+    private val messageHandler = object : MessageHandler {
         val messages = mutableListOf<SammenligningsgrunnlagMessage>()
 
         override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {}
@@ -31,9 +28,6 @@ class SammenligningsgrunnlagRiverTest {
         private const val AKTØRID = "1234567891011"
         private const val FØDSELSNUMMER = "12345678910"
         private const val ORGANISASJONSNUMMER = "987654321"
-        private val objectMapper = jacksonObjectMapper()
-            .registerModule(JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     }
 
     init {
@@ -58,13 +52,28 @@ class SammenligningsgrunnlagRiverTest {
 
     @Test
     fun `Leser ikke inn sammenligningsgrunnlag uten løsning`() {
-        testRapid.sendTestMessage(sammenligningsgrunnlagJsonUtenLøsning(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, 1.januar))
+        testRapid.sendTestMessage(
+            sammenligningsgrunnlagJsonUtenLøsning(
+                AKTØRID,
+                FØDSELSNUMMER,
+                ORGANISASJONSNUMMER,
+                1.januar
+            )
+        )
         assertEquals(0, messageHandler.messages.size)
     }
 
     @Test
     fun `Leser ikke inn sammenligningsgrunnlag som mangler årMåned`() {
-        testRapid.sendTestMessage(sammenligningsgrunnlagJsonMed(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, 1.januar, inntekterForSammenligningsgrunnlag(null to emptyList())))
+        testRapid.sendTestMessage(
+            sammenligningsgrunnlagJsonMed(
+                AKTØRID,
+                FØDSELSNUMMER,
+                ORGANISASJONSNUMMER,
+                1.januar,
+                inntekterForSammenligningsgrunnlag(null to emptyList())
+            )
+        )
         assertEquals(0, messageHandler.messages.size)
     }
 
@@ -163,6 +172,7 @@ class SammenligningsgrunnlagRiverTest {
         )
         assertEquals(0, messageHandler.messages.size)
     }
+
     @Test
     fun `Leser ikke inn sammenligningsgrunnlag hvis det ikke er final`() {
         testRapid.sendTestMessage(
@@ -231,6 +241,7 @@ class SammenligningsgrunnlagRiverTest {
         val beskrivelse: String?,
         val fordel: String?
     )
+
     private fun List<InntektForSammenligningsgrunnlag>.toJson(): String {
         return objectMapper.writeValueAsString(this)
     }

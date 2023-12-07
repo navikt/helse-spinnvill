@@ -1,14 +1,12 @@
 package no.nav.helse.mediator
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.*
 import no.nav.helse.db.TestDatabase
 import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.helpers.januar
+import no.nav.helse.helpers.objectMapper
 import no.nav.helse.rapids_rivers.asLocalDate
 import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -267,12 +265,6 @@ internal class MediatorTest {
     private fun TestRapid.RapidInspector.behov(behov: String) =
         hendelser("behov")
             .filter { it.path("@behov").map(JsonNode::asText).containsAll(listOf(behov)) }
-
-    private companion object {
-        private val objectMapper = jacksonObjectMapper()
-            .registerModule(JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-    }
 
     private fun utkastTilVedtakJson(
         aktørId: String,

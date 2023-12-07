@@ -1,10 +1,7 @@
 package no.nav.helse.kafka
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.Beskrivelse
 import no.nav.helse.Fordel
 import no.nav.helse.rapids_rivers.JsonMessage
@@ -65,10 +62,4 @@ class SammenligningsgrunnlagMessage(packet: JsonMessage) {
                     beskrivelse = if (inntekt.path("beskrivelse").isTextual) Beskrivelse(inntekt["beskrivelse"].asText()) else null
                 )
             }
-
-    private companion object {
-        private val objectMapper = jacksonObjectMapper()
-            .registerModule(JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-    }
 }
