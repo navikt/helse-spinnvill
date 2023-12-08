@@ -4,7 +4,7 @@ private val flywayCoreVersion = "10.1.0"
 private val kotliqueryVersion = "1.9.0"
 private val testcontainersPostgresqlVersion = "1.19.3"
 private val micrometerVersion = "1.12.0"
-private val exposedVersion = "0.44.1"
+private val exposedVersion = "0.45.0"
 
 group = "no.nav.helse"
 
