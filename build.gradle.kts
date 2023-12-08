@@ -1,4 +1,4 @@
-private val logbackVersion = "1.4.11"
+private val logbackVersion = "1.4.12"
 private val logstashVersion = "7.4"
 private val mockkVersion = "1.13.8"
 private val junitJupiterVersion = "5.10.1"
