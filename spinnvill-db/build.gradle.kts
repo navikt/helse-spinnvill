@@ -1,4 +1,4 @@
-private val postgresqlVersion = "42.6.0"
+private val postgresqlVersion = "42.7.1"
 private val hikariCPVersion = "5.1.0"
 private val flywayCoreVersion = "10.1.0"
 private val kotliqueryVersion = "1.9.0"
