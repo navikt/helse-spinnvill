@@ -23,7 +23,7 @@ jobs:
         with:
           fail-on-error: true
           gradle-build-module: |-
-            helse-spinnvill:spinnvill-app
-            helse-spinnvill:spinnvill-avviksvurdering
-            helse-spinnvill:spinnvill-db
-            helse-spinnvill:spinnvill-felles
+            :spinnvill-app
+            :spinnvill-avviksvurdering
+            :spinnvill-db
+            :spinnvill-felles
