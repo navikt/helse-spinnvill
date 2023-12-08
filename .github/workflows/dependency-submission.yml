@@ -28,4 +28,3 @@ jobs:
             ":spinnvill-avviksvurdering"
             ":spinnvill-db"
             ":spinnvill-felles"
-          gradle-dependency-path: "build.gradle.kts"
