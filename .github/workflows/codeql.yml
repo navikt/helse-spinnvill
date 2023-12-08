@@ -33,7 +33,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17.x'
-          cache: 'gradle'
 
       - name: Gradle build
         uses: gradle/gradle-build-action@v2.9.0
