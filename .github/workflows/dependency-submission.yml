@@ -22,4 +22,10 @@ jobs:
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
         with:
           fail-on-error: true
+          gradle-build-module: |-
+            ":"
+            ":spinnvill-app"
+            ":spinnvill-avviksvurdering"
+            ":spinnvill-db"
+            ":spinnvill-felles"
           gradle-dependency-path: "build.gradle.kts"
