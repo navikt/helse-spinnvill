@@ -113,7 +113,7 @@ class Mediator(
         avviksvurdering.register(subsumsjonProducer)
         avviksvurdering.register(avviksvurderingProducer)
         avviksvurdering.håndter(beregningsgrunnlag)
-        utkastTilVedtakProducer.håndter()
+        utkastTilVedtakProducer.registrerUtkastForUtsending()
         val builder = DatabaseDtoBuilder()
         avviksvurdering.accept(builder)
         database.lagreAvviksvurdering(builder.build())

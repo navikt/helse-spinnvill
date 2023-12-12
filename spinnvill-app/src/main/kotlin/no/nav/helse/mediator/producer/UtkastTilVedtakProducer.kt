@@ -6,7 +6,7 @@ internal class UtkastTilVedtakProducer(
     private val utkastTilVedtakMessage: UtkastTilVedtakMessage
 ) : Producer {
     private val utkastTilVedtak = mutableListOf<UtkastTilVedtakMessage>()
-    internal fun håndter() {
+    internal fun registrerUtkastForUtsending() {
         utkastTilVedtak.add(utkastTilVedtakMessage)
     }
 
