@@ -32,7 +32,7 @@ class AvviksvurderingProducer(private val vilkårsgrunnlagId: UUID) : KriterieOb
         )
     }
 
-    override fun finalize(): List<Message> {
+    override fun ferdigstill(): List<Message> {
         if (avviksvurderingKø.isEmpty()) return emptyList()
         val meldinger = avviksvurderingKø.map {
             Message.Hendelse(

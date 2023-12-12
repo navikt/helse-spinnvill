@@ -10,7 +10,7 @@ internal class UtkastTilVedtakProducer(
         utkastTilVedtak.add(utkastTilVedtakMessage)
     }
 
-    override fun finalize(): List<Message> {
+    override fun ferdigstill(): List<Message> {
         return utkastTilVedtak.map {
             Message.Behov(
                 setOf("Godkjenning"),

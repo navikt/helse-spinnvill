@@ -26,7 +26,7 @@ internal class VarselProducer(
         ))
     }
 
-    override fun finalize(): List<Message> {
+    override fun ferdigstill(): List<Message> {
         if (varselkø.isEmpty()) return emptyList()
         val message = Message.Hendelse(
             navn = "nye_varsler",

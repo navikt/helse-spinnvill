@@ -8,7 +8,7 @@ internal class BehovProducer(
 ): Producer {
     private val behovskø = mutableMapOf<String, Map<String, Any>>()
 
-    override fun finalize(): List<Message> {
+    override fun ferdigstill(): List<Message> {
         if (behovskø.isEmpty()) return emptyList()
         val compositeBehov = Message.Behov(
             behov = behovskø.keys.toSet(),

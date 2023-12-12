@@ -16,21 +16,21 @@ class VarselProducerTest {
     @Test
     fun `ikke produser varsel hvis avviket er akseptabelt`() {
         varselProducer.avvikVurdert(UUID.randomUUID(), true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        varselProducer.finalize()
-        assertEquals(0, varselProducer.finalize().size)
+        varselProducer.ferdigstill()
+        assertEquals(0, varselProducer.ferdigstill().size)
     }
 
     @Test
     fun `varselkø tømmes etter hver finalize`() {
         varselProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        assertEquals(1, varselProducer.finalize().size)
-        assertEquals(0, varselProducer.finalize().size)
+        assertEquals(1, varselProducer.ferdigstill().size)
+        assertEquals(0, varselProducer.ferdigstill().size)
     }
 
     @Test
     fun `produser riktig format på varsel`() {
         varselProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        val messages = varselProducer.finalize()
+        val messages = varselProducer.ferdigstill()
         assertEquals(1, messages.size)
         val message = messages[0]
         check(message is Message.Hendelse)
@@ -53,7 +53,7 @@ class VarselProducerTest {
     @Test
     fun `produser varsel hvis avviket ikke er akseptabelt`() {
         varselProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        val messages = varselProducer.finalize()
+        val messages = varselProducer.ferdigstill()
         val json = messages[0].innhold.toJson()
         val varsel = json["aktiviteter"][0]
         assertPresent(varsel)

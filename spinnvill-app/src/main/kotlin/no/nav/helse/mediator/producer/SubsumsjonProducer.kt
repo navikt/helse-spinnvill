@@ -40,7 +40,7 @@ internal class SubsumsjonProducer(
         )
     }
 
-    override fun finalize(): List<Message> {
+    override fun ferdigstill(): List<Message> {
         if (subsumsjonskø.isEmpty()) return emptyList()
         val meldinger = subsumsjonskø.map {
             Message.Hendelse(

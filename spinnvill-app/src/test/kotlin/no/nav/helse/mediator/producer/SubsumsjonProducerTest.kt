@@ -29,26 +29,26 @@ internal class SubsumsjonProducerTest {
     @Test
     fun `produser subsumsjonsmelding hvis avviket er akseptabelt`() {
         subsumsjonProducer.avvikVurdert(UUID.randomUUID(), true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        assertEquals(1, subsumsjonProducer.finalize().size)
+        assertEquals(1, subsumsjonProducer.ferdigstill().size)
     }
 
     @Test
     fun `produser subsumsjonsmelding hvis avviket ikke er akseptabelt`() {
         subsumsjonProducer.avvikVurdert(UUID.randomUUID(), false, 42.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        assertEquals(1, subsumsjonProducer.finalize().size)
+        assertEquals(1, subsumsjonProducer.ferdigstill().size)
     }
 
     @Test
     fun `subsumsjonskø tømmes etter hver finalize`() {
         subsumsjonProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        assertEquals(1, subsumsjonProducer.finalize().size)
-        assertEquals(0, subsumsjonProducer.finalize().size)
+        assertEquals(1, subsumsjonProducer.ferdigstill().size)
+        assertEquals(0, subsumsjonProducer.ferdigstill().size)
     }
 
     @Test
     fun `produserer riktig format på subsumsjonsmelding`() {
         subsumsjonProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        val messages = subsumsjonProducer.finalize()
+        val messages = subsumsjonProducer.ferdigstill()
         assertEquals(1, messages.size)
         val message = messages[0]
         check(message is Message.Hendelse)
@@ -83,7 +83,7 @@ internal class SubsumsjonProducerTest {
         val beregningsgrunnlag = beregningsgrunnlag("a1" to 600000.0)
         val sammenligningsgrunnlag = sammenligningsgrunnlag("a1" to 50000.0)
         subsumsjonProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0)
-        val message = subsumsjonProducer.finalize()[0]
+        val message = subsumsjonProducer.ferdigstill()[0]
         check(message is Message.Hendelse)
         assertEquals("subsumsjon", message.navn)
 

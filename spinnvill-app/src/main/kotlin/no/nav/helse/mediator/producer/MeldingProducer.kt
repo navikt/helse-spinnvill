@@ -12,7 +12,7 @@ import java.time.LocalDate
 import java.util.*
 
 interface Producer {
-    fun finalize(): List<Message>
+    fun ferdigstill(): List<Message>
 }
 
 sealed class Message(
@@ -51,7 +51,7 @@ class MeldingProducer(
     internal fun finalize() {
         producers
             .flatMap {
-                it.finalize().map { message ->
+                it.ferdigstill().map { message ->
                     when (message) {
                         is Message.Behov -> message to JsonMessage.newNeed(message.behov, message.innhold)
                         is Message.Hendelse -> message to JsonMessage.newMessage(message.navn, message.innhold)

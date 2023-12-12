@@ -70,12 +70,12 @@ class MeldingProducerTest {
     }
 
     private object BehovProducer: Producer {
-        override fun finalize(): List<Message> {
+        override fun ferdigstill(): List<Message> {
             return listOf(Message.Behov(setOf("behov1", "behov2"), mapOf("et" to "behov")))
         }
     }
     private object HendelseProducer: Producer {
-        override fun finalize(): List<Message> {
+        override fun ferdigstill(): List<Message> {
             return listOf(Message.Hendelse("hendelse", mapOf("en" to "hendelse")))
         }
     }

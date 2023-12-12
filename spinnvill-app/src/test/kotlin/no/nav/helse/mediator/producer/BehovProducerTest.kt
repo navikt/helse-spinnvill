@@ -20,7 +20,7 @@ class BehovProducerTest {
         behovProducer.sammenligningsgrunnlag(
             BehovForSammenligningsgrunnlag(1.januar, YearMonth.of(2018, Month.JANUARY), YearMonth.of(2018, Month.APRIL))
         )
-        val messages = behovProducer.finalize()
+        val messages = behovProducer.ferdigstill()
         assertEquals(1, messages.size)
 
         val message = messages[0]
@@ -34,7 +34,7 @@ class BehovProducerTest {
 
     @Test
     fun `lager ikke behov når behovskø er tom`() {
-        assertEquals(0, behovProducer.finalize().size)
+        assertEquals(0, behovProducer.ferdigstill().size)
     }
 
     @Test
@@ -42,8 +42,8 @@ class BehovProducerTest {
         behovProducer.sammenligningsgrunnlag(
             BehovForSammenligningsgrunnlag(1.januar, YearMonth.of(2018, Month.JANUARY), YearMonth.of(2018, Month.APRIL))
         )
-        val meldinger = behovProducer.finalize()
-        val meldingerEtterClear = behovProducer.finalize()
+        val meldinger = behovProducer.ferdigstill()
+        val meldingerEtterClear = behovProducer.ferdigstill()
         assertEquals(1, meldinger.size)
         assertEquals(0, meldingerEtterClear.size)
     }
@@ -54,7 +54,7 @@ class BehovProducerTest {
             BehovForSammenligningsgrunnlag(1.januar, YearMonth.of(2018, Month.JANUARY), YearMonth.of(2018, Month.APRIL))
         )
 
-        val behov = behovProducer.finalize()[0].innhold.toJson()
+        val behov = behovProducer.ferdigstill()[0].innhold.toJson()
         assertEquals("tilVedtak", behov["utkastTilVedtak"]["etUtkast"].asText())
     }
 }

@@ -31,7 +31,7 @@ class AvviksvurderingProducerTest {
             maksimaltTillattAvvik = 25.0
         )
 
-        assertEquals(1, avviksvurderingProducer.finalize().size)
+        assertEquals(1, avviksvurderingProducer.ferdigstill().size)
     }
 
     @Test
@@ -45,7 +45,7 @@ class AvviksvurderingProducerTest {
             maksimaltTillattAvvik = 25.0
         )
 
-        assertEquals(1, avviksvurderingProducer.finalize().size)
+        assertEquals(1, avviksvurderingProducer.ferdigstill().size)
     }
 
     @Test
@@ -58,8 +58,8 @@ class AvviksvurderingProducerTest {
             sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
             maksimaltTillattAvvik = 25.0
         )
-        val meldinger = avviksvurderingProducer.finalize()
-        val meldingerEtterClear = avviksvurderingProducer.finalize()
+        val meldinger = avviksvurderingProducer.ferdigstill()
+        val meldingerEtterClear = avviksvurderingProducer.ferdigstill()
         assertEquals(1, meldinger.size)
         assertEquals(0, meldingerEtterClear.size)
     }
@@ -95,7 +95,7 @@ class AvviksvurderingProducerTest {
             ),
             maksimaltTillattAvvik = 25.0
         )
-        val messages = avviksvurderingProducer.finalize()
+        val messages = avviksvurderingProducer.ferdigstill()
         assertEquals(1, messages.size)
         val message = messages[0]
         check(message is Message.Hendelse)
@@ -185,7 +185,7 @@ class AvviksvurderingProducerTest {
             maksimaltTillattAvvik = 25.0
         )
 
-        val message = avviksvurderingProducer.finalize()[0].innhold.toJson()
+        val message = avviksvurderingProducer.ferdigstill()[0].innhold.toJson()
         val avviksvurdering = message["avviksvurdering"]
         assertEquals(avviksprosent, avviksvurdering["avviksprosent"].asDouble())
         val beregningsgrunnlag = avviksvurdering["beregningsgrunnlag"]
