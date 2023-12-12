@@ -48,7 +48,7 @@ class Mediator(
             vilkårsgrunnlagId = utkastTilVedtakMessage.vilkårsgrunnlagId,
             versjonAvKode = versjonAvKode
         )
-        val avviksvurderingProducer = AvviksvurderingProducer()
+        val avviksvurderingProducer = AvviksvurderingProducer(vilkårsgrunnlagId = utkastTilVedtakMessage.vilkårsgrunnlagId)
         val utkastTilVedtakProducer = UtkastTilVedtakProducer(utkastTilVedtakMessage)
         meldingProducer.nyProducer(behovProducer, varselProducer, subsumsjonProducer, avviksvurderingProducer, utkastTilVedtakProducer)
         val beregningsgrunnlag = Beregningsgrunnlag.opprett(
