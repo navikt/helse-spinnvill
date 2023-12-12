@@ -7,9 +7,7 @@ import no.nav.helse.VersjonAvKode
 import no.nav.helse.helpers.*
 import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.isMissingOrNull
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.YearMonth
 import java.util.*
@@ -30,26 +28,26 @@ internal class SubsumsjonProducerTest {
 
     @Test
     fun `produser subsumsjonsmelding hvis avviket er akseptabelt`() {
-        subsumsjonProducer.avvikVurdert(true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
+        subsumsjonProducer.avvikVurdert(UUID.randomUUID(), true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         assertEquals(1, subsumsjonProducer.finalize().size)
     }
 
     @Test
     fun `produser subsumsjonsmelding hvis avviket ikke er akseptabelt`() {
-        subsumsjonProducer.avvikVurdert(false, 42.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
+        subsumsjonProducer.avvikVurdert(UUID.randomUUID(), false, 42.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         assertEquals(1, subsumsjonProducer.finalize().size)
     }
 
     @Test
     fun `subsumsjonskø tømmes etter hver finalize`() {
-        subsumsjonProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
+        subsumsjonProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         assertEquals(1, subsumsjonProducer.finalize().size)
         assertEquals(0, subsumsjonProducer.finalize().size)
     }
 
     @Test
     fun `produserer riktig format på subsumsjonsmelding`() {
-        subsumsjonProducer.avvikVurdert(false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
+        subsumsjonProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
         val messages = subsumsjonProducer.finalize()
         assertEquals(1, messages.size)
         val message = messages[0]
@@ -84,7 +82,7 @@ internal class SubsumsjonProducerTest {
     fun `lag subsumsjonsmelding for avviksvurdering`() {
         val beregningsgrunnlag = beregningsgrunnlag("a1" to 600000.0)
         val sammenligningsgrunnlag = sammenligningsgrunnlag("a1" to 50000.0)
-        subsumsjonProducer.avvikVurdert(false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0)
+        subsumsjonProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0)
         val message = subsumsjonProducer.finalize()[0]
         check(message is Message.Hendelse)
         assertEquals("subsumsjon", message.navn)

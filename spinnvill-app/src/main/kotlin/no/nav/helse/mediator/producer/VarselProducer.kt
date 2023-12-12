@@ -12,6 +12,7 @@ internal class VarselProducer(
     private val varselkø = mutableListOf<VarselDto>()
 
     override fun avvikVurdert(
+        id: UUID,
         harAkseptabeltAvvik: Boolean,
         avviksprosent: Double,
         beregningsgrunnlag: Beregningsgrunnlag,

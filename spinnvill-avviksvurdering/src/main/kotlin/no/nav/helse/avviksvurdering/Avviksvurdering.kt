@@ -26,6 +26,7 @@ class Avviksvurdering(
         avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
         observers.forEach {
             it.avvikVurdert(
+                id = id,
                 harAkseptabeltAvvik = avviksprosent.harAkseptabeltAvvik(),
                 avviksprosent = avviksprosent.avrundetTilToDesimaler(),
                 beregningsgrunnlag = beregningsgrunnlag,

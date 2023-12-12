@@ -7,6 +7,7 @@ import no.nav.helse.somArbeidsgiverref
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.YearMonth
+import java.util.*
 
 class AvviksvurderingSubsumsjonBuilderTest {
 
@@ -16,7 +17,12 @@ class AvviksvurderingSubsumsjonBuilderTest {
         val sammenligningsgrunnlag = sammenligningsgrunnlag("a1" to 50000.0)
 
         val builder = AvviksvurderingSubsumsjonBuilder(
-            false, 26.0, 25.0, beregningsgrunnlag, sammenligningsgrunnlag
+            id = UUID.randomUUID(),
+            harAkseptabeltAvvik = false,
+            avviksprosent = 26.0,
+            maksimaltTillattAvvik = 25.0,
+            beregningsgrunnlag = beregningsgrunnlag,
+            sammenligningsgrunnlag = sammenligningsgrunnlag
         )
 
         val subsumsjonsmelding = builder.buildSubsumsjon()
@@ -66,7 +72,12 @@ class AvviksvurderingSubsumsjonBuilderTest {
         val sammenligningsgrunnlag = sammenligningsgrunnlag("a1" to 35000.0, "a2" to 15000.0)
 
         val builder = AvviksvurderingSubsumsjonBuilder(
-            false, 26.0, 25.0, beregningsgrunnlag, sammenligningsgrunnlag
+            id = UUID.randomUUID(),
+            harAkseptabeltAvvik = false,
+            avviksprosent = 26.0,
+            maksimaltTillattAvvik = 25.0,
+            beregningsgrunnlag = beregningsgrunnlag,
+            sammenligningsgrunnlag = sammenligningsgrunnlag
         )
 
         val subsumsjonsmelding = builder.buildSubsumsjon()
@@ -127,7 +138,12 @@ class AvviksvurderingSubsumsjonBuilderTest {
         val sammenligningsgrunnlag = sammenligningsgrunnlag("a1" to 50000.0)
 
         val builder = AvviksvurderingSubsumsjonBuilder(
-            false, 26.0, 25.0, beregningsgrunnlag, sammenligningsgrunnlag
+            id = UUID.randomUUID(),
+            harAkseptabeltAvvik = false,
+            avviksprosent = 26.0,
+            maksimaltTillattAvvik = 25.0,
+            beregningsgrunnlag = beregningsgrunnlag,
+            sammenligningsgrunnlag = sammenligningsgrunnlag
         )
 
         val avviksvurdering = builder.buildAvviksvurdering()
@@ -158,7 +174,12 @@ class AvviksvurderingSubsumsjonBuilderTest {
         )
 
         val builder = AvviksvurderingSubsumsjonBuilder(
-            false, 26.0, 25.0, beregningsgrunnlag, sammenligningsgrunnlag
+            id = UUID.randomUUID(),
+            harAkseptabeltAvvik = false,
+            avviksprosent = 26.0,
+            maksimaltTillattAvvik = 25.0,
+            beregningsgrunnlag = beregningsgrunnlag,
+            sammenligningsgrunnlag = sammenligningsgrunnlag
         )
 
         val avviksvurdering = builder.buildAvviksvurdering()

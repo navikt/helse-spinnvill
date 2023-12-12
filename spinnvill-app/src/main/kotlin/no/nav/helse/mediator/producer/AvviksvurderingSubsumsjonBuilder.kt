@@ -7,9 +7,11 @@ import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import no.nav.helse.avviksvurdering.Visitor
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.*
 import kotlin.properties.Delegates
 
 internal class AvviksvurderingSubsumsjonBuilder(
+    private val id: UUID,
     private val harAkseptabeltAvvik: Boolean,
     private val avviksprosent: Double,
     private val maksimaltTillattAvvik: Double,
@@ -23,6 +25,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
         val sammenligningsgrunnlagDto = sammenligningsgrunnlagBuilder.buildForAvviksvurdering()
         return AvviksvurderingProducer.AvviksvurderingDto(
             avviksprosent = avviksprosent,
+            id = id,
             beregningsgrunnlagTotalbeløp = beregningsgrunnlagDto.totalbeløp,
             omregnedeÅrsinntekter = beregningsgrunnlagDto.omregnedeÅrsinntekter,
             sammenligningsgrunnlagTotalbeløp = sammenligningsgrunnlagDto.totalbeløp,

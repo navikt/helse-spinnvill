@@ -21,6 +21,7 @@ internal class SubsumsjonProducer(
     private val subsumsjonskø = mutableListOf<SubsumsjonsmeldingDto>()
 
     override fun avvikVurdert(
+        id: UUID,
         harAkseptabeltAvvik: Boolean,
         avviksprosent: Double,
         beregningsgrunnlag: Beregningsgrunnlag,
@@ -29,6 +30,7 @@ internal class SubsumsjonProducer(
     ) {
         subsumsjonskø.add(
             AvviksvurderingSubsumsjonBuilder(
+                id = id,
                 harAkseptabeltAvvik = harAkseptabeltAvvik,
                 avviksprosent = avviksprosent,
                 maksimaltTillattAvvik = maksimaltTillattAvvik,

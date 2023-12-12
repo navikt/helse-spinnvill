@@ -8,10 +8,12 @@ import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import java.time.LocalDateTime
 import java.time.YearMonth
+import java.util.UUID
 
-class AvviksvurderingProducer : KriterieObserver, Producer {
+class AvviksvurderingProducer(private val vilkårsgrunnlagId: UUID) : KriterieObserver, Producer {
     private val avviksvurderingKø = mutableListOf<AvviksvurderingDto>()
     override fun avvikVurdert(
+        id: UUID,
         harAkseptabeltAvvik: Boolean,
         avviksprosent: Double,
         beregningsgrunnlag: Beregningsgrunnlag,
@@ -20,11 +22,12 @@ class AvviksvurderingProducer : KriterieObserver, Producer {
     ) {
         avviksvurderingKø.add(
             AvviksvurderingSubsumsjonBuilder(
-                harAkseptabeltAvvik,
-                avviksprosent,
-                maksimaltTillattAvvik,
-                beregningsgrunnlag,
-                sammenligningsgrunnlag
+                id = id,
+                harAkseptabeltAvvik = harAkseptabeltAvvik,
+                avviksprosent = avviksprosent,
+                maksimaltTillattAvvik = maksimaltTillattAvvik,
+                beregningsgrunnlag = beregningsgrunnlag,
+                sammenligningsgrunnlag = sammenligningsgrunnlag
             ).buildAvviksvurdering()
         )
     }
@@ -36,6 +39,8 @@ class AvviksvurderingProducer : KriterieObserver, Producer {
                 navn = "avviksvurdering",
                 innhold = mapOf(
                     "avviksvurdering" to mapOf(
+                        "id" to it.id,
+                        "vilkårsgrunnlagId" to vilkårsgrunnlagId,
                         "opprettet" to LocalDateTime.now(),
                         "avviksprosent" to it.avviksprosent,
                         "beregningsgrunnlag" to mapOf(
@@ -70,6 +75,7 @@ class AvviksvurderingProducer : KriterieObserver, Producer {
     }
 
     internal data class AvviksvurderingDto(
+        val id: UUID,
         val avviksprosent: Double,
         val beregningsgrunnlagTotalbeløp: Double,
         val sammenligningsgrunnlagTotalbeløp: Double,

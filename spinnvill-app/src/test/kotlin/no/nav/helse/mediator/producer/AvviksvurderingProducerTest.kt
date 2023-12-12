@@ -15,15 +15,17 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.YearMonth
+import java.util.*
 
 class AvviksvurderingProducerTest {
-    private val avviksvurderingProducer = AvviksvurderingProducer()
+    private val avviksvurderingProducer = AvviksvurderingProducer(UUID.randomUUID())
 
     @Test
     fun `produser avviksvurdering for akseptebelt avvik`() {
         avviksvurderingProducer.avvikVurdert(
-            avviksprosent = 24.9,
+            id = UUID.randomUUID(),
             harAkseptabeltAvvik = true,
+            avviksprosent = 24.9,
             beregningsgrunnlag = Beregningsgrunnlag.INGEN,
             sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
             maksimaltTillattAvvik = 25.0
@@ -35,8 +37,9 @@ class AvviksvurderingProducerTest {
     @Test
     fun `produser avviksvurdering for uakseptebelt avvik`() {
         avviksvurderingProducer.avvikVurdert(
-            avviksprosent = 25.0,
+            id = UUID.randomUUID(),
             harAkseptabeltAvvik = false,
+            avviksprosent = 25.0,
             beregningsgrunnlag = Beregningsgrunnlag.INGEN,
             sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
             maksimaltTillattAvvik = 25.0
@@ -48,8 +51,9 @@ class AvviksvurderingProducerTest {
     @Test
     fun `avviksvurdering kø tømmes etter hver finalize`() {
         avviksvurderingProducer.avvikVurdert(
-            avviksprosent = 24.9,
+            id = UUID.randomUUID(),
             harAkseptabeltAvvik = true,
+            avviksprosent = 24.9,
             beregningsgrunnlag = Beregningsgrunnlag.INGEN,
             sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
             maksimaltTillattAvvik = 25.0
@@ -63,8 +67,9 @@ class AvviksvurderingProducerTest {
     @Test
     fun `produserer riktig format på avviksvurderingmelding`() {
         avviksvurderingProducer.avvikVurdert(
-            avviksprosent = 24.9,
+            id = UUID.randomUUID(),
             harAkseptabeltAvvik = true,
+            avviksprosent = 24.9,
             beregningsgrunnlag = Beregningsgrunnlag.opprett(
                 mapOf(
                     "987654321".somArbeidsgiverref() to OmregnetÅrsinntekt(
@@ -98,6 +103,8 @@ class AvviksvurderingProducerTest {
         assertEquals("avviksvurdering", message.navn)
         assertPresent(json["avviksvurdering"])
         val avviksvurdering = json["avviksvurdering"]
+        assertPresent(avviksvurdering["id"])
+        assertPresent(avviksvurdering["vilkårsgrunnlagId"])
         assertPresent(avviksvurdering["opprettet"])
         assertPresent(avviksvurdering["avviksprosent"])
         assertPresent(avviksvurdering["beregningsgrunnlag"])
@@ -138,8 +145,9 @@ class AvviksvurderingProducerTest {
 
         val avviksprosent = 24.9
         avviksvurderingProducer.avvikVurdert(
-            avviksprosent = avviksprosent,
+            id = UUID.randomUUID(),
             harAkseptabeltAvvik = true,
+            avviksprosent = avviksprosent,
             beregningsgrunnlag = Beregningsgrunnlag.opprett(
                 mapOf(
                     arbeidsgiver1 to omregnetÅrsinntekt1,

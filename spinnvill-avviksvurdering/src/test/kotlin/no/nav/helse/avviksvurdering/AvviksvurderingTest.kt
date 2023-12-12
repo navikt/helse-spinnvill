@@ -5,6 +5,7 @@ import no.nav.helse.helpers.januar
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.YearMonth
+import java.util.*
 
 internal class AvviksvurderingTest {
 
@@ -69,6 +70,7 @@ internal class AvviksvurderingTest {
         }
 
         override fun avvikVurdert(
+            id: UUID,
             harAkseptabeltAvvik: Boolean,
             avviksprosent: Double,
             beregningsgrunnlag: Beregningsgrunnlag,
