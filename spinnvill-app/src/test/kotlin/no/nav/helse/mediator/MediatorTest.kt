@@ -7,6 +7,7 @@ import no.nav.helse.db.TestDatabase
 import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.helpers.januar
 import no.nav.helse.helpers.objectMapper
+import no.nav.helse.kafka.asUUID
 import no.nav.helse.rapids_rivers.asLocalDate
 import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
@@ -79,12 +81,13 @@ internal class MediatorTest {
         mottaUtkastTilVedtak()
         mottaSammenligningsgrunnlag()
 
-        assertEquals(1, testRapid.inspektør.behov("Godkjenning").size)
+        val avviksvurderingId = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)!!.id
+        testRapid.inspektør.assertGodkjenningsbehovHarAvviksvurderingId(avviksvurderingId)
     }
 
 
     @Test
-    fun `send utkast til vedtak hvis det ikke gjøres ny avviksvurdering`() {
+    fun `sender utkast til vedtak hvis det ikke gjøres ny avviksvurdering`() {
         mottaUtkastTilVedtak()
         mottaSammenligningsgrunnlag()
 
@@ -92,12 +95,12 @@ internal class MediatorTest {
 
         mottaUtkastTilVedtak()
 
-        assertEquals(1, testRapid.inspektør.size)
-        assertEquals(1, testRapid.inspektør.behov("Godkjenning").size)
+        val avviksvurderingId = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)!!.id
+        testRapid.inspektør.assertGodkjenningsbehovHarAvviksvurderingId(avviksvurderingId)
     }
 
     @Test
-    fun `sender ikke behov for sammenligningsgrunnlag når det finnes en ekisterende avviksvurdering`() {
+    fun `sender ikke behov for sammenligningsgrunnlag når det finnes en eksisterende avviksvurdering`() {
         mottaUtkastTilVedtak()
         mottaSammenligningsgrunnlag()
 
@@ -265,6 +268,9 @@ internal class MediatorTest {
     private fun TestRapid.RapidInspector.behov(behov: String) =
         hendelser("behov")
             .filter { it.path("@behov").map(JsonNode::asText).containsAll(listOf(behov)) }
+
+    private fun TestRapid.RapidInspector.assertGodkjenningsbehovHarAvviksvurderingId(id: UUID) =
+        assertEquals(id, behov("Godkjenning").single()["avviksvurderingId"].asUUID())
 
     private fun utkastTilVedtakJson(
         aktørId: String,

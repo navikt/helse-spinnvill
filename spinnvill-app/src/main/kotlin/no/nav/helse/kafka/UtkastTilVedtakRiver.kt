@@ -14,6 +14,7 @@ internal class UtkastTilVedtakRiver(rapidsConnection: RapidsConnection, private 
                 it.demandAll("@behov", listOf("Godkjenning"))
                 it.rejectKey("@løsning")
                 it.rejectKey("behandlingStartet")
+                it.rejectKey("avviksvurderingId")
                 it.requireKey("fødselsnummer", "organisasjonsnummer", "aktørId", "vedtaksperiodeId")
                 it.requireKey("Godkjenning.vilkårsgrunnlagId", "Godkjenning.skjæringstidspunkt")
                 it.requireArray("Godkjenning.omregnedeÅrsinntekter") {

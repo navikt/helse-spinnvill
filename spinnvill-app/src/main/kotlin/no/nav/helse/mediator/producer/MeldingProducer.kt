@@ -38,7 +38,7 @@ class MeldingProducer(
     private val rapidsConnection: RapidsConnection
 ) {
     private companion object {
-        private val logg = LoggerFactory.getLogger(this::class.java)
+        private val logg = LoggerFactory.getLogger(MeldingProducer::class.java)
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
     }
 

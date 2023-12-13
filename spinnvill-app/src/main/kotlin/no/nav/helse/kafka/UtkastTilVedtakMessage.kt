@@ -1,22 +1,31 @@
 package no.nav.helse.kafka
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.asLocalDate
 import java.time.LocalDate
 import java.util.*
 
-class UtkastTilVedtakMessage(private val packet: JsonMessage) {
-    fun toJson(): JsonNode {
-        return objectMapper.readTree(packet.toJson())
+class UtkastTilVedtakMessage(packet: JsonMessage) {
+
+    // Litt usikker på om vi trenger denne, det føltes bare litt feil å fikle på det objektet vi får inn i konstruktøren
+    private val result = objectMapper.readTree(packet.toJson()) as ObjectNode
+    private lateinit var avviksvurderingId: UUID
+
+    fun toJson(): JsonNode = result.deepCopy()
+
+    fun leggTilAvviksvurderingId(id: UUID) {
+        avviksvurderingId = id
     }
 
+    @Suppress("removal")
     fun finalize(): Map<String, Any> =
-        objectMapper.readValue<Map<String, Any>>(packet.apply {
-            packet["behandlingStartet"] = true
-            packet["avviksvurderingId"] = UUID.randomUUID()
-        }.toJson())
+        objectMapper.convertValue(result.apply {
+            if (::avviksvurderingId.isInitialized) put("avviksvurderingId", avviksvurderingId.toString())
+            else put("behandlingStartet", true)
+        })
 
     val vilkårsgrunnlagId: UUID = packet["Godkjenning.vilkårsgrunnlagId"].asUUID()
     val skjæringstidspunkt: LocalDate = packet["Godkjenning.skjæringstidspunkt"].asLocalDate()

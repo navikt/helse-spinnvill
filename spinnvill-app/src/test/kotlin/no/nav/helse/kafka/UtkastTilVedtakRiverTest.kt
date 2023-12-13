@@ -7,6 +7,7 @@ import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.util.*
 
 class UtkastTilVedtakRiverTest {
 
@@ -49,6 +50,12 @@ class UtkastTilVedtakRiverTest {
     @Test
     fun `leser ikke inn godkjenningsbehov markert med behandlingStartet`() {
         testRapid.sendTestMessage(utkastTilVedtakJsonMedBehandlingStartet(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, skjæringstidspunkt))
+        assertEquals(0, messageHandler.messages.size)
+    }
+
+    @Test
+    fun `leser ikke inn godkjenningsbehov som har avviksvurderingId`() {
+        testRapid.sendTestMessage(utkastTilVedtakJsonMedAvviksvurderingId(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, skjæringstidspunkt))
         assertEquals(0, messageHandler.messages.size)
     }
 
@@ -128,6 +135,15 @@ class UtkastTilVedtakRiverTest {
     ) = utkastTilVedtakJsonNode(aktørId, fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
         .med("behandlingStartet" to "true")
         .let(objectMapper::writeValueAsString)
+
+    private fun utkastTilVedtakJsonMedAvviksvurderingId(
+        aktørId: String,
+        fødselsnummer: String,
+        organisasjonsnummer: String,
+        skjæringstidspunkt: LocalDate
+    ) = utkastTilVedtakJsonNode(aktørId, fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
+        .med("avviksvurderingId" to UUID.randomUUID())
+        .run(objectMapper::writeValueAsString)
 
 }
 

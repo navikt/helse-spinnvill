@@ -63,8 +63,10 @@ class Mediator(
         )?.vurderBehovForNyVurdering(beregningsgrunnlag)
 
         if (avviksvurdering == null) {
+            logg.info("Trenger sammenligningsgrunnlag, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
             beOmSammenligningsgrunnlag(skjæringstidspunkt, behovProducer)
         } else {
+            logg.info("Har sammenligningsgrunnlag, starter avviksvurdering, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
             håndter(
                 beregningsgrunnlag = beregningsgrunnlag,
                 varselProducer = varselProducer,
@@ -73,6 +75,7 @@ class Mediator(
                 utkastTilVedtakProducer = utkastTilVedtakProducer,
                 avviksvurdering = avviksvurdering,
             )
+            logg.info("Avviksvurdering utført, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
         }
         meldingProducer.publiserMeldinger()
     }
@@ -116,7 +119,7 @@ class Mediator(
         avviksvurdering.register(subsumsjonProducer)
         avviksvurdering.register(avviksvurderingProducer)
         avviksvurdering.håndter(beregningsgrunnlag)
-        utkastTilVedtakProducer.registrerUtkastForUtsending()
+        utkastTilVedtakProducer.registrerUtkastForUtsending(avviksvurdering)
         val builder = DatabaseDtoBuilder()
         avviksvurdering.accept(builder)
         database.lagreAvviksvurdering(builder.build())
@@ -139,7 +142,7 @@ class Mediator(
     }
 
     internal companion object {
-        private val logg = LoggerFactory.getLogger(this::class.java)
+        private val logg = LoggerFactory.getLogger(Mediator::class.java)
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
 
 
