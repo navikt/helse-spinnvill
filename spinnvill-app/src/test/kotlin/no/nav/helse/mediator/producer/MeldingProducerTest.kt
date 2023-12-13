@@ -33,7 +33,7 @@ class MeldingProducerTest {
     @Test
     fun `publiserer behov`() {
         meldingProducer.nyProducer(BehovProducer)
-        meldingProducer.finalize()
+        meldingProducer.publiserMeldinger()
         val json = testRapid.inspektør.message(0)
         assertEquals("behov", json["@event_name"].asText())
         assertEquals(aktørId, json["aktørId"].asText().somAktørId())
@@ -47,7 +47,7 @@ class MeldingProducerTest {
     @Test
     fun `publiserer hendelse`() {
         meldingProducer.nyProducer(HendelseProducer)
-        meldingProducer.finalize()
+        meldingProducer.publiserMeldinger()
         val json = testRapid.inspektør.message(0)
         assertEquals("hendelse", json["@event_name"].asText())
         assertEquals(aktørId, json["aktørId"].asText().somAktørId())
@@ -60,7 +60,7 @@ class MeldingProducerTest {
     @Test
     fun `publiserer behov og hendelse`() {
         meldingProducer.nyProducer(HendelseProducer, BehovProducer)
-        meldingProducer.finalize()
+        meldingProducer.publiserMeldinger()
         val hendelseJson = testRapid.inspektør.message(0)
         val behovJson = testRapid.inspektør.message(1)
         assertEquals("hendelse", hendelseJson["@event_name"].asText())

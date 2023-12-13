@@ -56,17 +56,25 @@ class Mediator(
                 Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value)
             }
         )
-        håndter(
-            beregningsgrunnlag = beregningsgrunnlag,
-            fødselsnummer = Fødselsnummer(utkastTilVedtakMessage.fødselsnummer),
-            skjæringstidspunkt = utkastTilVedtakMessage.skjæringstidspunkt,
-            behovProducer = behovProducer,
-            varselProducer = varselProducer,
-            subsumsjonProducer = subsumsjonProducer,
-            avviksvurderingProducer = avviksvurderingProducer,
-            utkastTilVedtakProducer = utkastTilVedtakProducer
-        )
-        meldingProducer.finalize()
+        val skjæringstidspunkt = utkastTilVedtakMessage.skjæringstidspunkt
+        val avviksvurdering = avviksvurdering(
+            Fødselsnummer(utkastTilVedtakMessage.fødselsnummer),
+            skjæringstidspunkt
+        )?.vurderBehovForNyVurdering(beregningsgrunnlag)
+
+        if (avviksvurdering == null) {
+            beOmSammenligningsgrunnlag(skjæringstidspunkt, behovProducer)
+        } else {
+            håndter(
+                beregningsgrunnlag = beregningsgrunnlag,
+                varselProducer = varselProducer,
+                subsumsjonProducer = subsumsjonProducer,
+                avviksvurderingProducer = avviksvurderingProducer,
+                utkastTilVedtakProducer = utkastTilVedtakProducer,
+                avviksvurdering = avviksvurdering,
+            )
+        }
+        meldingProducer.publiserMeldinger()
     }
 
     override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
@@ -98,17 +106,12 @@ class Mediator(
 
     private fun håndter(
         beregningsgrunnlag: Beregningsgrunnlag,
-        fødselsnummer: Fødselsnummer,
-        skjæringstidspunkt: LocalDate,
-        behovProducer: BehovProducer,
         varselProducer: VarselProducer,
         subsumsjonProducer: SubsumsjonProducer,
         avviksvurderingProducer: AvviksvurderingProducer,
-        utkastTilVedtakProducer: UtkastTilVedtakProducer
+        utkastTilVedtakProducer: UtkastTilVedtakProducer,
+        avviksvurdering: Avviksvurdering,
     ) {
-        val avviksvurdering =
-            avviksvurdering(fødselsnummer, skjæringstidspunkt)?.vurderBehovForNyVurdering(beregningsgrunnlag)
-                ?: return beOmSammenligningsgrunnlag(skjæringstidspunkt, behovProducer)
         avviksvurdering.register(varselProducer)
         avviksvurdering.register(subsumsjonProducer)
         avviksvurdering.register(avviksvurderingProducer)

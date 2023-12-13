@@ -48,7 +48,7 @@ class MeldingProducer(
         producers.addAll(producer)
     }
 
-    internal fun finalize() {
+    internal fun publiserMeldinger() {
         producers
             .flatMap {
                 it.ferdigstill().map { message ->

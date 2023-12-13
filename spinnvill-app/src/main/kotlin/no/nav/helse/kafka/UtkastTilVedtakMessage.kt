@@ -13,7 +13,10 @@ class UtkastTilVedtakMessage(private val packet: JsonMessage) {
     }
 
     fun finalize(): Map<String, Any> =
-        objectMapper.readValue<Map<String, Any>>(packet.apply { packet["behandlingStartet"] = true }.toJson())
+        objectMapper.readValue<Map<String, Any>>(packet.apply {
+            packet["behandlingStartet"] = true
+            packet["avviksvurderingId"] = UUID.randomUUID()
+        }.toJson())
 
     val vilkårsgrunnlagId: UUID = packet["Godkjenning.vilkårsgrunnlagId"].asUUID()
     val skjæringstidspunkt: LocalDate = packet["Godkjenning.skjæringstidspunkt"].asLocalDate()
