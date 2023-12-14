@@ -216,6 +216,18 @@ internal class MediatorTest {
         assertEquals(avviksvurdering1, avviksvurdering2)
     }
 
+    @Test
+    fun `meldinger skal sendes i riktig rekkefølge`() {
+        mottaUtkastTilVedtak()
+        mottaSammenligningsgrunnlag()
+
+        assertEquals(4, testRapid.inspektør.size)
+        assertEquals("InntekterForSammenligningsgrunnlag", testRapid.inspektør.field(0, "@behov").first().asText())
+        assertEquals("subsumsjon", testRapid.inspektør.field(1, "@event_name").asText())
+        assertEquals("avviksvurdering", testRapid.inspektør.field(2, "@event_name").asText())
+        assertEquals("Godkjenning", testRapid.inspektør.field(3, "@behov").first().asText())
+    }
+
     private fun mottaUtkastTilVedtak(beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto = BEREGNINGSGRUNNLAG) {
         testRapid.sendTestMessage(
             utkastTilVedtakJson(
