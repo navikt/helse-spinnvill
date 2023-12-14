@@ -45,6 +45,26 @@ flowchart TD
     gjennbruk_avviksvurdering & opprett_avviksvurdering --> gjør_avviksvurdering
 ```
 
+```mermaid
+---
+title: Meldingsflyt
+---
+sequenceDiagram
+  participant Spleis
+  participant Spinn as Spinnvill
+  participant Kafka
+  participant Spes as Spesialist
+  
+  Spleis ->> Spinn: Utkast til vedtak
+  Spinn -->> Kafka: Be om sammenligningsgrunnlag
+  Kafka -->> Spinn: Sammenligningsgrunnlag
+  Spinn ->> Spinn: Vurder avvik 
+  Spinn -->> Kafka: Subsumsjon
+  Spinn -->> Kafka: Varsel
+  Spinn ->> Spes: Avviksvurdering
+  Spinn ->> Spes: Utkast til vedtak (med avviksvurderingId)
+```
+
 ### Datamodell
 ```mermaid
 ---
