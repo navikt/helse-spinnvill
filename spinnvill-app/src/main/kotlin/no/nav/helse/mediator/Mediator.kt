@@ -25,6 +25,7 @@ class Mediator(
     }
 
     override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {
+        if (Toggle.LesemodusOnly.enabled) return sikkerlogg.info("Spinnvill er i lesemodus, håndterer ikke godkjenningsbehov")
         logg.info("Behandler utkast_til_vedtak for {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
         sikkerlogg.info(
             "Behandler utkast_til_vedtak for {}, {}",
