@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import no.nav.helse.*
 import no.nav.helse.db.TestDatabase
 import no.nav.helse.dto.AvviksvurderingDto
+import no.nav.helse.helpers.ToggleHelpers.disable
+import no.nav.helse.helpers.ToggleHelpers.enable
 import no.nav.helse.helpers.januar
 import no.nav.helse.helpers.objectMapper
 import no.nav.helse.kafka.asUUID
@@ -226,6 +228,14 @@ internal class MediatorTest {
         assertEquals("subsumsjon", testRapid.inspektør.field(1, "@event_name").asText())
         assertEquals("avviksvurdering", testRapid.inspektør.field(2, "@event_name").asText())
         assertEquals("Godkjenning", testRapid.inspektør.field(3, "@behov").first().asText())
+    }
+
+    @Test
+    fun `ikke behandle godkjenningsbehov hvis lesemodus er på`() {
+        Toggle.LesemodusOnly.enable()
+        mottaUtkastTilVedtak()
+        assertEquals(0, testRapid.inspektør.size)
+        Toggle.LesemodusOnly.disable()
     }
 
     private fun mottaUtkastTilVedtak(beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto = BEREGNINGSGRUNNLAG) {
