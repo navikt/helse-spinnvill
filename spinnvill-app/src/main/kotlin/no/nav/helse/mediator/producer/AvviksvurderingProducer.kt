@@ -36,7 +36,7 @@ class AvviksvurderingProducer(private val vilkårsgrunnlagId: UUID) : KriterieOb
         if (avviksvurderingKø.isEmpty()) return emptyList()
         val meldinger = avviksvurderingKø.map {
             Message.Hendelse(
-                navn = "avviksvurdering",
+                navn = "avvik_vurdert",
                 innhold = mapOf(
                     "avviksvurdering" to mapOf(
                         "id" to it.id,

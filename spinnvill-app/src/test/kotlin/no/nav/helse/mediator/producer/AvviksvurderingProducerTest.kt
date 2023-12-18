@@ -100,7 +100,7 @@ class AvviksvurderingProducerTest {
         val message = messages[0]
         check(message is Message.Hendelse)
         val json = message.innhold.toJson()
-        assertEquals("avviksvurdering", message.navn)
+        assertEquals("avvik_vurdert", message.navn)
         assertPresent(json["avviksvurdering"])
         val avviksvurdering = json["avviksvurdering"]
         assertPresent(avviksvurdering["id"])
