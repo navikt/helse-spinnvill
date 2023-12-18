@@ -32,6 +32,8 @@ spec:
         databases:
           - name: spinnvill
             envVarPrefix: DATABASE
+            users:
+              - name: spinnvill-opprydding-dev
   env:
     - name: KAFKA_RAPID_TOPIC
       value: tbd.rapid.v1
