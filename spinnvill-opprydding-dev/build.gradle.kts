@@ -3,6 +3,7 @@ private val postgresqlVersion = "42.6.0"
 private val hikariCPVersion = "5.0.1"
 private val flywayCoreVersion = "9.22.3"
 private val kotliqueryVersion = "1.9.0"
+private val cloudSqlVersion = "1.14.1"
 private val testcontainersPostgresqlVersion = "1.19.0"
 
 group = "no.nav.helse"
@@ -12,6 +13,7 @@ private val mainClass = "no.nav.helse.AppKt"
 
 dependencies {
     implementation(project(":spinnvill-felles"))
+    implementation("com.google.cloud.sql:postgres-socket-factory:$cloudSqlVersion")
     implementation("org.postgresql:postgresql:$postgresqlVersion")
     implementation("com.zaxxer:HikariCP:$hikariCPVersion")
     implementation("org.flywaydb:flyway-core:$flywayCoreVersion")
