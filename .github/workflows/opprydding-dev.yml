@@ -30,10 +30,11 @@ jobs:
           java-version: "21.x"
       - name: Bygg med Gradle
         uses: gradle/gradle-build-action@v2.10.0
+        with:
+          arguments: :spinnvill-opprydding-dev:test :spinnvill-opprydding-dev:build
         env:
           ORG_GRADLE_PROJECT_githubUser: x-access-token
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew :spinnvill-opprydding-dev:test :spinnvill-opprydding-dev:build
       - name: Bygg docker image
         uses: nais/docker-build-push@v0
         id: docker-build-push
