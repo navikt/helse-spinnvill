@@ -1,6 +1,4 @@
 private val rapidsAndRiversVersion = "2023101613431697456627.0cdd93eb696f"
-private val hikariCPVersion = "5.0.1"
-
 
 group = "no.nav.helse"
 
