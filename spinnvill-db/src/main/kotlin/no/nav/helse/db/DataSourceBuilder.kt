@@ -23,11 +23,12 @@ internal class DataSourceBuilder(env: Map<String, String>) {
         jdbcUrl = dbUrl
         username = databaseUsername
         password = databasePassword
+        maximumPoolSize = 5
+        minimumIdle = 2
         idleTimeout = Duration.ofMinutes(1).toMillis()
         maxLifetime = idleTimeout * 5
         initializationFailTimeout = Duration.ofMinutes(1).toMillis()
         connectionTimeout = Duration.ofSeconds(30).toMillis()
-        maximumPoolSize = 1
         metricRegistry = PrometheusMeterRegistry(
             PrometheusConfig.DEFAULT,
             CollectorRegistry.defaultRegistry,
