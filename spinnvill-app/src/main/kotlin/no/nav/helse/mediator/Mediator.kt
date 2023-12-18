@@ -31,40 +31,23 @@ class Mediator(
             kv("fødselsnummer", utkastTilVedtakMessage.fødselsnummer),
             kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId)
         )
-        val meldingProducer = MeldingProducer(
-            aktørId = utkastTilVedtakMessage.aktørId.somAktørId(),
-            fødselsnummer = utkastTilVedtakMessage.fødselsnummer.somFnr(),
-            vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
-            organisasjonsnummer = utkastTilVedtakMessage.organisasjonsnummer.somArbeidsgiverref(),
-            skjæringstidspunkt = utkastTilVedtakMessage.skjæringstidspunkt,
-            rapidsConnection = rapidsConnection
-        )
+        val meldingProducer = nyMeldingProducer(utkastTilVedtakMessage)
         val behovProducer = BehovProducer(utkastTilVedtakJson = utkastTilVedtakMessage.toJson())
         val varselProducer = VarselProducer(vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId)
-        val subsumsjonProducer = SubsumsjonProducer(
-            fødselsnummer = utkastTilVedtakMessage.fødselsnummer.somFnr(),
-            vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
-            organisasjonsnummer = utkastTilVedtakMessage.organisasjonsnummer.somArbeidsgiverref(),
-            vilkårsgrunnlagId = utkastTilVedtakMessage.vilkårsgrunnlagId,
-            versjonAvKode = versjonAvKode
-        )
+        val subsumsjonProducer = nySubsumsjonProducer(utkastTilVedtakMessage)
         val avviksvurderingProducer = AvviksvurderingProducer(vilkårsgrunnlagId = utkastTilVedtakMessage.vilkårsgrunnlagId)
         val utkastTilVedtakProducer = UtkastTilVedtakProducer(utkastTilVedtakMessage)
         meldingProducer.nyProducer(behovProducer, varselProducer, subsumsjonProducer, avviksvurderingProducer, utkastTilVedtakProducer)
-        val beregningsgrunnlag = Beregningsgrunnlag.opprett(
-            utkastTilVedtakMessage.beregningsgrunnlag.entries.associate {
-                Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value)
-            }
-        )
-        val skjæringstidspunkt = utkastTilVedtakMessage.skjæringstidspunkt
-        val avviksvurdering = avviksvurdering(
+        val beregningsgrunnlag = nyttBeregningsgrunnlag(utkastTilVedtakMessage)
+        val avviksvurdering = finnAvviksvurdering(
             Fødselsnummer(utkastTilVedtakMessage.fødselsnummer),
-            skjæringstidspunkt
-        )?.vurderBehovForNyVurdering(beregningsgrunnlag)
+            utkastTilVedtakMessage.skjæringstidspunkt
+        )
+            ?.vurderBehovForNyVurdering(beregningsgrunnlag)
 
         if (avviksvurdering == null) {
             logg.info("Trenger sammenligningsgrunnlag, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
-            beOmSammenligningsgrunnlag(skjæringstidspunkt, behovProducer)
+            beOmSammenligningsgrunnlag(utkastTilVedtakMessage.skjæringstidspunkt, behovProducer)
         } else {
             logg.info("Har sammenligningsgrunnlag, starter avviksvurdering, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
             håndter(
@@ -84,7 +67,7 @@ class Mediator(
         val fødselsnummer = Fødselsnummer(sammenligningsgrunnlagMessage.fødselsnummer)
         val skjæringstidspunkt = sammenligningsgrunnlagMessage.skjæringstidspunkt
 
-        if (avviksvurdering(fødselsnummer, skjæringstidspunkt) != null) {
+        if (finnAvviksvurdering(fødselsnummer, skjæringstidspunkt) != null) {
             logg.warn("Ignorerer duplikat sammenligningsgrunnlag for eksisterende avviksvurdering")
             sikkerlogg.warn(
                 "Ignorerer duplikat sammenligningsgrunnlag for {} {}",
@@ -125,7 +108,7 @@ class Mediator(
         database.lagreAvviksvurdering(builder.build())
     }
 
-    private fun avviksvurdering(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurdering? {
+    private fun finnAvviksvurdering(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurdering? {
         return database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)?.tilDomene()
     }
 
@@ -138,6 +121,33 @@ class Mediator(
                 beregningsperiodeFom = fom,
                 beregningsperiodeTom = tom
             )
+        )
+    }
+
+    private fun nyMeldingProducer(utkastTilVedtakMessage: UtkastTilVedtakMessage) = MeldingProducer(
+        aktørId = utkastTilVedtakMessage.aktørId.somAktørId(),
+        fødselsnummer = utkastTilVedtakMessage.fødselsnummer.somFnr(),
+        vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
+        organisasjonsnummer = utkastTilVedtakMessage.organisasjonsnummer.somArbeidsgiverref(),
+        skjæringstidspunkt = utkastTilVedtakMessage.skjæringstidspunkt,
+        rapidsConnection = rapidsConnection
+    )
+
+    private fun nySubsumsjonProducer(utkastTilVedtakMessage: UtkastTilVedtakMessage): SubsumsjonProducer {
+        return SubsumsjonProducer(
+            fødselsnummer = utkastTilVedtakMessage.fødselsnummer.somFnr(),
+            vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
+            organisasjonsnummer = utkastTilVedtakMessage.organisasjonsnummer.somArbeidsgiverref(),
+            vilkårsgrunnlagId = utkastTilVedtakMessage.vilkårsgrunnlagId,
+            versjonAvKode = versjonAvKode
+        )
+    }
+
+    private fun nyttBeregningsgrunnlag(utkastTilVedtakMessage: UtkastTilVedtakMessage): Beregningsgrunnlag {
+        return Beregningsgrunnlag.opprett(
+            utkastTilVedtakMessage.beregningsgrunnlag.entries.associate {
+                Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value)
+            }
         )
     }
 
