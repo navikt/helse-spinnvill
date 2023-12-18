@@ -22,6 +22,33 @@ class Mediator(
     init {
         UtkastTilVedtakRiver(rapidsConnection, this)
         SammenligningsgrunnlagRiver(rapidsConnection, this)
+        AvviksvurderingerFraSpleisRiver(rapidsConnection, this)
+    }
+
+    override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {
+        avviksvurderingerFraSpleisMessage.avviksvurderinger.forEach { avviksvurdering ->
+            database.lagreAvviksvurdering(
+                AvviksvurderingDto(
+                    id = avviksvurdering.id,
+                    fødselsnummer = avviksvurderingerFraSpleisMessage.fødselsnummer,
+                    skjæringstidspunkt = avviksvurdering.skjæringstidspunkt,
+                    sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
+                        innrapporterteInntekter = avviksvurdering.innrapporterteInntekter.associate { innrapportertInntekt ->
+                            innrapportertInntekt.orgnummer.somArbeidsgiverref() to innrapportertInntekt.inntekter.map { inntekt ->
+                                AvviksvurderingDto.MånedligInntektDto(
+                                    InntektPerMåned(inntekt.beløp),
+                                    inntekt.måned,
+                                    Fordel(inntekt.fordel),
+                                    Beskrivelse(inntekt.beskrivelse),
+                                    inntektstype = enumValueOf(inntekt.type)
+                                )
+                            }
+                        }
+                    ),
+                    beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(avviksvurdering.omregnedeÅrsinntekter)
+                )
+            )
+        }
     }
 
     override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {

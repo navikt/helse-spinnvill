@@ -18,6 +18,7 @@ class UtkastTilVedtakMessageTest {
         }
 
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}
+        override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {}
     }
 
     init {

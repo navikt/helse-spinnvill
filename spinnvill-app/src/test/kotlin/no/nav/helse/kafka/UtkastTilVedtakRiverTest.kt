@@ -20,6 +20,7 @@ class UtkastTilVedtakRiverTest {
         }
 
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}
+        override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {}
     }
 //teste hva hvis fødselsnumemr osv ikke er der blablab
     private companion object {

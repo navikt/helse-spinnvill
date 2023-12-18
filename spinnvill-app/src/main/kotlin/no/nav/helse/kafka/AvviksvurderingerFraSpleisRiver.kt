@@ -16,7 +16,10 @@ class AvviksvurderingerFraSpleisRiver(
                 it.demandValue("@event_name", "avviksvurderinger")
                 it.requireKey("fødselsnummer")
                 it.requireArray("skjæringstidspunkter") {
-                    requireKey("skjæringstidspunkt", "vurderingstidspunkt", "type")
+                    requireKey(
+                        "skjæringstidspunkt", "vurderingstidspunkt", "type", "vilkårsgrunnlagId",
+                    )
+                    interestedIn("avviksprosent", "beregningsgrunnlagTotalbeløp", "sammenligningsgrunnlagTotalbeløp")
                     requireArray("omregnedeÅrsinntekter") {
                         requireKey("orgnummer", "beløp")
                     }
@@ -32,6 +35,6 @@ class AvviksvurderingerFraSpleisRiver(
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        messageHandler.håndter(AvviksvurderingerFraSpleisMessage())
+        messageHandler.håndter(AvviksvurderingerFraSpleisMessage(packet))
     }
 }

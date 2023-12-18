@@ -38,6 +38,10 @@ class AvviksvurderingerFraSpleisRiverTest {
             {
               "skjæringstidspunkt": "2018-01-01",
               "vurderingstidspunkt": "2018-01-01T00:00:00.000",
+              "vilkårsgrunnlagId": "291228ef-8b4e-4a1f-8065-ad7ed85acbb4",
+              "avviksprosent": 0.0,
+              "sammenligningsgrunnlagTotalbeløp": 50000.0,
+              "beregningsgrunnlagTotalbeløp": 30000.0,
               "type": "SPLEIS",
               "omregnedeÅrsinntekter": [
                 {
@@ -70,6 +74,7 @@ class AvviksvurderingerFraSpleisRiverTest {
             {
               "skjæringstidspunkt": "2018-02-01",
               "vurderingstidspunkt": "1970-01-01T00:00:00",
+              "vilkårsgrunnlagId": "291228ef-8b4e-4a1f-8065-ad7ed85acbb4",
               "type": "INFOTRYGD",
               "omregnedeÅrsinntekter": [],
               "sammenligningsgrunnlag": []
@@ -77,6 +82,10 @@ class AvviksvurderingerFraSpleisRiverTest {
             {
               "skjæringstidspunkt": "2018-03-01",
               "vurderingstidspunkt": "2018-03-01T00:00:00.000",
+              "vilkårsgrunnlagId": "1862266e-3a75-4f1e-8cfa-6ecd9d8bf172",
+              "avviksprosent": 0.0,
+              "sammenligningsgrunnlagTotalbeløp": 30000.0,
+              "beregningsgrunnlagTotalbeløp": 30000.0,
               "type": "SPLEIS",
               "omregnedeÅrsinntekter": [
                 {

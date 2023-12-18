@@ -9,6 +9,7 @@ import no.nav.helse.helpers.ToggleHelpers.disable
 import no.nav.helse.helpers.ToggleHelpers.enable
 import no.nav.helse.helpers.januar
 import no.nav.helse.helpers.objectMapper
+import no.nav.helse.kafka.Avviksvurderingkilde
 import no.nav.helse.kafka.asUUID
 import no.nav.helse.rapids_rivers.asLocalDate
 import no.nav.helse.rapids_rivers.asYearMonth
@@ -238,6 +239,20 @@ internal class MediatorTest {
         Toggle.LesemodusOnly.disable()
     }
 
+    @Test
+    fun `lagre avviksvurdering fra Spleis`() {
+        mottaAvviksvurderingFraSpleis(kilde = Avviksvurderingkilde.SPLEIS)
+        val avviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
+        assertNotNull(avviksvurdering)
+    }
+
+    @Test
+    fun `lagre avviksvurdering fra Spleis der vurderingen er gjort i Infotrygd`() {
+        mottaAvviksvurderingFraSpleis(kilde = Avviksvurderingkilde.INFOTRYGD)
+        val avviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
+        assertNotNull(avviksvurdering)
+    }
+
     private fun mottaUtkastTilVedtak(beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto = BEREGNINGSGRUNNLAG) {
         testRapid.sendTestMessage(
             utkastTilVedtakJson(
@@ -248,6 +263,14 @@ internal class MediatorTest {
                 beregningsgrunnlag
             )
         )
+    }
+
+    private fun mottaAvviksvurderingFraSpleis(kilde: Avviksvurderingkilde) {
+        val message = when (kilde) {
+            Avviksvurderingkilde.SPLEIS -> avviksvurderingFraSpleisJson(AKTØR_ID, FØDSELSNUMMER, ORGANISASJONSNUMMER, SKJÆRINGSTIDSPUNKT)
+            Avviksvurderingkilde.INFOTRYGD -> avviksvurderingFraInfotrygdJson(AKTØR_ID, FØDSELSNUMMER, SKJÆRINGSTIDSPUNKT)
+        }
+        testRapid.sendTestMessage(message)
     }
 
     private fun mottaSammenligningsgrunnlag(årsinntekt: Double = 600000.0, antallMåneder: Int = 12) {
@@ -342,6 +365,85 @@ internal class MediatorTest {
               "@opprettet": "2018-01-01T00:00:00.000"
             }
         """.trimIndent()
+        return json
+    }
+    private fun avviksvurderingFraSpleisJson(
+        aktørId: String,
+        fødselsnummer: String,
+        organisasjonsnummer: String,
+        skjæringstidspunkt: LocalDate
+    ): String {
+        @Language("JSON")
+        val json = """
+        {
+          "@event_name": "avviksvurderinger",
+          "fødselsnummer": "$fødselsnummer",
+          "aktørId": "$aktørId",
+          "skjæringstidspunkter": [
+            {
+              "skjæringstidspunkt": "$skjæringstidspunkt",
+              "vurderingstidspunkt": "2018-01-01T00:00:00.000",
+              "vilkårsgrunnlagId": "291228ef-8b4e-4a1f-8065-ad7ed85acbb4",
+              "avviksprosent": 0.0,
+              "sammenligningsgrunnlagTotalbeløp": 50000.0,
+              "beregningsgrunnlagTotalbeløp": 30000.0,
+              "type": "SPLEIS",
+              "omregnedeÅrsinntekter": [
+                {
+                  "orgnummer": "$organisasjonsnummer",
+                  "beløp": 30000.0
+                }
+              ],
+              "sammenligningsgrunnlag": [
+                {
+                  "orgnummer": "$organisasjonsnummer",
+                  "skatteopplysninger": [
+                    {
+                      "beløp": 20000.0,
+                      "måned": "2018-01",
+                      "type": "LØNNSINNTEKT",
+                      "fordel": "naturalytelse",
+                      "beskrivelse": "skattepliktigDelForsikringer"
+                    },
+                    {
+                      "beløp": 30000.0,
+                      "måned": "2018-02",
+                      "type": "LØNNSINNTEKT",
+                      "fordel": "kontantytelse",
+                      "beskrivelse": "fastloenn"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+    """.trimIndent()
+        return json
+    }
+    private fun avviksvurderingFraInfotrygdJson(
+        aktørId: String,
+        fødselsnummer: String,
+        skjæringstidspunkt: LocalDate,
+    ): String {
+        @Language("JSON")
+        val json = """
+        {
+          "@event_name": "avviksvurderinger",
+          "fødselsnummer": "$fødselsnummer",
+          "aktørId": "$aktørId",
+          "skjæringstidspunkter": [
+            {
+              "skjæringstidspunkt": "$skjæringstidspunkt",
+              "vurderingstidspunkt": "2018-01-01T00:00:00.000",
+              "vilkårsgrunnlagId": "291228ef-8b4e-4a1f-8065-ad7ed85acbb4",
+              "type": "INFOTRYGD",
+              "omregnedeÅrsinntekter": [],
+              "sammenligningsgrunnlag": []
+            }
+          ]
+        }
+    """.trimIndent()
         return json
     }
 

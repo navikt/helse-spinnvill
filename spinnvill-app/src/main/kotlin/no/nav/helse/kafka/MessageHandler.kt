@@ -5,5 +5,5 @@ interface MessageHandler {
 
     fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage)
 
-    fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {}
+    fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage)
 }

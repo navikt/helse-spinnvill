@@ -22,6 +22,9 @@ class SammenligningsgrunnlagRiverTest {
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
             messages.add(sammenligningsgrunnlagMessage)
         }
+
+        override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {
+        }
     }
 
     private companion object {
