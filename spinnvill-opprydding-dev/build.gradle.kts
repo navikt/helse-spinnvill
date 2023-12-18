@@ -7,6 +7,9 @@ private val testcontainersPostgresqlVersion = "1.19.0"
 
 group = "no.nav.helse"
 
+private val mainClass = "no.nav.helse.AppKt"
+
+
 dependencies {
     implementation(project(":spinnvill-felles"))
     implementation("org.postgresql:postgresql:$postgresqlVersion")
@@ -16,4 +19,24 @@ dependencies {
     implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
 
     testImplementation("org.testcontainers:postgresql:$testcontainersPostgresqlVersion")
+}
+
+tasks {
+    named<Jar>("jar") {
+        archiveBaseName.set("app")
+
+        manifest {
+            attributes["Main-Class"] = mainClass
+            attributes["Class-Path"] = configurations.runtimeClasspath.get().joinToString(separator = " ") {
+                it.name
+            }
+        }
+    }
+    val copyDeps by registering(Sync::class) {
+        from(configurations.runtimeClasspath)
+        into("build/libs")
+    }
+    named("assemble") {
+        dependsOn(copyDeps)
+    }
 }

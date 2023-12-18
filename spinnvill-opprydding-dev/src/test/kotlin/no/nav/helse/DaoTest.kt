@@ -13,7 +13,7 @@ internal class DaoTest: AbstractDatabaseTest() {
         assertTabellinnhold {
             (it == 1) to "Forventer at hver tabell har én rad"
         }
-        dao.deletePerson(fødselsnummer.somFnr())
+        dao.slett(fødselsnummer.somFnr())
         assertTabellinnhold {
             (it == 0) to "Forventer at alle tabeller er tomme"
         }
@@ -27,7 +27,7 @@ internal class DaoTest: AbstractDatabaseTest() {
         assertTabellinnhold {
             (it == 2) to "Forventer at hver tabell har minst to rader"
         }
-        dao.deletePerson(fødselsnummer.somFnr())
+        dao.slett(fødselsnummer.somFnr())
         assertTabellinnhold {
             (it == 1) to "Forventer at det finnes rader for $annetFødselsnummer"
         }
@@ -40,7 +40,7 @@ internal class DaoTest: AbstractDatabaseTest() {
         assertTabellinnhold {
             (it == 2) to "Forventer at hver tabell har to rader"
         }
-        dao.deletePerson(fødselsnummer.somFnr())
+        dao.slett(fødselsnummer.somFnr())
         assertTabellinnhold {
             (it == 0) to "Forventer at alle tabeller er tomme"
         }

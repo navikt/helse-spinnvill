@@ -4,6 +4,10 @@ on:
   push:
     paths-ignore:
       - '.idea'
+      - 'spinnvill-opprydding-dev/**'
+      - 'Dockerfile-opprydding-dev'
+      - '.github/workflows/opprydding-dev.yml'
+      - 'deploy/dev-opprydding.yml'
     branches:
       - main
 jobs:

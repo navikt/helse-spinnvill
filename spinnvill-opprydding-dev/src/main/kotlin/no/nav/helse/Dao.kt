@@ -6,7 +6,7 @@ import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
 
 class Dao(private val dataSource: DataSource) {
-    internal fun deletePerson(fødselsnummer: Fødselsnummer) {
+    internal fun slett(fødselsnummer: Fødselsnummer) {
         @Language("PostgreSQL")
         val query = """
             DELETE FROM avviksvurdering WHERE fødselsnummer = :fodselsnummer
