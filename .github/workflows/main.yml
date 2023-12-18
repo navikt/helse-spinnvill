@@ -59,5 +59,20 @@ jobs:
           RESOURCE: deploy/dev.yml,deploy/dev-db-policy.yml
           IMAGE: ${{ needs.build.outputs.image }}
 
+  deploy-prod:
+    name: Deploy til prod
+    needs: [build, deploy-dev]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sjekk ut kode
+        uses: actions/checkout@v4
+      - name: Deploy til NAIS
+        uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: dev-gcp
+          RESOURCE: deploy/prod.yml
+          IMAGE: ${{ needs.build.outputs.image }}
+
 
 
