@@ -1,3 +1,5 @@
+@file:Suppress("SameParameterValue")
+
 package no.nav.helse.mediator
 
 import com.fasterxml.jackson.databind.JsonNode
@@ -235,6 +237,18 @@ internal class MediatorTest {
         Toggle.LesemodusOnly.enable()
         mottaUtkastTilVedtak()
         assertEquals(0, testRapid.inspektør.size)
+        Toggle.LesemodusOnly.disable()
+    }
+
+    @Test
+    fun `videresend godkjenningsbehov hvis Spinnvill er i lesemodus men det finnes avviksvurdering allerede`() {
+        mottaUtkastTilVedtak()
+        mottaSammenligningsgrunnlag()
+        testRapid.reset()
+        Toggle.LesemodusOnly.enable()
+        mottaUtkastTilVedtak()
+        assertEquals(1, testRapid.inspektør.size)
+        assertEquals("Godkjenning", testRapid.inspektør.field(0, "@behov").first().asText())
         Toggle.LesemodusOnly.disable()
     }
 

@@ -65,14 +65,27 @@ class Mediator(
     }
 
     override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {
-        if (Toggle.LesemodusOnly.enabled) return sikkerlogg.info("Spinnvill er i lesemodus, håndterer ikke godkjenningsbehov")
+        val meldingProducer = nyMeldingProducer(utkastTilVedtakMessage)
+
+        if (Toggle.LesemodusOnly.enabled) {
+            sikkerlogg.info("Spinnvill er i lesemodus")
+            val utkastTilVedtakProducer = UtkastTilVedtakProducer(utkastTilVedtakMessage)
+            meldingProducer.nyProducer(utkastTilVedtakProducer)
+            val avviksvurdering = database.finnSisteAvviksvurdering(utkastTilVedtakMessage.fødselsnummer.somFnr(), utkastTilVedtakMessage.skjæringstidspunkt)
+            if (avviksvurdering != null) {
+                utkastTilVedtakProducer.registrerUtkastForUtsending(avviksvurdering.tilDomene())
+                meldingProducer.publiserMeldinger()
+                sikkerlogg.info("Avviksvurdering finnes, vidersender godkjenningsbehov med avviksvurderingId")
+            }
+            return
+        }
+
         logg.info("Behandler utkast_til_vedtak for {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
         sikkerlogg.info(
             "Behandler utkast_til_vedtak for {}, {}",
             kv("fødselsnummer", utkastTilVedtakMessage.fødselsnummer),
             kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId)
         )
-        val meldingProducer = nyMeldingProducer(utkastTilVedtakMessage)
         val behovProducer = BehovProducer(utkastTilVedtakJson = utkastTilVedtakMessage.toJson())
         val varselProducer = VarselProducer(vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId)
         val subsumsjonProducer = nySubsumsjonProducer(utkastTilVedtakMessage)
