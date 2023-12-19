@@ -74,6 +74,32 @@ class MediatorMigreringTest {
         assertEquals(AvviksvurderingDto.KildeDto.SPLEIS, annenAvviksvurdering.kilde)
     }
 
+    @Test
+    fun `sender ut avvik_vurdert for avviksvurdering gjort i Spleis`() {
+        val vilkårsgrunnlagId = UUID.randomUUID()
+        mottaAvviksvurderingFraSpleis(kilde = Avviksvurderingkilde.SPLEIS, vilkårsgrunnlagId)
+
+        assertEquals(1, testRapid.inspektør.size)
+    }
+
+    @Test
+    fun `sender ut ett avvik_vurdert per avviksvurdering gjort i Spleis`() {
+        mottaFlereAvviksvurderingerFraSpleis(
+            AvviksvurderingFraSpleis(UUID.randomUUID(), SKJÆRINGSTIDSPUNKT),
+            AvviksvurderingFraSpleis(UUID.randomUUID(), SKJÆRINGSTIDSPUNKT.minusDays(1))
+        )
+
+        assertEquals(2, testRapid.inspektør.size)
+    }
+
+    @Test
+    fun `sender ikke ut event for avviksvurderinger gjort i Infotrygd`() {
+        val vilkårsgrunnlagId = UUID.randomUUID()
+        mottaAvviksvurderingFraSpleis(kilde = Avviksvurderingkilde.INFOTRYGD, vilkårsgrunnlagId)
+
+        assertEquals(0, testRapid.inspektør.size)
+    }
+
     private fun mottaAvviksvurderingFraSpleis(kilde: Avviksvurderingkilde, vilkårsgrunnlagId: UUID = UUID.randomUUID()) {
         val message = when (kilde) {
             Avviksvurderingkilde.SPLEIS -> avviksvurderingFraSpleisJson(AKTØR_ID, FØDSELSNUMMER, ORGANISASJONSNUMMER, SKJÆRINGSTIDSPUNKT, vilkårsgrunnlagId)

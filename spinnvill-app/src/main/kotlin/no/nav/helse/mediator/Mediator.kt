@@ -29,38 +29,22 @@ class Mediator(
     override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {
         val fødselsnummer = avviksvurderingerFraSpleisMessage.fødselsnummer
 
-        fun Avviksvurderingkilde.tilKildeDto() = when (this) {
-            Avviksvurderingkilde.SPLEIS -> AvviksvurderingDto.KildeDto.SPLEIS
-            Avviksvurderingkilde.INFOTRYGD -> AvviksvurderingDto.KildeDto.INFOTRYGD
-        }
+        val meldingProducer = MigrerteAvviksvurderingerProducer(fødselsnummer, rapidsConnection)
 
         avviksvurderingerFraSpleisMessage.avviksvurderinger.forEach { avviksvurdering ->
             if (database.harAvviksvurderingAllerede(fødselsnummer, avviksvurdering.vilkårsgrunnlagId)) return@forEach
-            database.lagreAvviksvurdering(
-                AvviksvurderingDto(
-                    id = avviksvurdering.id,
-                    fødselsnummer = fødselsnummer,
-                    skjæringstidspunkt = avviksvurdering.skjæringstidspunkt,
-                    sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
-                        innrapporterteInntekter = avviksvurdering.innrapporterteInntekter.associate { innrapportertInntekt ->
-                            innrapportertInntekt.orgnummer.somArbeidsgiverref() to innrapportertInntekt.inntekter.map { inntekt ->
-                                AvviksvurderingDto.MånedligInntektDto(
-                                    InntektPerMåned(inntekt.beløp),
-                                    inntekt.måned,
-                                    Fordel(inntekt.fordel),
-                                    Beskrivelse(inntekt.beskrivelse),
-                                    inntektstype = enumValueOf(inntekt.type)
-                                )
-                            }
-                        }
-                    ),
-                    opprettet = avviksvurdering.vurderingstidspunkt,
-                    kilde = avviksvurdering.kilde.tilKildeDto(),
-                    beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(avviksvurdering.omregnedeÅrsinntekter)
-                )
-            )
+
+            database.lagreAvviksvurdering(avviksvurdering.tilDatabaseDto(fødselsnummer))
             database.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, avviksvurdering.vilkårsgrunnlagId, avviksvurdering.id)
+
+            // sender ikke avvik_vurdert dersom avviksvurderingen er gjort i Infotrygd
+            // Vi viser hverken avviksprosent eller sammenligningsgrunnlag i Speil når
+            // inngangsvilkårene er vurdert i Infotrygd
+            if (avviksvurdering.kilde == Avviksvurderingkilde.INFOTRYGD) return@forEach
+
+            meldingProducer.nyAvviksvurdering(avviksvurdering.vilkårsgrunnlagId, avviksvurdering.skjæringstidspunkt, avviksvurdering.tilKafkaDto())
         }
+        meldingProducer.publiserMeldinger()
     }
 
     override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {
@@ -191,6 +175,55 @@ class Mediator(
             utkastTilVedtakMessage.beregningsgrunnlag.entries.associate {
                 Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value)
             }
+        )
+    }
+
+    private fun AvviksvurderingFraSpleis.tilKafkaDto(): AvviksvurderingProducer.AvviksvurderingDto {
+        return AvviksvurderingProducer.AvviksvurderingDto(
+            this.id,
+            requireNotNull(this.avviksprosent),
+            requireNotNull(this.beregningsgrunnlagTotalbeløp),
+            requireNotNull(this.sammenligningsgrunnlagTotalbeløp),
+            this.omregnedeÅrsinntekter,
+            this.innrapporterteInntekter.map { innrapportertInntekt ->
+                AvviksvurderingProducer.AvviksvurderingDto.InnrapportertInntektDto(
+                    innrapportertInntekt.orgnummer.somArbeidsgiverref(),
+                    innrapportertInntekt.inntekter.map { månedligInntekt ->
+                        AvviksvurderingProducer.AvviksvurderingDto.MånedligInntektDto(
+                            månedligInntekt.måned,
+                            InntektPerMåned(månedligInntekt.beløp)
+                        ) }
+                )
+            }
+        )
+    }
+
+    private fun AvviksvurderingFraSpleis.tilDatabaseDto(fødselsnummer: Fødselsnummer): AvviksvurderingDto {
+        fun Avviksvurderingkilde.tilKildeDto() = when (this) {
+            Avviksvurderingkilde.SPLEIS -> AvviksvurderingDto.KildeDto.SPLEIS
+            Avviksvurderingkilde.INFOTRYGD -> AvviksvurderingDto.KildeDto.INFOTRYGD
+        }
+
+        return AvviksvurderingDto(
+            id = this.id,
+            fødselsnummer = fødselsnummer,
+            skjæringstidspunkt = this.skjæringstidspunkt,
+            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
+                innrapporterteInntekter = this.innrapporterteInntekter.associate { innrapportertInntekt ->
+                    innrapportertInntekt.orgnummer.somArbeidsgiverref() to innrapportertInntekt.inntekter.map { inntekt ->
+                        AvviksvurderingDto.MånedligInntektDto(
+                            InntektPerMåned(inntekt.beløp),
+                            inntekt.måned,
+                            Fordel(inntekt.fordel),
+                            Beskrivelse(inntekt.beskrivelse),
+                            inntektstype = enumValueOf(inntekt.type)
+                        )
+                    }
+                }
+            ),
+            opprettet = this.vurderingstidspunkt,
+            kilde = this.kilde.tilKildeDto(),
+            beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(this.omregnedeÅrsinntekter)
         )
     }
 

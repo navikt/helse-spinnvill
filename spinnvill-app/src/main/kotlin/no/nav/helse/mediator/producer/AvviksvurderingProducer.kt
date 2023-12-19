@@ -34,42 +34,7 @@ class AvviksvurderingProducer(private val vilkårsgrunnlagId: UUID) : KriterieOb
 
     override fun ferdigstill(): List<Message> {
         if (avviksvurderingKø.isEmpty()) return emptyList()
-        val meldinger = avviksvurderingKø.map {
-            Message.Hendelse(
-                navn = "avvik_vurdert",
-                innhold = mapOf(
-                    "avviksvurdering" to mapOf(
-                        "id" to it.id,
-                        "vilkårsgrunnlagId" to vilkårsgrunnlagId,
-                        "opprettet" to LocalDateTime.now(),
-                        "avviksprosent" to it.avviksprosent,
-                        "beregningsgrunnlag" to mapOf(
-                            "totalbeløp" to it.beregningsgrunnlagTotalbeløp,
-                            "omregnedeÅrsinntekter" to it.omregnedeÅrsinntekter.map { (arbeidsgiverreferanse, beløp) ->
-                                mapOf(
-                                    "arbeidsgiverreferanse" to arbeidsgiverreferanse,
-                                    "beløp" to beløp
-                                )
-                            }
-                        ),
-                        "sammenligningsgrunnlag" to mapOf(
-                            "totalbeløp" to it.sammenligningsgrunnlagTotalbeløp,
-                            "innrapporterteInntekter" to it.innrapporterteInntekter.map { (arbeidsgiverreferanse, inntekter) ->
-                                mapOf(
-                                    "arbeidsgiverreferanse" to arbeidsgiverreferanse,
-                                    "inntekter" to inntekter.map { (årMåned, beløp) ->
-                                        mapOf(
-                                            "årMåned" to årMåned,
-                                            "beløp" to beløp
-                                        )
-                                    }
-                                )
-                            }
-                        )
-                    )
-                )
-            )
-        }
+        val meldinger = avviksvurderingKø.map { dto -> dto.toHendelse(vilkårsgrunnlagId) }
         avviksvurderingKø.clear()
         return meldinger
     }
@@ -91,5 +56,44 @@ class AvviksvurderingProducer(private val vilkårsgrunnlagId: UUID) : KriterieOb
             val måned: YearMonth,
             val beløp: InntektPerMåned,
         )
+    }
+
+    internal companion object {
+        internal fun AvviksvurderingDto.toHendelse(vilkårsgrunnlagId: UUID): Message.Hendelse {
+            return Message.Hendelse(
+                navn = "avvik_vurdert",
+                innhold = mapOf(
+                    "avviksvurdering" to mapOf(
+                        "id" to id,
+                        "vilkårsgrunnlagId" to vilkårsgrunnlagId,
+                        "opprettet" to LocalDateTime.now(),
+                        "avviksprosent" to avviksprosent,
+                        "beregningsgrunnlag" to mapOf(
+                            "totalbeløp" to beregningsgrunnlagTotalbeløp,
+                            "omregnedeÅrsinntekter" to omregnedeÅrsinntekter.map { (arbeidsgiverreferanse, beløp) ->
+                                mapOf(
+                                    "arbeidsgiverreferanse" to arbeidsgiverreferanse,
+                                    "beløp" to beløp
+                                )
+                            }
+                        ),
+                        "sammenligningsgrunnlag" to mapOf(
+                            "totalbeløp" to sammenligningsgrunnlagTotalbeløp,
+                            "innrapporterteInntekter" to innrapporterteInntekter.map { (arbeidsgiverreferanse, inntekter) ->
+                                mapOf(
+                                    "arbeidsgiverreferanse" to arbeidsgiverreferanse,
+                                    "inntekter" to inntekter.map { (årMåned, beløp) ->
+                                        mapOf(
+                                            "årMåned" to årMåned,
+                                            "beløp" to beløp
+                                        )
+                                    }
+                                )
+                            }
+                        )
+                    )
+                )
+            )
+        }
     }
 }
