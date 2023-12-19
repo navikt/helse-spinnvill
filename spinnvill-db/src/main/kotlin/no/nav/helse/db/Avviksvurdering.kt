@@ -19,7 +19,6 @@ import java.util.*
 internal class Avviksvurdering {
     internal companion object {
         private object Avviksvurderinger : UUIDTable(name = "avviksvurdering") {
-            val løpenummer: Column<Long> = long("løpenummer").autoIncrement()
             val fødselsnummer: Column<String> = varchar("fødselsnummer", 11)
             val skjæringstidspunkt: Column<LocalDate> = date("skjæringstidspunkt")
             val opprettet: Column<LocalDateTime> = datetime("opprettet")
@@ -112,13 +111,14 @@ internal class Avviksvurdering {
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
         kilde: AvviksvurderingDto.KildeDto,
+        opprettet: LocalDateTime,
         sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
         beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?
     ): AvviksvurderingDto {
         return transaction {
             EnAvviksvurdering.findById(id)?.let {
                 update(id, requireNotNull(beregningsgrunnlag))
-            } ?: insert(id, fødselsnummer, skjæringstidspunkt, kilde, sammenligningsgrunnlag, beregningsgrunnlag)
+            } ?: insert(id, fødselsnummer, skjæringstidspunkt, kilde, opprettet, sammenligningsgrunnlag, beregningsgrunnlag)
         }
     }
 
@@ -127,13 +127,14 @@ internal class Avviksvurdering {
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
         kilde: AvviksvurderingDto.KildeDto,
+        opprettet: LocalDateTime,
         sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
         beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?
     ): AvviksvurderingDto = this.run {
         val enAvviksvurdering = EnAvviksvurdering.new(id) {
             this.fødselsnummer = fødselsnummer.value
             this.skjæringstidspunkt = skjæringstidspunkt
-            this.opprettet = LocalDateTime.now()
+            this.opprettet = opprettet
             this.kilde = kilde.tilDatebase()
         }
 
@@ -202,6 +203,7 @@ internal class Avviksvurdering {
                     }
             ),
             kilde = this.kilde.tilKilde(),
+            opprettet = opprettet,
             beregningsgrunnlag = this.beregningsgrunnlag
                 .takeUnless { beregningsgrunnlag -> beregningsgrunnlag.empty() }
                 ?.let { ettBeregningsgrunnlag ->

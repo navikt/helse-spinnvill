@@ -25,6 +25,7 @@ class Database private constructor(env: Map<String, String>) {
             fødselsnummer = avviksvurderingDto.fødselsnummer,
             skjæringstidspunkt = avviksvurderingDto.skjæringstidspunkt,
             kilde = avviksvurderingDto.kilde,
+            opprettet = avviksvurderingDto.opprettet,
             sammenligningsgrunnlag = avviksvurderingDto.sammenligningsgrunnlag,
             beregningsgrunnlag = avviksvurderingDto.beregningsgrunnlag
         )

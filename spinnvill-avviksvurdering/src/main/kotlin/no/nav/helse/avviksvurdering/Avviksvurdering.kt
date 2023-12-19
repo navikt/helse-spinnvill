@@ -3,6 +3,7 @@ package no.nav.helse.avviksvurdering
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.KriterieObserver
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 class Avviksvurdering(
@@ -10,7 +11,8 @@ class Avviksvurdering(
     private val fødselsnummer: Fødselsnummer,
     private val skjæringstidspunkt: LocalDate,
     private var beregningsgrunnlag: Beregningsgrunnlag,
-    private val sammenligningsgrunnlag: Sammenligningsgrunnlag
+    private val sammenligningsgrunnlag: Sammenligningsgrunnlag,
+    private val opprettet: LocalDateTime,
 ) {
     private var avviksprosent: Avviksprosent = Avviksprosent.INGEN
 
@@ -37,7 +39,7 @@ class Avviksvurdering(
     }
 
     fun accept(visitor: Visitor) {
-        visitor.visitAvviksvurdering(id, fødselsnummer, skjæringstidspunkt)
+        visitor.visitAvviksvurdering(id, fødselsnummer, skjæringstidspunkt, opprettet)
         beregningsgrunnlag.accept(visitor)
         sammenligningsgrunnlag.accept(visitor)
     }
@@ -58,7 +60,8 @@ class Avviksvurdering(
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = skjæringstidspunkt,
             beregningsgrunnlag = Beregningsgrunnlag.INGEN,
-            sammenligningsgrunnlag = sammenligningsgrunnlag
+            sammenligningsgrunnlag = sammenligningsgrunnlag,
+            opprettet = LocalDateTime.now()
         )
     }
 }

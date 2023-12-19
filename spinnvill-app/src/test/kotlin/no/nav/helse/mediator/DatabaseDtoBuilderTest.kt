@@ -5,6 +5,7 @@ import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.helpers.januar
 import no.nav.helse.mediator.Mediator.Companion.tilDomene
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 import java.time.YearMonth
 import java.util.*
 import kotlin.test.assertEquals
@@ -26,8 +27,11 @@ class DatabaseDtoBuilderTest {
                             fordel = Fordel("En fordel"),
                             beskrivelse = Beskrivelse("En beskrivelse"),
                             inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
-                        )))
+                        )
+                    )
+                )
             ),
+            opprettet = LocalDateTime.now(),
             beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(mapOf(
                 Arbeidsgiverreferanse("987654321") to OmregnetÅrsinntekt(240000.0)
             ))
@@ -57,8 +61,11 @@ class DatabaseDtoBuilderTest {
                             fordel = Fordel("En fordel"),
                             beskrivelse = Beskrivelse("En beskrivelse"),
                             inntektstype = AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
-                        )))
+                        )
+                    )
+                )
             ),
+            opprettet = LocalDateTime.now(),
             beregningsgrunnlag = null
         )
 

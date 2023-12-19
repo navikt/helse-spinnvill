@@ -7,6 +7,7 @@ import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
 import no.nav.helse.avviksvurdering.Visitor
 import no.nav.helse.dto.AvviksvurderingDto
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 class DatabaseDtoBuilder : Visitor {
@@ -15,16 +16,19 @@ class DatabaseDtoBuilder : Visitor {
     private lateinit var fødselsnummer: String
     private lateinit var skjæringstidspunkt: LocalDate
     private lateinit var omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
+    private lateinit var opprettet: LocalDateTime
     private val innrapporterteInntekter: MutableMap<Arbeidsgiverreferanse, List<AvviksvurderingDto.MånedligInntektDto>> = mutableMapOf()
 
     override fun visitAvviksvurdering(
         id: UUID,
         fødselsnummer: Fødselsnummer,
-        skjæringstidspunkt: LocalDate
+        skjæringstidspunkt: LocalDate,
+        opprettet: LocalDateTime
     ) {
         this.id = id
         this.fødselsnummer = fødselsnummer.value
         this.skjæringstidspunkt = skjæringstidspunkt
+        this.opprettet = opprettet
     }
 
     override fun visitBeregningsgrunnlag(
@@ -61,6 +65,7 @@ class DatabaseDtoBuilder : Visitor {
             fødselsnummer = Fødselsnummer(fødselsnummer),
             skjæringstidspunkt = skjæringstidspunkt,
             sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(innrapporterteInntekter = innrapporterteInntekter),
+            opprettet = opprettet,
             beregningsgrunnlag = omregnedeÅrsinntekter
                 .takeUnless { it.isEmpty() }
                 ?.let { AvviksvurderingDto.BeregningsgrunnlagDto(omregnedeÅrsinntekter = it) }

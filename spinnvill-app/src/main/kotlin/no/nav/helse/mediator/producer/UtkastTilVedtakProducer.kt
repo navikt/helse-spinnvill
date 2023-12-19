@@ -5,6 +5,7 @@ import no.nav.helse.avviksvurdering.Avviksvurdering
 import no.nav.helse.avviksvurdering.Visitor
 import no.nav.helse.kafka.UtkastTilVedtakMessage
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 internal class UtkastTilVedtakProducer(
@@ -27,7 +28,7 @@ internal class UtkastTilVedtakProducer(
     }
 
     private class Sammensyer(private val utkastTilVedtakMessage: UtkastTilVedtakMessage) : Visitor {
-        override fun visitAvviksvurdering(id: UUID, fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate) {
+        override fun visitAvviksvurdering(id: UUID, fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate, opprettet: LocalDateTime) {
             utkastTilVedtakMessage.leggTilAvviksvurderingId(id)
         }
     }

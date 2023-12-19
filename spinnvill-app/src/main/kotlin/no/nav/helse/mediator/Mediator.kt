@@ -10,6 +10,7 @@ import no.nav.helse.mediator.producer.*
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.YearMonth
 import java.util.*
 
@@ -49,6 +50,7 @@ class Mediator(
                             }
                         }
                     ),
+                    opprettet = avviksvurdering.vurderingstidspunkt,
                     kilde = avviksvurdering.kilde.tilKildeDto(),
                     beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(avviksvurdering.omregnedeÅrsinntekter)
                 )
@@ -70,7 +72,9 @@ class Mediator(
         val subsumsjonProducer = nySubsumsjonProducer(utkastTilVedtakMessage)
         val avviksvurderingProducer = AvviksvurderingProducer(vilkårsgrunnlagId = utkastTilVedtakMessage.vilkårsgrunnlagId)
         val utkastTilVedtakProducer = UtkastTilVedtakProducer(utkastTilVedtakMessage)
+
         meldingProducer.nyProducer(behovProducer, varselProducer, subsumsjonProducer, avviksvurderingProducer, utkastTilVedtakProducer)
+
         val beregningsgrunnlag = nyttBeregningsgrunnlag(utkastTilVedtakMessage)
         val avviksvurdering = finnAvviksvurdering(
             Fødselsnummer(utkastTilVedtakMessage.fødselsnummer),
@@ -116,6 +120,7 @@ class Mediator(
                 fødselsnummer = fødselsnummer,
                 skjæringstidspunkt = skjæringstidspunkt,
                 sammenligningsgrunnlag = sammenligningsgrunnlagMessage.sammenligningsgrunnlag.dto(),
+                opprettet = LocalDateTime.now(),
                 beregningsgrunnlag = null
             )
         )
@@ -199,6 +204,7 @@ class Mediator(
                 fødselsnummer = fødselsnummer,
                 skjæringstidspunkt = skjæringstidspunkt,
                 beregningsgrunnlag = beregningsgrunnlag,
+                opprettet = opprettet,
                 sammenligningsgrunnlag = Sammenligningsgrunnlag(
                     sammenligningsgrunnlag.innrapporterteInntekter.map { (organisasjonsnummer, inntekter) ->
                         ArbeidsgiverInntekt(
