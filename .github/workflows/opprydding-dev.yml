@@ -18,7 +18,7 @@ jobs:
     permissions:
       contents: "read"
       id-token: "write"
-    name: Bygg, test og lag docker image
+    name: Bygg og test og lag docker image
     runs-on: ubuntu-latest
     steps:
       - name: Sjekk ut kode
@@ -28,13 +28,13 @@ jobs:
         with:
           distribution: "temurin"
           java-version: "21.x"
-      - name: Bygg med Gradle
+      - name: Sett opp Gradle
         uses: gradle/gradle-build-action@v2.10.0
-        with:
-          arguments: :spinnvill-opprydding-dev:test :spinnvill-opprydding-dev:build
         env:
           ORG_GRADLE_PROJECT_githubUser: x-access-token
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
+      - name: Bygg med Gradle
+        run: ./gradlew :spinnvill-opprydding-dev:test :spinnvill-opprydding-dev:build
       - name: Bygg docker image
         uses: nais/docker-build-push@v0
         id: docker-build-push
