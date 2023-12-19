@@ -17,6 +17,8 @@ class AvviksvurderingerFraSpleisRiverTest {
         override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {
             håndterteAvviksvurderinger++
         }
+
+        override fun håndter(enAvviksvurderingFraSpleisMessage: EnAvviksvurderingFraSpleisMessage) {}
     }
 
     init {

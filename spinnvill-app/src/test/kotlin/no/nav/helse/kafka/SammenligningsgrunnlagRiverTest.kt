@@ -1,3 +1,5 @@
+@file:Suppress("SameParameterValue")
+
 package no.nav.helse.kafka
 
 import no.nav.helse.helpers.januar
@@ -23,8 +25,8 @@ class SammenligningsgrunnlagRiverTest {
             messages.add(sammenligningsgrunnlagMessage)
         }
 
-        override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {
-        }
+        override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {}
+        override fun håndter(enAvviksvurderingFraSpleisMessage: EnAvviksvurderingFraSpleisMessage) {}
     }
 
     private companion object {

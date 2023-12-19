@@ -24,6 +24,15 @@ class Mediator(
         UtkastTilVedtakRiver(rapidsConnection, this)
         SammenligningsgrunnlagRiver(rapidsConnection, this)
         AvviksvurderingerFraSpleisRiver(rapidsConnection, this)
+        AvviksvurderingFraSpleisRiver(rapidsConnection, this)
+    }
+
+    override fun håndter(enAvviksvurderingFraSpleisMessage: EnAvviksvurderingFraSpleisMessage) {
+        val fødselsnummer = enAvviksvurderingFraSpleisMessage.fødselsnummer
+        val meldingProducer = MigrerteAvviksvurderingerProducer(fødselsnummer, rapidsConnection)
+
+        lagreOgVideresendAvviksvurdering(fødselsnummer, enAvviksvurderingFraSpleisMessage.avviksvurdering, meldingProducer)
+        meldingProducer.publiserMeldinger()
     }
 
     override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {
@@ -32,19 +41,27 @@ class Mediator(
         val meldingProducer = MigrerteAvviksvurderingerProducer(fødselsnummer, rapidsConnection)
 
         avviksvurderingerFraSpleisMessage.avviksvurderinger.forEach { avviksvurdering ->
-            if (database.harAvviksvurderingAllerede(fødselsnummer, avviksvurdering.vilkårsgrunnlagId)) return@forEach
-
-            database.lagreAvviksvurdering(avviksvurdering.tilDatabaseDto(fødselsnummer))
-            database.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, avviksvurdering.vilkårsgrunnlagId, avviksvurdering.id)
-
-            // sender ikke avvik_vurdert dersom avviksvurderingen er gjort i Infotrygd
-            // Vi viser hverken avviksprosent eller sammenligningsgrunnlag i Speil når
-            // inngangsvilkårene er vurdert i Infotrygd
-            if (avviksvurdering.kilde == Avviksvurderingkilde.INFOTRYGD) return@forEach
-
-            meldingProducer.nyAvviksvurdering(avviksvurdering.vilkårsgrunnlagId, avviksvurdering.skjæringstidspunkt, avviksvurdering.tilKafkaDto())
+            lagreOgVideresendAvviksvurdering(fødselsnummer, avviksvurdering, meldingProducer)
         }
         meldingProducer.publiserMeldinger()
+    }
+
+    private fun lagreOgVideresendAvviksvurdering(
+        fødselsnummer: Fødselsnummer,
+        avviksvurdering: AvviksvurderingFraSpleis,
+        meldingProducer: MigrerteAvviksvurderingerProducer
+    ) {
+        if (database.harAvviksvurderingAllerede(fødselsnummer, avviksvurdering.vilkårsgrunnlagId)) return
+
+        database.lagreAvviksvurdering(avviksvurdering.tilDatabaseDto(fødselsnummer))
+        database.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, avviksvurdering.vilkårsgrunnlagId, avviksvurdering.id)
+
+        // sender ikke avvik_vurdert dersom avviksvurderingen er gjort i Infotrygd
+        // Vi viser hverken avviksprosent eller sammenligningsgrunnlag i Speil når
+        // inngangsvilkårene er vurdert i Infotrygd
+        if (avviksvurdering.kilde == Avviksvurderingkilde.INFOTRYGD) return
+
+        meldingProducer.nyAvviksvurdering(avviksvurdering.vilkårsgrunnlagId, avviksvurdering.skjæringstidspunkt, avviksvurdering.tilKafkaDto())
     }
 
     override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {

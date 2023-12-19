@@ -43,6 +43,37 @@ class AvviksvurderingerFraSpleisMessage(packet: JsonMessage) {
     }
 }
 
+class EnAvviksvurderingFraSpleisMessage(packet: JsonMessage) {
+    internal val fødselsnummer = packet["fødselsnummer"].asText().somFnr()
+    internal val avviksvurdering = AvviksvurderingFraSpleis(
+        skjæringstidspunkt = packet["skjæringstidspunkt"].asLocalDate(),
+        vurderingstidspunkt = packet["vurderingstidspunkt"].asLocalDateTime(),
+        kilde = enumValueOf(packet["type"].asText()),
+        id = UUID.randomUUID(),
+        vilkårsgrunnlagId = packet["vilkårsgrunnlagId"].asUUID(),
+        avviksprosent = packet["avviksprosent"].asDouble(),
+        beregningsgrunnlagTotalbeløp = packet["beregningsgrunnlagTotalbeløp"].asDouble(),
+        sammenligningsgrunnlagTotalbeløp = packet["sammenligningsgrunnlagTotalbeløp"].asDouble(),
+        omregnedeÅrsinntekter = packet["omregnedeÅrsinntekter"].associate {
+            it["orgnummer"].asText().somArbeidsgiverref() to OmregnetÅrsinntekt(it["beløp"].asDouble())
+        },
+        innrapporterteInntekter = packet["sammenligningsgrunnlag"].map { sammenligningsgrunnlag ->
+            InnrapportertInntektFraSpleis(
+                orgnummer = sammenligningsgrunnlag["orgnummer"].asText(),
+                inntekter = sammenligningsgrunnlag["skatteopplysninger"].map {
+                    MånedligInntektFraSpleis(
+                        beløp = it["beløp"].asDouble(),
+                        måned = it["måned"].asYearMonth(),
+                        type = it["type"].asText(),
+                        fordel = it["fordel"].asText(),
+                        beskrivelse = it["beskrivelse"].asText(),
+                    )
+                }
+            )
+        }
+    )
+}
+
 data class AvviksvurderingFraSpleis(
     val skjæringstidspunkt: LocalDate,
     val vurderingstidspunkt: LocalDateTime,

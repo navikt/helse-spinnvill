@@ -1,3 +1,5 @@
+@file:Suppress("SameParameterValue")
+
 package no.nav.helse.kafka
 
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -21,6 +23,7 @@ class UtkastTilVedtakRiverTest {
 
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}
         override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {}
+        override fun håndter(enAvviksvurderingFraSpleisMessage: EnAvviksvurderingFraSpleisMessage) {}
     }
 //teste hva hvis fødselsnumemr osv ikke er der blablab
     private companion object {

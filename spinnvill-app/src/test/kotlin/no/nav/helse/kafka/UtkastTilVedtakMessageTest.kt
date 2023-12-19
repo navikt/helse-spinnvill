@@ -1,3 +1,5 @@
+@file:Suppress("SameParameterValue")
+
 package no.nav.helse.kafka
 
 import no.nav.helse.helpers.januar
@@ -19,6 +21,7 @@ class UtkastTilVedtakMessageTest {
 
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}
         override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {}
+        override fun håndter(enAvviksvurderingFraSpleisMessage: EnAvviksvurderingFraSpleisMessage) {}
     }
 
     init {
