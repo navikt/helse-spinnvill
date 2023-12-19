@@ -13,6 +13,7 @@ import java.time.LocalDateTime
 import java.time.YearMonth
 import java.util.*
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -126,6 +127,22 @@ internal class AvviksvurderingTest {
         }
 
         assertEquals(1, antallSammenligningsgrunnlag)
+    }
+
+    @Test
+    fun `Finn siste avviksvurdering basert på opprettet-tidspunktet`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+
+        val expectedLatest = avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag(60000.0), beregningsgrunnlag(500000.0))
+        val expectedNotLatest = avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now().minusDays(1), sammenligningsgrunnlag(40000.0), beregningsgrunnlag(300000.0))
+        val avviksvurdering = avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
+
+        assertNotEquals(expectedLatest.id, expectedNotLatest.id)
+        assertNotNull(avviksvurdering)
+        assertEquals(expectedLatest.id, avviksvurdering.id)
+        assertEquals(expectedLatest.sammenligningsgrunnlag, avviksvurdering.sammenligningsgrunnlag)
+        assertEquals(expectedLatest.beregningsgrunnlag, avviksvurdering.beregningsgrunnlag)
     }
 
     @ParameterizedTest

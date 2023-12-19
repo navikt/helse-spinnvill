@@ -100,7 +100,7 @@ internal class Avviksvurdering {
             EnAvviksvurdering.find {
                 Avviksvurderinger.fødselsnummer eq fødselsnummer.value and (Avviksvurderinger.skjæringstidspunkt eq skjæringstidspunkt)
             }
-                .orderBy(Avviksvurderinger.løpenummer to SortOrder.DESC)
+                .orderBy(Avviksvurderinger.opprettet to SortOrder.DESC)
                 .firstOrNull()
                 ?.dto()
         }
