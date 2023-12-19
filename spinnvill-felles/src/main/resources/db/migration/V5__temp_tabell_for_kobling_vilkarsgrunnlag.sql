@@ -1,4 +1,4 @@
-CREATE TABLE vilkårsgrunnlag_kobling
+CREATE TABLE IF NOT EXISTS vilkårsgrunnlag_kobling
 (
     løpenummer         BIGSERIAL NOT NULL PRIMARY KEY,
     vilkårsgrunnlag_id UUID      NOT NULL,
