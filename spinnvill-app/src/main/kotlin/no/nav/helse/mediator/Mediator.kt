@@ -105,7 +105,7 @@ class Mediator(
             logg.info("Trenger sammenligningsgrunnlag, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
             beOmSammenligningsgrunnlag(utkastTilVedtakMessage.skjæringstidspunkt, behovProducer)
         } else {
-            logg.info("Har sammenligningsgrunnlag, starter avviksvurdering, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
+            logg.info("Har sammenligningsgrunnlag, vurderer behov for ny avviksvurdering, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
             håndter(
                 beregningsgrunnlag = beregningsgrunnlag,
                 varselProducer = varselProducer,
@@ -114,7 +114,7 @@ class Mediator(
                 utkastTilVedtakProducer = utkastTilVedtakProducer,
                 avviksvurdering = avviksvurdering,
             )
-            logg.info("Avviksvurdering utført, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
+            logg.info("Utkast til vedtak ferdig behandlet, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
         }
         meldingProducer.publiserMeldinger()
     }
