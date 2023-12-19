@@ -159,6 +159,16 @@ internal class AvviksvurderingTest {
         assertEquals(kildeDto, avviksvurdering?.kilde)
     }
 
+    @Test
+    fun `opprette kobling til vilkårsgrunnlag`() {
+        val vilkårsgrunnlagId = UUID.randomUUID()
+        val avviksvurderingId = UUID.randomUUID()
+        val fødselsnummer = Fødselsnummer("12345678910")
+        avviksvurdering.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId, avviksvurderingId)
+        val koblingFinnes = avviksvurdering.harKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId)
+        assertEquals(true, koblingFinnes)
+    }
+
     private fun beregningsgrunnlag(omregnetÅrsinntekt: Double = 20000.0): AvviksvurderingDto.BeregningsgrunnlagDto {
         return AvviksvurderingDto.BeregningsgrunnlagDto(
             mapOf(Arbeidsgiverreferanse("123456789") to OmregnetÅrsinntekt(omregnetÅrsinntekt))

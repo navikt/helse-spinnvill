@@ -3,9 +3,12 @@ package no.nav.helse.db
 import no.nav.helse.*
 import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.dto.AvviksvurderingDto.KildeDto.*
+import org.jetbrains.exposed.dao.LongEntity
+import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.javatime.date
@@ -93,9 +96,23 @@ internal class Avviksvurdering {
 
             internal val yearMonth: YearMonth get() = YearMonth.of(år, måned)
         }
+
+        private object VilkårsgrunnlagKobling: LongIdTable(name = "vilkårsgrunnlag_kobling", columnName = "løpenummer") {
+            val vilkårsgrunnlagId: Column<UUID> = uuid("vilkårsgrunnlag_id")
+            val avviksvurderingId: Column<UUID> = uuid("avviksvurdering_id")
+            val fødselsnummer: Column<String> = varchar("fødselsnummer", 255)
+        }
+
+        class EnVilkårsgrunnlagKobling(id: EntityID<Long>): LongEntity(id) {
+            companion object : LongEntityClass<EnVilkårsgrunnlagKobling>(VilkårsgrunnlagKobling)
+
+            var vilkårsgrunnlagId by VilkårsgrunnlagKobling.vilkårsgrunnlagId
+            var avviksvurderingId by VilkårsgrunnlagKobling.avviksvurderingId
+            var fødselsnummer by VilkårsgrunnlagKobling.fødselsnummer
+        }
     }
 
-    fun findLatest(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
+    internal fun findLatest(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
         return transaction {
             EnAvviksvurdering.find {
                 Avviksvurderinger.fødselsnummer eq fødselsnummer.value and (Avviksvurderinger.skjæringstidspunkt eq skjæringstidspunkt)
@@ -119,6 +136,24 @@ internal class Avviksvurdering {
             EnAvviksvurdering.findById(id)?.let {
                 update(id, requireNotNull(beregningsgrunnlag))
             } ?: insert(id, fødselsnummer, skjæringstidspunkt, kilde, opprettet, sammenligningsgrunnlag, beregningsgrunnlag)
+        }
+    }
+
+    internal fun opprettKoblingTilVilkårsgrunnlag(fødselsnummer: Fødselsnummer, vilkårsgrunnlagId: UUID, avviksvurderingId: UUID) {
+        transaction {
+            EnVilkårsgrunnlagKobling.new {
+                this.vilkårsgrunnlagId = vilkårsgrunnlagId
+                this.avviksvurderingId = avviksvurderingId
+                this.fødselsnummer = fødselsnummer.value
+            }
+        }
+    }
+
+    internal fun harKoblingTilVilkårsgrunnlag(fødselsnummer: Fødselsnummer, vilkårsgrunnlagId: UUID): Boolean {
+        return transaction {
+            EnVilkårsgrunnlagKobling.find {
+                VilkårsgrunnlagKobling.vilkårsgrunnlagId eq vilkårsgrunnlagId and (VilkårsgrunnlagKobling.fødselsnummer eq fødselsnummer.value)
+            }.count() >= 1
         }
     }
 

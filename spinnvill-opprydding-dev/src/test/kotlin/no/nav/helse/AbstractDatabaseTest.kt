@@ -93,7 +93,7 @@ internal abstract class AbstractDatabaseTest {
 
     protected fun assertTabellinnhold(booleanExpressionBlock: (actualTabellCount: Int) -> Pair<Boolean, String>) {
         val tabeller = finnTabeller().toMutableList()
-        tabeller.remove("flyway_schema_history")
+        tabeller.removeAll(listOf("flyway_schema_history", "vilkårsgrunnlag_kobling"))
         tabeller.forEach {
             val rowCount = finnRowCount(it)
             if (it in listOf("manedsinntekt")) {
