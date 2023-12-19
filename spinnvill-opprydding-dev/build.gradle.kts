@@ -24,21 +24,19 @@ dependencies {
 }
 
 tasks {
-    named<Jar>("jar") {
+    withType<Jar> {
         archiveBaseName.set("app")
-
         manifest {
-            attributes["Main-Class"] = mainClass
+            attributes["Main-Class"] = "no.nav.helse.AppKt"
             attributes["Class-Path"] = configurations.runtimeClasspath.get().joinToString(separator = " ") {
                 it.name
             }
         }
-    }
-    val copyDeps by registering(Sync::class) {
-        from(configurations.runtimeClasspath)
-        into("build/libs")
-    }
-    named("assemble") {
-        dependsOn(copyDeps)
+        doLast {
+            configurations.runtimeClasspath.get().forEach {
+                val file = File("${layout.buildDirectory.get()}/libs/${it.name}")
+                if (!file.exists()) it.copyTo(file)
+            }
+        }
     }
 }
