@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariDataSource
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.dto.AvviksvurderingDto
 import java.time.LocalDate
+import java.util.UUID
 
 class Database private constructor(env: Map<String, String>) {
     private val dataSourceBuilder = DataSourceBuilder(env)
@@ -33,6 +34,14 @@ class Database private constructor(env: Map<String, String>) {
 
     fun finnSisteAvviksvurdering(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
         return avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
+    }
+
+    fun harAvviksvurderingAllerede(fødselsnummer: Fødselsnummer, vilkårsgrunnlagId: UUID): Boolean {
+        return avviksvurdering.harKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId)
+    }
+
+    fun opprettKoblingTilVilkårsgrunnlag(fødselsnummer: Fødselsnummer, vilkårsgrunnlagId: UUID, avviksvurderingId: UUID) {
+        avviksvurdering.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId, avviksvurderingId)
     }
 
     companion object {

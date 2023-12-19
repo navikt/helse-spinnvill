@@ -27,15 +27,19 @@ class Mediator(
     }
 
     override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {
+        val fødselsnummer = avviksvurderingerFraSpleisMessage.fødselsnummer
+
         fun Avviksvurderingkilde.tilKildeDto() = when (this) {
             Avviksvurderingkilde.SPLEIS -> AvviksvurderingDto.KildeDto.SPLEIS
             Avviksvurderingkilde.INFOTRYGD -> AvviksvurderingDto.KildeDto.INFOTRYGD
         }
+
         avviksvurderingerFraSpleisMessage.avviksvurderinger.forEach { avviksvurdering ->
+            if (database.harAvviksvurderingAllerede(fødselsnummer, avviksvurdering.vilkårsgrunnlagId)) return@forEach
             database.lagreAvviksvurdering(
                 AvviksvurderingDto(
                     id = avviksvurdering.id,
-                    fødselsnummer = avviksvurderingerFraSpleisMessage.fødselsnummer,
+                    fødselsnummer = fødselsnummer,
                     skjæringstidspunkt = avviksvurdering.skjæringstidspunkt,
                     sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
                         innrapporterteInntekter = avviksvurdering.innrapporterteInntekter.associate { innrapportertInntekt ->
@@ -55,6 +59,7 @@ class Mediator(
                     beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(avviksvurdering.omregnedeÅrsinntekter)
                 )
             )
+            database.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, avviksvurdering.vilkårsgrunnlagId, avviksvurdering.id)
         }
     }
 
