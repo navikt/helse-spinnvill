@@ -2,10 +2,13 @@ package no.nav.helse.db
 
 import no.nav.helse.*
 import no.nav.helse.dto.AvviksvurderingDto
+import no.nav.helse.dto.AvviksvurderingDto.KildeDto.SPINNVILL
 import no.nav.helse.helpers.januar
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.time.YearMonth
 import java.util.*
 import kotlin.test.assertEquals
@@ -29,11 +32,12 @@ internal class AvviksvurderingTest {
         val sammenligningsgrunnlag = sammenligningsgrunnlag()
 
         val id = UUID.randomUUID()
-        val avviksvurdering = avviksvurdering.upsert(id, fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, null)
+        val avviksvurdering = avviksvurdering.upsert(id, fødselsnummer, skjæringstidspunkt, SPINNVILL, sammenligningsgrunnlag, null)
 
         assertEquals(id, avviksvurdering.id)
         assertEquals(fødselsnummer, avviksvurdering.fødselsnummer)
         assertEquals(skjæringstidspunkt, avviksvurdering.skjæringstidspunkt)
+        assertEquals(SPINNVILL, avviksvurdering.kilde)
         assertEquals(sammenligningsgrunnlag.innrapporterteInntekter.entries.first().key, avviksvurdering.sammenligningsgrunnlag.innrapporterteInntekter.entries.first().key)
         assertEquals(sammenligningsgrunnlag.innrapporterteInntekter.entries.first().value, avviksvurdering.sammenligningsgrunnlag.innrapporterteInntekter.entries.first().value)
         assertNull(avviksvurdering.beregningsgrunnlag)
@@ -48,8 +52,8 @@ internal class AvviksvurderingTest {
 
         val id = UUID.randomUUID()
 
-        val nyAvviksvurdering = avviksvurdering.upsert(id, fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, null)
-        val modifisertAvviksvurdering = avviksvurdering.upsert(id, fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, beregningsgrunnlag)
+        val nyAvviksvurdering = avviksvurdering.upsert(id, fødselsnummer, skjæringstidspunkt, SPINNVILL, sammenligningsgrunnlag, null)
+        val modifisertAvviksvurdering = avviksvurdering.upsert(id, fødselsnummer, skjæringstidspunkt, SPINNVILL, sammenligningsgrunnlag, beregningsgrunnlag)
 
         assertEquals(nyAvviksvurdering.id, modifisertAvviksvurdering.id)
         assertEquals(beregningsgrunnlag.omregnedeÅrsinntekter.keys.first(), modifisertAvviksvurdering.beregningsgrunnlag?.omregnedeÅrsinntekter?.keys?.first())
@@ -61,9 +65,9 @@ internal class AvviksvurderingTest {
         val fødselsnummer = Fødselsnummer("12345678910")
         val skjæringstidspunkt = 1.januar
 
-        avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag(20000.0), beregningsgrunnlag(200000.0))
-        avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag(40000.0), beregningsgrunnlag(300000.0))
-        val expectedLatest = avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag(60000.0), beregningsgrunnlag(500000.0))
+        avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, sammenligningsgrunnlag(20000.0), beregningsgrunnlag(200000.0))
+        avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, sammenligningsgrunnlag(40000.0), beregningsgrunnlag(300000.0))
+        val expectedLatest = avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, sammenligningsgrunnlag(60000.0), beregningsgrunnlag(500000.0))
         val avviksvurdering = avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
 
         assertNotNull(avviksvurdering)
@@ -77,9 +81,9 @@ internal class AvviksvurderingTest {
         val fødselsnummer = Fødselsnummer("12345678910")
         val skjæringstidspunkt = 1.januar
 
-        avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag(20000.0), beregningsgrunnlag(200000.0))
-        avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag(40000.0), beregningsgrunnlag(300000.0))
-        val expectedLatest = avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag(60000.0), null)
+        avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, sammenligningsgrunnlag(20000.0), beregningsgrunnlag(200000.0))
+        avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, sammenligningsgrunnlag(40000.0), beregningsgrunnlag(300000.0))
+        val expectedLatest = avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, sammenligningsgrunnlag(60000.0), null)
         val avviksvurdering = avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
 
         assertNotNull(avviksvurdering)
@@ -95,8 +99,8 @@ internal class AvviksvurderingTest {
         val beregningsgrunnlag = beregningsgrunnlag(200000.0)
         val sammenligningsgrunnlag = sammenligningsgrunnlag(20000.0)
 
-        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, beregningsgrunnlag)
-        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, beregningsgrunnlag)
+        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPINNVILL, sammenligningsgrunnlag, beregningsgrunnlag)
+        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPINNVILL, sammenligningsgrunnlag, beregningsgrunnlag)
 
         val antallBeregningsgrunnlag = transaction {
             Avviksvurdering.Companion.EttBeregningsgrunnlag.find { Avviksvurdering.Companion.Beregningsgrunnlag.avviksvurdering eq avviksvurderingId}.count()
@@ -113,14 +117,28 @@ internal class AvviksvurderingTest {
         val beregningsgrunnlag = beregningsgrunnlag(200000.0)
         val sammenligningsgrunnlag = sammenligningsgrunnlag(20000.0)
 
-        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, beregningsgrunnlag)
-        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, beregningsgrunnlag)
+        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPINNVILL, sammenligningsgrunnlag, beregningsgrunnlag)
+        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPINNVILL, sammenligningsgrunnlag, beregningsgrunnlag)
 
         val antallSammenligningsgrunnlag = transaction {
             Avviksvurdering.Companion.EttSammenligningsgrunnlag.find { Avviksvurdering.Companion.Sammenligningsgrunnlag.avviksvurdering eq avviksvurderingId}.count()
         }
 
         assertEquals(1, antallSammenligningsgrunnlag)
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = AvviksvurderingDto.KildeDto::class)
+    fun `kan lagre avviksvurdering med alle kilder`(kildeDto: AvviksvurderingDto.KildeDto) {
+        val avviksvurderingId = UUID.randomUUID()
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+        val beregningsgrunnlag = beregningsgrunnlag(200000.0)
+        val sammenligningsgrunnlag = sammenligningsgrunnlag(20000.0)
+
+        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, kildeDto, sammenligningsgrunnlag, beregningsgrunnlag)
+        val avviksvurdering = avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
+        assertEquals(kildeDto, avviksvurdering?.kilde)
     }
 
     private fun beregningsgrunnlag(omregnetÅrsinntekt: Double = 20000.0): AvviksvurderingDto.BeregningsgrunnlagDto {

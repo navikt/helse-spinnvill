@@ -9,6 +9,7 @@ data class AvviksvurderingDto(
     val id: UUID,
     val fødselsnummer: Fødselsnummer,
     val skjæringstidspunkt: LocalDate,
+    val kilde: KildeDto = KildeDto.SPINNVILL,
     val sammenligningsgrunnlag: SammenligningsgrunnlagDto,
     val beregningsgrunnlag: BeregningsgrunnlagDto?
 ) {
@@ -33,5 +34,11 @@ data class AvviksvurderingDto(
         NÆRINGSINNTEKT,
         PENSJON_ELLER_TRYGD,
         YTELSE_FRA_OFFENTLIGE,
+    }
+
+    enum class KildeDto {
+        SPINNVILL,
+        SPLEIS,
+        INFOTRYGD,
     }
 }

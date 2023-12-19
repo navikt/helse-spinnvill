@@ -2,6 +2,7 @@ package no.nav.helse.db
 
 import no.nav.helse.*
 import no.nav.helse.dto.AvviksvurderingDto
+import no.nav.helse.dto.AvviksvurderingDto.KildeDto.*
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -22,6 +23,7 @@ internal class Avviksvurdering {
             val fødselsnummer: Column<String> = varchar("fødselsnummer", 11)
             val skjæringstidspunkt: Column<LocalDate> = date("skjæringstidspunkt")
             val opprettet: Column<LocalDateTime> = datetime("opprettet")
+            val kilde: Column<String> = varchar("kilde", 255)
         }
 
         class EnAvviksvurdering(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -33,6 +35,7 @@ internal class Avviksvurdering {
             var fødselsnummer by Avviksvurderinger.fødselsnummer
             var skjæringstidspunkt by Avviksvurderinger.skjæringstidspunkt
             var opprettet by Avviksvurderinger.opprettet
+            var kilde by Avviksvurderinger.kilde
         }
 
         internal object Beregningsgrunnlag : UUIDTable(name = "beregningsgrunnlag") {
@@ -108,13 +111,14 @@ internal class Avviksvurdering {
         id: UUID,
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
+        kilde: AvviksvurderingDto.KildeDto,
         sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
         beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?
     ): AvviksvurderingDto {
         return transaction {
             EnAvviksvurdering.findById(id)?.let {
                 update(id, requireNotNull(beregningsgrunnlag))
-            } ?: insert(id, fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag, beregningsgrunnlag)
+            } ?: insert(id, fødselsnummer, skjæringstidspunkt, kilde, sammenligningsgrunnlag, beregningsgrunnlag)
         }
     }
 
@@ -122,6 +126,7 @@ internal class Avviksvurdering {
         id: UUID,
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
+        kilde: AvviksvurderingDto.KildeDto,
         sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
         beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?
     ): AvviksvurderingDto = this.run {
@@ -129,6 +134,7 @@ internal class Avviksvurdering {
             this.fødselsnummer = fødselsnummer.value
             this.skjæringstidspunkt = skjæringstidspunkt
             this.opprettet = LocalDateTime.now()
+            this.kilde = kilde.tilDatebase()
         }
 
         sammenligningsgrunnlag.innrapporterteInntekter.forEach { (arbeidsgiverreferanse, inntekter) ->
@@ -195,6 +201,7 @@ internal class Avviksvurdering {
                             }
                     }
             ),
+            kilde = this.kilde.tilKilde(),
             beregningsgrunnlag = this.beregningsgrunnlag
                 .takeUnless { beregningsgrunnlag -> beregningsgrunnlag.empty() }
                 ?.let { ettBeregningsgrunnlag ->
@@ -214,7 +221,24 @@ internal class Avviksvurdering {
             "NÆRINGSINNTEKT" -> AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT
             "PENSJON_ELLER_TRYGD" -> AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD
             "YTELSE_FRA_OFFENTLIGE" -> AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE
-            else -> error("Kunne ikke mappe InntektstypeDto")
+            else -> error("Kunne ikke mappe til InntektstypeDto, $this er ikke en gyldig InntektstypeDto")
+        }
+    }
+
+    private fun String.tilKilde(): AvviksvurderingDto.KildeDto {
+        return when (this) {
+            "SPINNVILL" -> SPINNVILL
+            "SPLEIS" -> SPLEIS
+            "INFOTRYGD" -> INFOTRYGD
+            else -> error("Kunne ikke mappe til KildeDto, $this er ikke en gyldig KildeDto")
+        }
+    }
+
+    private fun AvviksvurderingDto.KildeDto.tilDatebase(): String {
+        return when (this) {
+            SPINNVILL -> "SPINNVILL"
+            SPLEIS -> "SPLEIS"
+            INFOTRYGD -> "INFOTRYGD"
         }
     }
 

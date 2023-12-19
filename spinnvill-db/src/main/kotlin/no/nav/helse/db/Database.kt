@@ -18,11 +18,13 @@ class Database private constructor(env: Map<String, String>) {
     }
 
     internal fun datasource(): HikariDataSource = dataSourceBuilder.getDataSource()
+
     fun lagreAvviksvurdering(avviksvurderingDto: AvviksvurderingDto): AvviksvurderingDto {
         return avviksvurdering.upsert(
             id = avviksvurderingDto.id,
             fødselsnummer = avviksvurderingDto.fødselsnummer,
             skjæringstidspunkt = avviksvurderingDto.skjæringstidspunkt,
+            kilde = avviksvurderingDto.kilde,
             sammenligningsgrunnlag = avviksvurderingDto.sammenligningsgrunnlag,
             beregningsgrunnlag = avviksvurderingDto.beregningsgrunnlag
         )

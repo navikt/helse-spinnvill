@@ -26,6 +26,10 @@ class Mediator(
     }
 
     override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {
+        fun Avviksvurderingkilde.tilKildeDto() = when (this) {
+            Avviksvurderingkilde.SPLEIS -> AvviksvurderingDto.KildeDto.SPLEIS
+            Avviksvurderingkilde.INFOTRYGD -> AvviksvurderingDto.KildeDto.INFOTRYGD
+        }
         avviksvurderingerFraSpleisMessage.avviksvurderinger.forEach { avviksvurdering ->
             database.lagreAvviksvurdering(
                 AvviksvurderingDto(
@@ -45,6 +49,7 @@ class Mediator(
                             }
                         }
                     ),
+                    kilde = avviksvurdering.kilde.tilKildeDto(),
                     beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(avviksvurdering.omregnedeÅrsinntekter)
                 )
             )
