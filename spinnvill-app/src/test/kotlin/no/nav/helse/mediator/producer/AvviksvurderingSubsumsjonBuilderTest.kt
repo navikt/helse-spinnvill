@@ -25,7 +25,7 @@ class AvviksvurderingSubsumsjonBuilderTest {
             sammenligningsgrunnlag = sammenligningsgrunnlag
         )
 
-        val subsumsjonsmelding = builder.buildSubsumsjon()
+        val subsumsjonsmelding = builder.`8-30 ledd 2 punktum 1`()
         assertEquals(SubsumsjonProducer.Utfall.VILKAR_BEREGNET, subsumsjonsmelding.utfall)
         assertEquals("8-30", subsumsjonsmelding.paragraf)
         assertEquals(2, subsumsjonsmelding.ledd)
@@ -80,7 +80,7 @@ class AvviksvurderingSubsumsjonBuilderTest {
             sammenligningsgrunnlag = sammenligningsgrunnlag
         )
 
-        val subsumsjonsmelding = builder.buildSubsumsjon()
+        val subsumsjonsmelding = builder.`8-30 ledd 2 punktum 1`()
         assertEquals(SubsumsjonProducer.Utfall.VILKAR_BEREGNET, subsumsjonsmelding.utfall)
         assertEquals("8-30", subsumsjonsmelding.paragraf)
         assertEquals(2, subsumsjonsmelding.ledd)
@@ -146,7 +146,7 @@ class AvviksvurderingSubsumsjonBuilderTest {
             sammenligningsgrunnlag = sammenligningsgrunnlag
         )
 
-        val avviksvurdering = builder.buildAvviksvurdering()
+        val avviksvurdering = builder.buildAvvikVurdert()
 
         assertEquals(26.0, avviksvurdering.avviksprosent)
         assertEquals(600000.0, avviksvurdering.beregningsgrunnlagTotalbeløp)
@@ -182,7 +182,7 @@ class AvviksvurderingSubsumsjonBuilderTest {
             sammenligningsgrunnlag = sammenligningsgrunnlag
         )
 
-        val avviksvurdering = builder.buildAvviksvurdering()
+        val avviksvurdering = builder.buildAvvikVurdert()
 
         assertEquals(26.0, avviksvurdering.avviksprosent)
         assertEquals(840000.0, avviksvurdering.beregningsgrunnlagTotalbeløp)

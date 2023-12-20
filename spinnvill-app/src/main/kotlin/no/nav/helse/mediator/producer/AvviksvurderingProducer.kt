@@ -28,7 +28,7 @@ class AvviksvurderingProducer(private val vilkårsgrunnlagId: UUID) : KriterieOb
                 maksimaltTillattAvvik = maksimaltTillattAvvik,
                 beregningsgrunnlag = beregningsgrunnlag,
                 sammenligningsgrunnlag = sammenligningsgrunnlag
-            ).buildAvviksvurdering()
+            ).buildAvvikVurdert()
         )
     }
 

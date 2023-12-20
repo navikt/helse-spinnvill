@@ -28,16 +28,17 @@ internal class SubsumsjonProducer(
         sammenligningsgrunnlag: Sammenligningsgrunnlag,
         maksimaltTillattAvvik: Double,
     ) {
-        subsumsjonskø.add(
-            AvviksvurderingSubsumsjonBuilder(
-                id = id,
-                harAkseptabeltAvvik = harAkseptabeltAvvik,
-                avviksprosent = avviksprosent,
-                maksimaltTillattAvvik = maksimaltTillattAvvik,
-                beregningsgrunnlag = beregningsgrunnlag,
-                sammenligningsgrunnlag = sammenligningsgrunnlag
-            ).buildSubsumsjon()
+        val builder = AvviksvurderingSubsumsjonBuilder(
+            id = id,
+            harAkseptabeltAvvik = harAkseptabeltAvvik,
+            avviksprosent = avviksprosent,
+            maksimaltTillattAvvik = maksimaltTillattAvvik,
+            beregningsgrunnlag = beregningsgrunnlag,
+            sammenligningsgrunnlag = sammenligningsgrunnlag
         )
+        subsumsjonskø.add(builder.`8-30 ledd 2 punktum 1`())
+
+        if (harAkseptabeltAvvik) subsumsjonskø.add(builder.`8-30 ledd 1`())
     }
 
     override fun ferdigstill(): List<Message> {

@@ -21,7 +21,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
     private val beregningsgrunnlagDto = BeregningsgrunnlagBuilder().build(beregningsgrunnlag)
     private val sammenligningsgrunnlagBuilder = SammenligningsgrunnlagBuilder(sammenligningsgrunnlag)
 
-    internal fun buildAvviksvurdering(): AvviksvurderingProducer.AvviksvurderingDto {
+    internal fun buildAvvikVurdert(): AvviksvurderingProducer.AvviksvurderingDto {
         val sammenligningsgrunnlagDto = sammenligningsgrunnlagBuilder.buildForAvviksvurdering()
         return AvviksvurderingProducer.AvviksvurderingDto(
             avviksprosent = avviksprosent,
@@ -33,7 +33,30 @@ internal class AvviksvurderingSubsumsjonBuilder(
         )
     }
 
-    internal fun buildSubsumsjon(): SubsumsjonProducer.SubsumsjonsmeldingDto {
+    internal fun `8-30 ledd 1`(): SubsumsjonProducer.SubsumsjonsmeldingDto {
+        return SubsumsjonProducer.SubsumsjonsmeldingDto(
+            paragraf = "8-30",
+            ledd = 1,
+            bokstav = null,
+            punktum = null,
+            lovverk = "folketrygdloven",
+            lovverksversjon = LocalDate.of(2019, 1, 1),
+            utfall = SubsumsjonProducer.Utfall.VILKAR_BEREGNET,
+            input = mapOf(
+                "omregnedeÅrsinntekter" to beregningsgrunnlagDto.omregnedeÅrsinntekter.map { (arbeidsgiverreferanse, omregnetÅrsinntekt) ->
+                    mapOf(
+                        "arbeidsgiverreferanse" to arbeidsgiverreferanse.value,
+                        "inntekt" to omregnetÅrsinntekt.value
+                    )
+                },
+            ),
+            output = mapOf(
+                "grunnlagForSykepengegrunnlag" to beregningsgrunnlagDto.totalbeløp,
+            )
+        )
+    }
+
+    internal fun `8-30 ledd 2 punktum 1`(): SubsumsjonProducer.SubsumsjonsmeldingDto {
         val sammenligningsgrunnlagDto = sammenligningsgrunnlagBuilder.buildForSubsumsjon()
         return SubsumsjonProducer.SubsumsjonsmeldingDto(
             paragraf = "8-30",

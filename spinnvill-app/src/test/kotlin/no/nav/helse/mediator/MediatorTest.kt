@@ -137,10 +137,10 @@ internal class MediatorTest {
         assertNotNull(fullstendigAvviksvurdering)
         assertNotNull(fullstendigAvviksvurdering.beregningsgrunnlag)
 
-        assertEquals(4, testRapid.inspektør.size)
+        assertEquals(5, testRapid.inspektør.size)
         assertEquals(0, testRapid.inspektør.hendelser("nye_varsler").size)
         assertEquals(1, testRapid.inspektør.behov("InntekterForSammenligningsgrunnlag").size)
-        assertEquals(1, testRapid.inspektør.hendelser("subsumsjon").size)
+        assertEquals(2, testRapid.inspektør.hendelser("subsumsjon").size)
         assertEquals(1, testRapid.inspektør.hendelser("avvik_vurdert").size)
         assertEquals(1, testRapid.inspektør.behov("Godkjenning").size)
     }
@@ -225,11 +225,12 @@ internal class MediatorTest {
         mottaUtkastTilVedtak()
         mottaSammenligningsgrunnlag()
 
-        assertEquals(4, testRapid.inspektør.size)
+        assertEquals(5, testRapid.inspektør.size)
         assertEquals("InntekterForSammenligningsgrunnlag", testRapid.inspektør.field(0, "@behov").first().asText())
         assertEquals("subsumsjon", testRapid.inspektør.field(1, "@event_name").asText())
-        assertEquals("avvik_vurdert", testRapid.inspektør.field(2, "@event_name").asText())
-        assertEquals("Godkjenning", testRapid.inspektør.field(3, "@behov").first().asText())
+        assertEquals("subsumsjon", testRapid.inspektør.field(2, "@event_name").asText())
+        assertEquals("avvik_vurdert", testRapid.inspektør.field(3, "@event_name").asText())
+        assertEquals("Godkjenning", testRapid.inspektør.field(4, "@behov").first().asText())
     }
 
     @Test

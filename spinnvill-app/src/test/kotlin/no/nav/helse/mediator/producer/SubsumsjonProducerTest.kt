@@ -27,9 +27,9 @@ internal class SubsumsjonProducerTest {
     )
 
     @Test
-    fun `produser subsumsjonsmelding hvis avviket er akseptabelt`() {
+    fun `produserer to subsumsjonsmeldinger hvis avviket er akseptabelt, både 8-30 ledd 2 punktum 1 og 8-30 ledd 1`() {
         subsumsjonProducer.avvikVurdert(UUID.randomUUID(), true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
-        assertEquals(1, subsumsjonProducer.ferdigstill().size)
+        assertEquals(2, subsumsjonProducer.ferdigstill().size)
     }
 
     @Test
@@ -79,7 +79,7 @@ internal class SubsumsjonProducerTest {
     }
 
     @Test
-    fun `lag subsumsjonsmelding for avviksvurdering`() {
+    fun `lag subsumsjonsmelding for avviksvurdering - 8-30 ledd 2 punktum 1`() {
         val beregningsgrunnlag = beregningsgrunnlag("a1" to 600000.0)
         val sammenligningsgrunnlag = sammenligningsgrunnlag("a1" to 50000.0)
         subsumsjonProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0)
@@ -134,6 +134,39 @@ internal class SubsumsjonProducerTest {
         assertEquals(26.0, output["avviksprosent"].asDouble())
         assertEquals(false, output["harAkseptabeltAvvik"].asBoolean())
     }
+
+    @Test
+    fun `lag subsumsjonsmelding for fastsettelse etter hovedregel - 8-30 ledd 1`() {
+        val beregningsgrunnlag = beregningsgrunnlag("a1" to 600000.0)
+        val sammenligningsgrunnlag = sammenligningsgrunnlag("a1" to 50000.0)
+        subsumsjonProducer.avvikVurdert(UUID.randomUUID(), true, 25.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0)
+        val message = subsumsjonProducer.ferdigstill()[1]
+        check(message is Message.Hendelse)
+        assertEquals("subsumsjon", message.navn)
+
+        val subsumsjon = message.innhold.toJson()["subsumsjon"]
+        assertEquals("8-30", subsumsjon["paragraf"].asText())
+        assertNull(subsumsjon["bokstav"])
+        assertNull(subsumsjon["punktum"])
+        assertEquals(1, subsumsjon["ledd"].asInt())
+        assertEquals("VILKAR_BEREGNET", subsumsjon["utfall"].asText())
+        assertEquals("folketrygdloven", subsumsjon["lovverk"].asText())
+        assertEquals("2019-01-01", subsumsjon["lovverksversjon"].asText())
+
+        assertPresent(subsumsjon["input"])
+        assertPresent(subsumsjon["output"])
+        val input = subsumsjon["input"]
+        val output = subsumsjon["output"]
+
+        assertPresent(input["omregnedeÅrsinntekter"])
+        val omregnedeÅrsinntekterNode = input["omregnedeÅrsinntekter"]
+        assertEquals("a1", omregnedeÅrsinntekterNode[0]["arbeidsgiverreferanse"].asText())
+        assertEquals(600000.0, omregnedeÅrsinntekterNode[0]["inntekt"].asDouble())
+
+        assertPresent(output["grunnlagForSykepengegrunnlag"])
+        assertEquals(600000.0, output["grunnlagForSykepengegrunnlag"].asDouble())
+    }
+
 
     private fun assertPresent(jsonNode: JsonNode?) {
         assertNotNull(jsonNode) { "Forventer at noden ikke er null" }
