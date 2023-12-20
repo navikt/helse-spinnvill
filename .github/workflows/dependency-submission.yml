@@ -11,19 +11,18 @@ jobs:
   dependabot:
     name: Monitor dependencies with Dependabot
     runs-on: ubuntu-latest
-    permissions: # The Dependency Submission API requires write permission
+    permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4 # ratchet:actions/checkout@v4
-      - name: Run snapshot action
-        uses: mikepenz/gradle-dependency-submission@v0.9.1
-        env:
-          ORG_GRADLE_PROJECT_githubUser: x-access-token
-          ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
-          fail-on-error: true
-          gradle-build-module: |-
-            :spinnvill-app
-            :spinnvill-avviksvurdering
-            :spinnvill-db
-            :spinnvill-felles
+          distribution: 'temurin'
+          java-version: '21.x'
+
+      - name: Set up gradle with generate and submit
+        uses: gradle/gradle-build-action@v2
+        with:
+          dependency-graph: generate-and-submit
+      - name: Build gradle (dependency-graph will be generated and submitted post-job)
+        run: ./gradlew build
