@@ -46,37 +46,11 @@ class Mediator(
         meldingProducer.publiserMeldinger()
     }
 
-    private fun lagreOgVideresendAvviksvurdering(
-        fødselsnummer: Fødselsnummer,
-        avviksvurdering: AvviksvurderingFraSpleis,
-        meldingProducer: MigrerteAvviksvurderingerProducer
-    ) {
-        if (database.harAvviksvurderingAllerede(fødselsnummer, avviksvurdering.vilkårsgrunnlagId)) return
-
-        database.lagreAvviksvurdering(avviksvurdering.tilDatabaseDto(fødselsnummer))
-        database.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, avviksvurdering.vilkårsgrunnlagId, avviksvurdering.id)
-
-        // sender ikke avvik_vurdert dersom avviksvurderingen er gjort i Infotrygd
-        // Vi viser hverken avviksprosent eller sammenligningsgrunnlag i Speil når
-        // inngangsvilkårene er vurdert i Infotrygd
-        if (avviksvurdering.kilde == Avviksvurderingkilde.INFOTRYGD) return
-
-        meldingProducer.nyAvviksvurdering(avviksvurdering.vilkårsgrunnlagId, avviksvurdering.skjæringstidspunkt, avviksvurdering.tilKafkaDto())
-    }
-
     override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {
         val meldingProducer = nyMeldingProducer(utkastTilVedtakMessage)
 
         if (Toggle.LesemodusOnly.enabled) {
-            sikkerlogg.info("Spinnvill er i lesemodus")
-            val utkastTilVedtakProducer = UtkastTilVedtakProducer(utkastTilVedtakMessage)
-            meldingProducer.nyProducer(utkastTilVedtakProducer)
-            val avviksvurdering = database.finnSisteAvviksvurdering(utkastTilVedtakMessage.fødselsnummer.somFnr(), utkastTilVedtakMessage.skjæringstidspunkt)
-            if (avviksvurdering != null) {
-                utkastTilVedtakProducer.registrerUtkastForUtsending(avviksvurdering.tilDomene())
-                meldingProducer.publiserMeldinger()
-                sikkerlogg.info("Avviksvurdering finnes, vidersender godkjenningsbehov med avviksvurderingId")
-            }
+            håndterLesemodus(meldingProducer, utkastTilVedtakMessage)
             return
         }
 
@@ -89,10 +63,10 @@ class Mediator(
         val behovProducer = BehovProducer(utkastTilVedtakJson = utkastTilVedtakMessage.toJson())
         val varselProducer = VarselProducer(vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId)
         val subsumsjonProducer = nySubsumsjonProducer(utkastTilVedtakMessage)
-        val avviksvurderingProducer = AvviksvurderingProducer(vilkårsgrunnlagId = utkastTilVedtakMessage.vilkårsgrunnlagId)
+        val avvikVurdertProducer = AvvikVurdertProducer(vilkårsgrunnlagId = utkastTilVedtakMessage.vilkårsgrunnlagId)
         val utkastTilVedtakProducer = UtkastTilVedtakProducer(utkastTilVedtakMessage)
 
-        meldingProducer.nyProducer(behovProducer, varselProducer, subsumsjonProducer, avviksvurderingProducer, utkastTilVedtakProducer)
+        meldingProducer.nyProducer(behovProducer, varselProducer, subsumsjonProducer, avvikVurdertProducer, utkastTilVedtakProducer)
 
         val beregningsgrunnlag = nyttBeregningsgrunnlag(utkastTilVedtakMessage)
         val avviksvurdering = finnAvviksvurdering(
@@ -106,14 +80,7 @@ class Mediator(
             beOmSammenligningsgrunnlag(utkastTilVedtakMessage.skjæringstidspunkt, behovProducer)
         } else {
             logg.info("Har sammenligningsgrunnlag, vurderer behov for ny avviksvurdering, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
-            håndter(
-                beregningsgrunnlag = beregningsgrunnlag,
-                varselProducer = varselProducer,
-                subsumsjonProducer = subsumsjonProducer,
-                avviksvurderingProducer = avviksvurderingProducer,
-                utkastTilVedtakProducer = utkastTilVedtakProducer,
-                avviksvurdering = avviksvurdering,
-            )
+            håndter(beregningsgrunnlag, avviksvurdering, utkastTilVedtakProducer, varselProducer, subsumsjonProducer, avvikVurdertProducer)
             logg.info("Utkast til vedtak ferdig behandlet, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
         }
         meldingProducer.publiserMeldinger()
@@ -147,17 +114,43 @@ class Mediator(
         rapidsConnection.queueReplayMessage(fødselsnummer.value, sammenligningsgrunnlagMessage.utkastTilVedtakJson)
     }
 
+    private fun håndterLesemodus(meldingProducer: MeldingProducer, utkastTilVedtakMessage: UtkastTilVedtakMessage) {
+        sikkerlogg.info("Spinnvill er i lesemodus")
+        val utkastTilVedtakProducer = UtkastTilVedtakProducer(utkastTilVedtakMessage)
+        meldingProducer.nyProducer(utkastTilVedtakProducer)
+        val avviksvurdering = database.finnSisteAvviksvurdering(utkastTilVedtakMessage.fødselsnummer.somFnr(), utkastTilVedtakMessage.skjæringstidspunkt)
+        if (avviksvurdering != null) {
+            utkastTilVedtakProducer.registrerUtkastForUtsending(avviksvurdering.tilDomene())
+            meldingProducer.publiserMeldinger()
+            sikkerlogg.info("Avviksvurdering finnes, vidersender godkjenningsbehov med avviksvurderingId")
+        }
+    }
+
+    private fun lagreOgVideresendAvviksvurdering(
+        fødselsnummer: Fødselsnummer,
+        avviksvurdering: AvviksvurderingFraSpleis,
+        meldingProducer: MigrerteAvviksvurderingerProducer
+    ) {
+        if (database.harAvviksvurderingAllerede(fødselsnummer, avviksvurdering.vilkårsgrunnlagId)) return
+
+        database.lagreAvviksvurdering(avviksvurdering.tilDatabaseDto(fødselsnummer))
+        database.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, avviksvurdering.vilkårsgrunnlagId, avviksvurdering.id)
+
+        // sender ikke avvik_vurdert dersom avviksvurderingen er gjort i Infotrygd
+        // Vi viser hverken avviksprosent eller sammenligningsgrunnlag i Speil når
+        // inngangsvilkårene er vurdert i Infotrygd
+        if (avviksvurdering.kilde == Avviksvurderingkilde.INFOTRYGD) return
+
+        meldingProducer.nyAvviksvurdering(avviksvurdering.vilkårsgrunnlagId, avviksvurdering.skjæringstidspunkt, avviksvurdering.tilKafkaDto())
+    }
+
     private fun håndter(
         beregningsgrunnlag: Beregningsgrunnlag,
-        varselProducer: VarselProducer,
-        subsumsjonProducer: SubsumsjonProducer,
-        avviksvurderingProducer: AvviksvurderingProducer,
-        utkastTilVedtakProducer: UtkastTilVedtakProducer,
         avviksvurdering: Avviksvurdering,
+        utkastTilVedtakProducer: UtkastTilVedtakProducer,
+        vararg observers: KriterieObserver,
     ) {
-        avviksvurdering.register(varselProducer)
-        avviksvurdering.register(subsumsjonProducer)
-        avviksvurdering.register(avviksvurderingProducer)
+        avviksvurdering.register(*observers)
         avviksvurdering.håndter(beregningsgrunnlag)
         utkastTilVedtakProducer.registrerUtkastForUtsending(avviksvurdering)
         val builder = DatabaseDtoBuilder()
@@ -208,21 +201,22 @@ class Mediator(
         )
     }
 
-    private fun AvviksvurderingFraSpleis.tilKafkaDto(): AvviksvurderingProducer.AvviksvurderingDto {
-        return AvviksvurderingProducer.AvviksvurderingDto(
+    private fun AvviksvurderingFraSpleis.tilKafkaDto(): AvvikVurdertProducer.AvviksvurderingDto {
+        return AvvikVurdertProducer.AvviksvurderingDto(
             this.id,
             requireNotNull(this.avviksprosent),
             requireNotNull(this.beregningsgrunnlagTotalbeløp),
             requireNotNull(this.sammenligningsgrunnlagTotalbeløp),
             this.omregnedeÅrsinntekter,
             this.innrapporterteInntekter.map { innrapportertInntekt ->
-                AvviksvurderingProducer.AvviksvurderingDto.InnrapportertInntektDto(
+                AvvikVurdertProducer.AvviksvurderingDto.InnrapportertInntektDto(
                     innrapportertInntekt.orgnummer.somArbeidsgiverref(),
                     innrapportertInntekt.inntekter.map { månedligInntekt ->
-                        AvviksvurderingProducer.AvviksvurderingDto.MånedligInntektDto(
+                        AvvikVurdertProducer.AvviksvurderingDto.MånedligInntektDto(
                             månedligInntekt.måned,
                             InntektPerMåned(månedligInntekt.beløp)
-                        ) }
+                        )
+                    }
                 )
             }
         )

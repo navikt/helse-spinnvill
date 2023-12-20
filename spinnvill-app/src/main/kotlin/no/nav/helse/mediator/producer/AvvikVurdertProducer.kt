@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 import java.time.YearMonth
 import java.util.UUID
 
-class AvviksvurderingProducer(private val vilkårsgrunnlagId: UUID) : KriterieObserver, Producer {
+class AvvikVurdertProducer(private val vilkårsgrunnlagId: UUID) : KriterieObserver, Producer {
     private val avviksvurderingKø = mutableListOf<AvviksvurderingDto>()
     override fun avvikVurdert(
         id: UUID,

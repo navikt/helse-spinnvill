@@ -21,9 +21,9 @@ internal class AvviksvurderingSubsumsjonBuilder(
     private val beregningsgrunnlagDto = BeregningsgrunnlagBuilder().build(beregningsgrunnlag)
     private val sammenligningsgrunnlagBuilder = SammenligningsgrunnlagBuilder(sammenligningsgrunnlag)
 
-    internal fun buildAvvikVurdert(): AvviksvurderingProducer.AvviksvurderingDto {
+    internal fun buildAvvikVurdert(): AvvikVurdertProducer.AvviksvurderingDto {
         val sammenligningsgrunnlagDto = sammenligningsgrunnlagBuilder.buildForAvviksvurdering()
-        return AvviksvurderingProducer.AvviksvurderingDto(
+        return AvvikVurdertProducer.AvviksvurderingDto(
             avviksprosent = avviksprosent,
             id = id,
             beregningsgrunnlagTotalbeløp = beregningsgrunnlagDto.totalbeløp,
@@ -114,7 +114,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
 
     private data class SammenligningsgrunnlagAvviksvurderingDto(
         val totalbeløp: Double,
-        val arbeidsgiverligeInntekter: List<AvviksvurderingProducer.AvviksvurderingDto.InnrapportertInntektDto>
+        val arbeidsgiverligeInntekter: List<AvvikVurdertProducer.AvviksvurderingDto.InnrapportertInntektDto>
     )
 
     private data class MånedligInntekt(
@@ -201,10 +201,10 @@ internal class AvviksvurderingSubsumsjonBuilder(
             return SammenligningsgrunnlagAvviksvurderingDto(
                 totalbeløp = totalbeløp,
                 arbeidsgiverligeInntekter = arbeidsgiverInntekter.map { (arbeidsgiverreferanse, inntekter) ->
-                    AvviksvurderingProducer.AvviksvurderingDto.InnrapportertInntektDto(
+                    AvvikVurdertProducer.AvviksvurderingDto.InnrapportertInntektDto(
                         arbeidsgiverreferanse,
                         inntekter.map {
-                            AvviksvurderingProducer.AvviksvurderingDto.MånedligInntektDto(
+                            AvvikVurdertProducer.AvviksvurderingDto.MånedligInntektDto(
                                 it.måned,
                                 it.inntekt
                             )

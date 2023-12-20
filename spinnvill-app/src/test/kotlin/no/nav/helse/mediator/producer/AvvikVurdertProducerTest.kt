@@ -17,12 +17,12 @@ import org.junit.jupiter.api.Test
 import java.time.YearMonth
 import java.util.*
 
-class AvviksvurderingProducerTest {
-    private val avviksvurderingProducer = AvviksvurderingProducer(UUID.randomUUID())
+class AvvikVurdertProducerTest {
+    private val avvikVurdertProducer = AvvikVurdertProducer(UUID.randomUUID())
 
     @Test
     fun `produser avviksvurdering for akseptebelt avvik`() {
-        avviksvurderingProducer.avvikVurdert(
+        avvikVurdertProducer.avvikVurdert(
             id = UUID.randomUUID(),
             harAkseptabeltAvvik = true,
             avviksprosent = 24.9,
@@ -31,12 +31,12 @@ class AvviksvurderingProducerTest {
             maksimaltTillattAvvik = 25.0
         )
 
-        assertEquals(1, avviksvurderingProducer.ferdigstill().size)
+        assertEquals(1, avvikVurdertProducer.ferdigstill().size)
     }
 
     @Test
     fun `produser avviksvurdering for uakseptebelt avvik`() {
-        avviksvurderingProducer.avvikVurdert(
+        avvikVurdertProducer.avvikVurdert(
             id = UUID.randomUUID(),
             harAkseptabeltAvvik = false,
             avviksprosent = 25.0,
@@ -45,12 +45,12 @@ class AvviksvurderingProducerTest {
             maksimaltTillattAvvik = 25.0
         )
 
-        assertEquals(1, avviksvurderingProducer.ferdigstill().size)
+        assertEquals(1, avvikVurdertProducer.ferdigstill().size)
     }
 
     @Test
     fun `avviksvurdering kø tømmes etter hver finalize`() {
-        avviksvurderingProducer.avvikVurdert(
+        avvikVurdertProducer.avvikVurdert(
             id = UUID.randomUUID(),
             harAkseptabeltAvvik = true,
             avviksprosent = 24.9,
@@ -58,15 +58,15 @@ class AvviksvurderingProducerTest {
             sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
             maksimaltTillattAvvik = 25.0
         )
-        val meldinger = avviksvurderingProducer.ferdigstill()
-        val meldingerEtterClear = avviksvurderingProducer.ferdigstill()
+        val meldinger = avvikVurdertProducer.ferdigstill()
+        val meldingerEtterClear = avvikVurdertProducer.ferdigstill()
         assertEquals(1, meldinger.size)
         assertEquals(0, meldingerEtterClear.size)
     }
 
     @Test
     fun `produserer riktig format på avviksvurderingmelding`() {
-        avviksvurderingProducer.avvikVurdert(
+        avvikVurdertProducer.avvikVurdert(
             id = UUID.randomUUID(),
             harAkseptabeltAvvik = true,
             avviksprosent = 24.9,
@@ -95,7 +95,7 @@ class AvviksvurderingProducerTest {
             ),
             maksimaltTillattAvvik = 25.0
         )
-        val messages = avviksvurderingProducer.ferdigstill()
+        val messages = avvikVurdertProducer.ferdigstill()
         assertEquals(1, messages.size)
         val message = messages[0]
         check(message is Message.Hendelse)
@@ -144,7 +144,7 @@ class AvviksvurderingProducerTest {
         )
 
         val avviksprosent = 24.9
-        avviksvurderingProducer.avvikVurdert(
+        avvikVurdertProducer.avvikVurdert(
             id = UUID.randomUUID(),
             harAkseptabeltAvvik = true,
             avviksprosent = avviksprosent,
@@ -185,7 +185,7 @@ class AvviksvurderingProducerTest {
             maksimaltTillattAvvik = 25.0
         )
 
-        val message = avviksvurderingProducer.ferdigstill()[0].innhold.toJson()
+        val message = avvikVurdertProducer.ferdigstill()[0].innhold.toJson()
         val avviksvurdering = message["avviksvurdering"]
         assertEquals(avviksprosent, avviksvurdering["avviksprosent"].asDouble())
         val beregningsgrunnlag = avviksvurdering["beregningsgrunnlag"]

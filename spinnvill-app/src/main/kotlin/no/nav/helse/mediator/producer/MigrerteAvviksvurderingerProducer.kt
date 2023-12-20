@@ -2,7 +2,7 @@ package no.nav.helse.mediator.producer
 
 import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.Fødselsnummer
-import no.nav.helse.mediator.producer.AvviksvurderingProducer.Companion.toHendelse
+import no.nav.helse.mediator.producer.AvvikVurdertProducer.Companion.toHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
@@ -22,7 +22,7 @@ class MigrerteAvviksvurderingerProducer(
     internal fun nyAvviksvurdering(
         vilkårsgrunnlagId: UUID,
         skjæringstidspunkt: LocalDate,
-        avviksvurderingDto: AvviksvurderingProducer.AvviksvurderingDto,
+        avviksvurderingDto: AvvikVurdertProducer.AvviksvurderingDto,
     ) {
         avviksvurderingerKø.add(
             AvviksvurderingForKafka(vilkårsgrunnlagId, skjæringstidspunkt, avviksvurderingDto)
@@ -53,6 +53,6 @@ class MigrerteAvviksvurderingerProducer(
     private data class AvviksvurderingForKafka(
         val vilkårsgrunnlagId: UUID,
         val skjæringstidspunkt: LocalDate,
-        val avviksvurderingDto: AvviksvurderingProducer.AvviksvurderingDto
+        val avviksvurderingDto: AvvikVurdertProducer.AvviksvurderingDto
     )
 }
