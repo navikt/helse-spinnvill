@@ -17,6 +17,7 @@ dependencies {
     implementation("org.postgresql:postgresql:$postgresqlVersion")
     implementation("com.zaxxer:HikariCP:$hikariCPVersion")
     implementation("org.flywaydb:flyway-core:$flywayCoreVersion")
+    implementation("org.flywaydb:flyway-database-postgresql:$flywayCoreVersion")
     implementation("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
     implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
 
