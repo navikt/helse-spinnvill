@@ -28,14 +28,17 @@ class Mediator(
     }
 
     override fun håndter(enAvviksvurderingFraSpleisMessage: EnAvviksvurderingFraSpleisMessage) {
+        sikkerlogg.info("Mottok avviksvurdering fra Spleis")
         val fødselsnummer = enAvviksvurderingFraSpleisMessage.fødselsnummer
         val meldingProducer = MigrerteAvviksvurderingerProducer(fødselsnummer, rapidsConnection)
 
         lagreOgVideresendAvviksvurdering(fødselsnummer, enAvviksvurderingFraSpleisMessage.avviksvurdering, meldingProducer)
         meldingProducer.publiserMeldinger()
+        sikkerlogg.info("Avviksvurdering fra Spleis ferdigbehandlet")
     }
 
     override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {
+        sikkerlogg.info("Mottok migrering med ${avviksvurderingerFraSpleisMessage.avviksvurderinger.size} avviksvurderinger fra Spleis")
         val fødselsnummer = avviksvurderingerFraSpleisMessage.fødselsnummer
 
         val meldingProducer = MigrerteAvviksvurderingerProducer(fødselsnummer, rapidsConnection)
@@ -44,6 +47,7 @@ class Mediator(
             lagreOgVideresendAvviksvurdering(fødselsnummer, avviksvurdering, meldingProducer)
         }
         meldingProducer.publiserMeldinger()
+        sikkerlogg.info("Migrering med avviksvurderinger fra Spleis ferdigbehandlet")
     }
 
     override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {
