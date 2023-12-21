@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS manedsinntekt_sammenligningsgrunnlag_ref_idx ON manedsinntekt(sammenligningsgrunnlag_ref);
