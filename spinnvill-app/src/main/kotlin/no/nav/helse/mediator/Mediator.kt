@@ -103,7 +103,7 @@ class Mediator(
             sikkerlogg.warn(
                 "Ignorerer duplikat sammenligningsgrunnlag for {} {}",
                 kv("fødselsnummer", fødselsnummer.value),
-                kv("skjæringstidspunkg", skjæringstidspunkt)
+                kv("skjæringstidspunkt", skjæringstidspunkt)
             )
             return
         }
