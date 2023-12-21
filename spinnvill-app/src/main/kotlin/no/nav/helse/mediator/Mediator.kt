@@ -130,9 +130,18 @@ class Mediator(
         if (avviksvurdering != null) {
             utkastTilVedtakProducer.registrerUtkastForUtsending(avviksvurdering.tilDomene())
             meldingProducer.publiserMeldinger()
-            sikkerlogg.info("Avviksvurdering finnes, vidersender godkjenningsbehov med avviksvurderingId")
+            sikkerlogg.info(
+                "Avviksvurdering finnes, vidersender godkjenningsbehov med avviksvurderingId, {}, {}, {}",
+                kv("vilkårsgrunnlagId", utkastTilVedtakMessage.vilkårsgrunnlagId),
+                kv("skjæringstidspunkt", utkastTilVedtakMessage.skjæringstidspunkt),
+                kv("fødselsnummer", utkastTilVedtakMessage.fødselsnummer)
+            )
         } else {
-            sikkerlogg.info("Avviksvurdering finnes ikke, vidersender ikke godkjenningsbehov med avviksvurderingId")
+            sikkerlogg.info("Avviksvurdering finnes ikke, vidersender ikke godkjenningsbehov med avviksvurderingId, {}, {}, {}",
+                kv("vilkårsgrunnlagId", utkastTilVedtakMessage.vilkårsgrunnlagId),
+                kv("skjæringstidspunkt", utkastTilVedtakMessage.skjæringstidspunkt),
+                kv("fødselsnummer", utkastTilVedtakMessage.fødselsnummer)
+            )
         }
     }
 
