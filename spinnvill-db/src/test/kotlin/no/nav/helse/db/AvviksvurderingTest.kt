@@ -169,6 +169,24 @@ internal class AvviksvurderingTest {
         assertEquals(true, koblingFinnes)
     }
 
+    @Test
+    fun `finner siste avviksvurdering selv om sammenligningsgrunnlaget er tomt og beregningsgrunnlaget er null`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        avviksvurdering.upsert(
+            UUID.randomUUID(),
+            fødselsnummer,
+            1.januar,
+            SPINNVILL,
+            LocalDateTime.now(),
+            AvviksvurderingDto.SammenligningsgrunnlagDto(
+                emptyMap()
+            ),
+            beregningsgrunnlag = null
+        )
+        val siste = avviksvurdering.findLatest(fødselsnummer, 1.januar)
+        assertNotNull(siste)
+    }
+
     private fun beregningsgrunnlag(omregnetÅrsinntekt: Double = 20000.0): AvviksvurderingDto.BeregningsgrunnlagDto {
         return AvviksvurderingDto.BeregningsgrunnlagDto(
             mapOf(Arbeidsgiverreferanse("123456789") to OmregnetÅrsinntekt(omregnetÅrsinntekt))
