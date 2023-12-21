@@ -29,9 +29,14 @@ spec:
     sqlInstances:
       - type: POSTGRES_15
         diskAutoresize: true
+        pointInTimeRecovery: true
+        tier: db-custom-96-215040
         databases:
           - name: spinnvill
             envVarPrefix: DATABASE
+        flags:
+          - name: max_connections
+            value: "200"
   env:
     - name: KAFKA_RAPID_TOPIC
       value: tbd.rapid.v1
