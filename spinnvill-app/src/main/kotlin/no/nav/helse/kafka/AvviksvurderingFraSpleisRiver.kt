@@ -15,7 +15,7 @@ class AvviksvurderingFraSpleisRiver(
             validate {
                 it.demandValue("@event_name", "avviksprosent_beregnet_event")
                 it.requireKey("fødselsnummer")
-                it.requireKey("skjæringstidspunkt", "vurderingstidspunkt", "type", "vilkårsgrunnlagId")
+                it.requireKey("skjæringstidspunkt", "vurderingstidspunkt", "vilkårsgrunnlagId")
                 it.requireKey("avviksprosent", "beregningsgrunnlagTotalbeløp", "sammenligningsgrunnlagTotalbeløp")
                 it.requireArray("omregnedeÅrsinntekter") {
                     requireKey("orgnummer", "beløp")

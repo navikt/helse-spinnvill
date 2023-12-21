@@ -2,6 +2,7 @@ package no.nav.helse.kafka
 
 import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.OmregnetÅrsinntekt
+import no.nav.helse.kafka.Avviksvurderingkilde.SPLEIS
 import no.nav.helse.rapids_rivers.*
 import no.nav.helse.somArbeidsgiverref
 import no.nav.helse.somFnr
@@ -48,7 +49,7 @@ class EnAvviksvurderingFraSpleisMessage(packet: JsonMessage) {
     internal val avviksvurdering = AvviksvurderingFraSpleis(
         skjæringstidspunkt = packet["skjæringstidspunkt"].asLocalDate(),
         vurderingstidspunkt = packet["vurderingstidspunkt"].asLocalDateTime(),
-        kilde = enumValueOf(packet["type"].asText()),
+        kilde = SPLEIS,
         id = UUID.randomUUID(),
         vilkårsgrunnlagId = packet["vilkårsgrunnlagId"].asUUID(),
         avviksprosent = packet["avviksprosent"].asDouble(),

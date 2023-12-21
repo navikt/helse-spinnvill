@@ -42,7 +42,6 @@ class AvviksvurderingFraSpleisRiverTest {
           "avviksprosent": 0.0,
           "sammenligningsgrunnlagTotalbeløp": 50000.0,
           "beregningsgrunnlagTotalbeløp": 30000.0,
-          "type": "SPLEIS",
           "omregnedeÅrsinntekter": [
             {
               "orgnummer": "987654321",
