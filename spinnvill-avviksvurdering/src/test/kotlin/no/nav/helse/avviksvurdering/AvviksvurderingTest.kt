@@ -1,6 +1,7 @@
 package no.nav.helse.avviksvurdering
 
 import no.nav.helse.*
+import no.nav.helse.avviksvurdering.Avviksvurdering.Companion.siste
 import no.nav.helse.helpers.januar
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -42,6 +43,14 @@ internal class AvviksvurderingTest {
         val (harAkseptabeltAvvik, avviksprosent) = observer.avviksvurderinger.single()
         assertEquals(false, harAkseptabeltAvvik)
         assertEquals(40.0, avviksprosent)
+    }
+
+    @Test
+    fun `finn siste avviksvurdering fra liste`() {
+        val avviksvurdering1 = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
+        val avviksvurdering2 = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
+        val avviksvurderinger = listOf(avviksvurdering1, avviksvurdering2)
+        assertEquals(avviksvurdering2, avviksvurderinger.siste())
     }
 
     private fun sammenligningsgrunnlag(inntekt: Double) = Sammenligningsgrunnlag(

@@ -63,5 +63,7 @@ class Avviksvurdering(
             sammenligningsgrunnlag = sammenligningsgrunnlag,
             opprettet = LocalDateTime.now()
         )
+
+        internal fun Collection<Avviksvurdering>.siste() = maxByOrNull { it.opprettet }
     }
 }
