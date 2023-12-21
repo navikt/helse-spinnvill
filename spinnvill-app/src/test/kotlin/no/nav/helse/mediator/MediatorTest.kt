@@ -253,6 +253,15 @@ internal class MediatorTest {
         Toggle.LesemodusOnly.disable()
     }
 
+    @Test
+    fun `ikke gjør ny avviksvurdering hvis avvik allerede vurdert i Spleis med manglende data`() {
+        mottaAvviksvurderingFraSpleisUtenSammenligningsgrunnlag()
+        testRapid.reset()
+        mottaUtkastTilVedtak()
+        assertEquals(1, testRapid.inspektør.size)
+        assertEquals("Godkjenning", testRapid.inspektør.field(0, "@behov").first().asText())
+    }
+
     private fun mottaUtkastTilVedtak(beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto = BEREGNINGSGRUNNLAG) {
         testRapid.sendTestMessage(
             utkastTilVedtakJson(
@@ -290,6 +299,18 @@ internal class MediatorTest {
         testRapid.sendTestMessage(objectMapper.writeValueAsString(løsning))
     }
 
+    private fun mottaAvviksvurderingFraSpleisUtenSammenligningsgrunnlag() {
+        testRapid.sendTestMessage(
+            avviksvurderingFraSpleisUtenSammenligningsgrunnlagJson(
+                AKTØR_ID,
+                FØDSELSNUMMER,
+                ORGANISASJONSNUMMER,
+                SKJÆRINGSTIDSPUNKT,
+                UUID.randomUUID()
+            )
+        )
+    }
+
 
     private fun TestRapid.RapidInspector.meldinger() =
         (0 until size).map { index -> message(index) }
@@ -308,6 +329,42 @@ internal class MediatorTest {
 
     private fun TestRapid.RapidInspector.assertGodkjenningsbehovHarAvviksvurderingId(id: UUID) =
         assertEquals(id, behov("Godkjenning").single()["avviksvurderingId"].asUUID())
+
+    private fun avviksvurderingFraSpleisUtenSammenligningsgrunnlagJson(
+        aktørId: String,
+        fødselsnummer: String,
+        organisasjonsnummer: String,
+        skjæringstidspunkt: LocalDate,
+        vilkårsgrunnlagId: UUID
+    ): String {
+        @Language("JSON")
+        val json = """
+        {
+          "@event_name": "avviksvurderinger",
+          "fødselsnummer": "$fødselsnummer",
+          "aktørId": "$aktørId",
+          "skjæringstidspunkter": [
+            {
+              "skjæringstidspunkt": "$skjæringstidspunkt",
+              "vurderingstidspunkt": "2018-01-01T00:00:00.000",
+              "vilkårsgrunnlagId": "$vilkårsgrunnlagId",
+              "avviksprosent": 0.0,
+              "sammenligningsgrunnlagTotalbeløp": 50000.0,
+              "beregningsgrunnlagTotalbeløp": 30000.0,
+              "type": "SPLEIS",
+              "omregnedeÅrsinntekter": [
+                {
+                  "orgnummer": "$organisasjonsnummer",
+                  "beløp": 600000.0
+                }
+              ],
+              "sammenligningsgrunnlag": []
+            }
+          ]
+        }
+    """.trimIndent()
+        return json
+    }
 
     private fun utkastTilVedtakJson(
         aktørId: String,
