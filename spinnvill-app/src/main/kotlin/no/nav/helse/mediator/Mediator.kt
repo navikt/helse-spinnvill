@@ -131,6 +131,8 @@ class Mediator(
             utkastTilVedtakProducer.registrerUtkastForUtsending(avviksvurdering.tilDomene())
             meldingProducer.publiserMeldinger()
             sikkerlogg.info("Avviksvurdering finnes, vidersender godkjenningsbehov med avviksvurderingId")
+        } else {
+            sikkerlogg.info("Avviksvurdering finnes ikke, vidersender ikke godkjenningsbehov med avviksvurderingId")
         }
     }
 
