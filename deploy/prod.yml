@@ -36,7 +36,7 @@ spec:
             envVarPrefix: DATABASE
         flags:
           - name: max_connections
-            value: "200"
+            value: "300"
   env:
     - name: KAFKA_RAPID_TOPIC
       value: tbd.rapid.v1

@@ -1,0 +1,1 @@
+CREATE INDEX ON manedsinntekt(sammenligningsgrunnlag_ref);
