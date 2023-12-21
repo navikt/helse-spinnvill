@@ -31,7 +31,7 @@ internal class Avviksvurdering {
         class EnAvviksvurdering(id: EntityID<UUID>) : UUIDEntity(id) {
             companion object : UUIDEntityClass<EnAvviksvurdering>(Avviksvurderinger)
 
-            val beregningsgrunnlag by EttBeregningsgrunnlag optionalReferrersOn Beregningsgrunnlag.avviksvurdering
+            val beregningsgrunnlag by EttBeregningsgrunnlag referrersOn Beregningsgrunnlag.avviksvurdering
             val sammenligningsgrunnlag by EttSammenligningsgrunnlag referrersOn Sammenligningsgrunnlag.avviksvurdering
 
             var fødselsnummer by Avviksvurderinger.fødselsnummer
@@ -41,7 +41,7 @@ internal class Avviksvurdering {
         }
 
         internal object Beregningsgrunnlag : UUIDTable(name = "beregningsgrunnlag") {
-            val avviksvurdering = optReference("avviksvurdering_ref", Avviksvurderinger)
+            val avviksvurdering = reference("avviksvurdering_ref", Avviksvurderinger)
 
             val organisasjonsnummer: Column<String> = varchar("organisasjonsnummer", 9)
             val inntekt: Column<Double> = double("inntekt")
@@ -50,7 +50,7 @@ internal class Avviksvurdering {
         class EttBeregningsgrunnlag(id: EntityID<UUID>) : UUIDEntity(id) {
             companion object : UUIDEntityClass<EttBeregningsgrunnlag>(Beregningsgrunnlag)
 
-            var avviksvurdering by EnAvviksvurdering optionalReferencedOn Beregningsgrunnlag.avviksvurdering
+            var avviksvurdering by EnAvviksvurdering referencedOn Beregningsgrunnlag.avviksvurdering
 
             var organisasjonsnummer by Beregningsgrunnlag.organisasjonsnummer
             var inntekt by Beregningsgrunnlag.inntekt
