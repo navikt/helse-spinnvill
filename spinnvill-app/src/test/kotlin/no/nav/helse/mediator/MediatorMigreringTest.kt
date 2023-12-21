@@ -2,9 +2,12 @@
 
 package no.nav.helse.mediator
 
+import no.nav.helse.Toggle
 import no.nav.helse.VersjonAvKode
 import no.nav.helse.db.TestDatabase
 import no.nav.helse.dto.AvviksvurderingDto
+import no.nav.helse.helpers.ToggleHelpers.disable
+import no.nav.helse.helpers.ToggleHelpers.enable
 import no.nav.helse.helpers.januar
 import no.nav.helse.kafka.Avviksvurderingkilde
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -108,6 +111,7 @@ class MediatorMigreringTest {
 
     @Test
     fun `lagre en avviksvurdering fra Spleis`() {
+        Toggle.LesemodusOnly.enable()
         val vilkårsgrunnlagId = UUID.randomUUID()
         mottaAvviksvurderingFraSpleis(AvviksvurderingFraSpleis(vilkårsgrunnlagId, SKJÆRINGSTIDSPUNKT))
         val avviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
@@ -115,6 +119,7 @@ class MediatorMigreringTest {
 
         assertEquals(1, testRapid.inspektør.size)
         assertEquals("avvik_vurdert", testRapid.inspektør.field(0, "@event_name").asText())
+        Toggle.LesemodusOnly.disable()
     }
 
     private fun mottaAvviksvurderingerEventFraSpleis(kilde: Avviksvurderingkilde, vilkårsgrunnlagId: UUID = UUID.randomUUID()) {
