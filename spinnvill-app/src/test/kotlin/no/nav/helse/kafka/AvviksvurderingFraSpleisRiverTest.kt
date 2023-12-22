@@ -13,7 +13,7 @@ class AvviksvurderingFraSpleisRiverTest {
         var håndterteAvviksvurderinger = 0
             private set
 
-        override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {}
+        override fun håndter(message: UtkastTilVedtakMessage) {}
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}
         override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {}
         override fun håndter(enAvviksvurderingFraSpleisMessage: EnAvviksvurderingFraSpleisMessage) {

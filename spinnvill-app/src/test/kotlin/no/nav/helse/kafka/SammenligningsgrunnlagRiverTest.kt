@@ -19,7 +19,7 @@ class SammenligningsgrunnlagRiverTest {
     private val messageHandler = object : MessageHandler {
         val messages = mutableListOf<SammenligningsgrunnlagMessage>()
 
-        override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {}
+        override fun håndter(message: UtkastTilVedtakMessage) {}
 
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
             messages.add(sammenligningsgrunnlagMessage)

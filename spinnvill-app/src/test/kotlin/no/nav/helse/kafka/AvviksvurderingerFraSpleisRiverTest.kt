@@ -12,7 +12,7 @@ class AvviksvurderingerFraSpleisRiverTest {
     private val messageHandler = object: MessageHandler {
         var håndterteAvviksvurderinger = 0
             private set
-        override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) = TODO("Not yet implemented")
+        override fun håndter(message: UtkastTilVedtakMessage) = TODO("Not yet implemented")
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) = TODO("Not yet implemented")
         override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {
             håndterteAvviksvurderinger++

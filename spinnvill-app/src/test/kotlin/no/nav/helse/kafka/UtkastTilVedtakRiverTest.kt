@@ -17,24 +17,26 @@ class UtkastTilVedtakRiverTest {
 
     private val messageHandler = object: MessageHandler {
         val messages = mutableListOf<UtkastTilVedtakMessage>()
-        override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {
-            messages.add(utkastTilVedtakMessage)
+        override fun håndter(message: UtkastTilVedtakMessage) {
+            messages.add(message)
         }
 
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}
         override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {}
         override fun håndter(enAvviksvurderingFraSpleisMessage: EnAvviksvurderingFraSpleisMessage) {}
     }
-//teste hva hvis fødselsnumemr osv ikke er der blablab
+
     private companion object {
         private const val AKTØRID = "1234567891011"
         private const val FØDSELSNUMMER = "12345678910"
         private const val ORGANISASJONSNUMMER = "987654321"
         private val skjæringstidspunkt = 1.januar
     }
+
     init {
         UtkastTilVedtakRiver(testRapid, messageHandler)
     }
+
     @Test
     fun `les inn godkjenningsbehov`() {
         testRapid.sendTestMessage(utkastTilVedtakJson(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, skjæringstidspunkt))
@@ -148,7 +150,6 @@ class UtkastTilVedtakRiverTest {
     ) = utkastTilVedtakJsonNode(aktørId, fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
         .med("avviksvurderingId" to UUID.randomUUID())
         .run(objectMapper::writeValueAsString)
-
 }
 
 private fun ObjectNode.med(vararg felter: Pair<String, Any>): ObjectNode {

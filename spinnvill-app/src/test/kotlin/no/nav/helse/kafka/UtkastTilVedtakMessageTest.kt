@@ -15,8 +15,8 @@ class UtkastTilVedtakMessageTest {
     private val testRapid = TestRapid()
     private val messageHandler = object : MessageHandler {
         val messages = mutableListOf<UtkastTilVedtakMessage>()
-        override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {
-            messages.add(utkastTilVedtakMessage)
+        override fun håndter(message: UtkastTilVedtakMessage) {
+            messages.add(message)
         }
 
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}

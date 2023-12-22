@@ -55,42 +55,42 @@ class Mediator(
         sikkerlogg.info("Migrering med avviksvurderinger fra Spleis ferdigbehandlet")
     }
 
-    override fun håndter(utkastTilVedtakMessage: UtkastTilVedtakMessage) {
-        val meldingProducer = nyMeldingProducer(utkastTilVedtakMessage)
+    override fun håndter(message: UtkastTilVedtakMessage) {
+        val meldingProducer = nyMeldingProducer(message)
 
         if (Toggle.LesemodusOnly.enabled) {
-            håndterLesemodus(meldingProducer, utkastTilVedtakMessage)
+            håndterLesemodus(meldingProducer, message)
             return
         }
 
-        logg.info("Behandler utkast_til_vedtak for {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
+        logg.info("Behandler utkast_til_vedtak for {}", kv("vedtaksperiodeId", message.vedtaksperiodeId))
         sikkerlogg.info(
             "Behandler utkast_til_vedtak for {}, {}",
-            kv("fødselsnummer", utkastTilVedtakMessage.fødselsnummer),
-            kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId)
+            kv("fødselsnummer", message.fødselsnummer),
+            kv("vedtaksperiodeId", message.vedtaksperiodeId)
         )
-        val behovProducer = BehovProducer(utkastTilVedtakJson = utkastTilVedtakMessage.toJson())
-        val varselProducer = VarselProducer(vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId)
-        val subsumsjonProducer = nySubsumsjonProducer(utkastTilVedtakMessage)
-        val avvikVurdertProducer = AvvikVurdertProducer(vilkårsgrunnlagId = utkastTilVedtakMessage.vilkårsgrunnlagId)
-        val utkastTilVedtakProducer = UtkastTilVedtakProducer(utkastTilVedtakMessage)
+        val behovProducer = BehovProducer(utkastTilVedtakJson = message.toJson())
+        val varselProducer = VarselProducer(vedtaksperiodeId = message.vedtaksperiodeId)
+        val subsumsjonProducer = nySubsumsjonProducer(message)
+        val avvikVurdertProducer = AvvikVurdertProducer(vilkårsgrunnlagId = message.vilkårsgrunnlagId)
+        val utkastTilVedtakProducer = UtkastTilVedtakProducer(message)
 
         meldingProducer.nyProducer(behovProducer, varselProducer, subsumsjonProducer, avvikVurdertProducer, utkastTilVedtakProducer)
 
-        val beregningsgrunnlag = nyttBeregningsgrunnlag(utkastTilVedtakMessage)
+        val beregningsgrunnlag = nyttBeregningsgrunnlag(message)
         val avviksvurdering = finnAvviksvurdering(
-            Fødselsnummer(utkastTilVedtakMessage.fødselsnummer),
-            utkastTilVedtakMessage.skjæringstidspunkt
+            Fødselsnummer(message.fødselsnummer),
+            message.skjæringstidspunkt
         )
             ?.vurderBehovForNyVurdering(beregningsgrunnlag)
 
         if (avviksvurdering == null) {
-            logg.info("Trenger sammenligningsgrunnlag, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
-            beOmSammenligningsgrunnlag(utkastTilVedtakMessage.skjæringstidspunkt, behovProducer)
+            logg.info("Trenger sammenligningsgrunnlag, {}", kv("vedtaksperiodeId", message.vedtaksperiodeId))
+            beOmSammenligningsgrunnlag(message.skjæringstidspunkt, behovProducer)
         } else {
-            logg.info("Har sammenligningsgrunnlag, vurderer behov for ny avviksvurdering, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
+            logg.info("Har sammenligningsgrunnlag, vurderer behov for ny avviksvurdering, {}", kv("vedtaksperiodeId", message.vedtaksperiodeId))
             håndter(beregningsgrunnlag, avviksvurdering, utkastTilVedtakProducer, varselProducer, subsumsjonProducer, avvikVurdertProducer)
-            logg.info("Utkast til vedtak ferdig behandlet, {}", kv("vedtaksperiodeId", utkastTilVedtakMessage.vedtaksperiodeId))
+            logg.info("Utkast til vedtak ferdig behandlet, {}", kv("vedtaksperiodeId", message.vedtaksperiodeId))
         }
         meldingProducer.publiserMeldinger()
     }
