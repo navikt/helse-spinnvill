@@ -40,6 +40,10 @@ class Database private constructor(env: Map<String, String>) {
         return avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt)
     }
 
+    fun lagreAvviksvurderinger(avviksvurderinger: List<AvviksvurderingDto>) {
+        return avviksvurdering.upsertAll(avviksvurderinger)
+    }
+
     fun harAvviksvurderingAllerede(fødselsnummer: Fødselsnummer, vilkårsgrunnlagId: UUID): Boolean {
         return avviksvurdering.harKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId)
     }

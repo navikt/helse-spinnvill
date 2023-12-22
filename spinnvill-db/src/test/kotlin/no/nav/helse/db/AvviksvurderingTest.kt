@@ -44,6 +44,46 @@ internal class AvviksvurderingTest {
     }
 
     @Test
+    fun `Kan lage flere avviksvurderinger samtidig`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+        val sammenligningsgrunnlag = sammenligningsgrunnlag()
+
+        val id1 = UUID.randomUUID()
+        val id2 = UUID.randomUUID()
+        val avviksvurdering1 = AvviksvurderingDto(id1, fødselsnummer, skjæringstidspunkt, LocalDateTime.now(), SPINNVILL, sammenligningsgrunnlag, null)
+        val avviksvurdering2 = AvviksvurderingDto(id2, fødselsnummer, skjæringstidspunkt, LocalDateTime.now(), SPINNVILL, sammenligningsgrunnlag, null)
+        avviksvurdering.upsertAll(listOf(avviksvurdering1, avviksvurdering2))
+
+        val avviksvurderinger = avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt)
+
+        assertEquals(2, avviksvurderinger.size)
+        assertContains(avviksvurderinger, avviksvurdering1)
+        assertContains(avviksvurderinger, avviksvurdering2)
+    }
+
+    @Test
+    fun `Kan oppdatere flere avviksvurderinger samtidig`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+
+        val id1 = UUID.randomUUID()
+        val nyAvviksvurdering = AvviksvurderingDto(id1, fødselsnummer, skjæringstidspunkt, LocalDateTime.now(), SPINNVILL, sammenligningsgrunnlag(), null)
+        val oppdatertAvviksvurdering = AvviksvurderingDto(id1, fødselsnummer, skjæringstidspunkt, LocalDateTime.now(), SPINNVILL, sammenligningsgrunnlag(), beregningsgrunnlag())
+        avviksvurdering.upsertAll(listOf(nyAvviksvurdering))
+        avviksvurdering.upsertAll(listOf(oppdatertAvviksvurdering))
+
+        val avviksvurderinger = avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt)
+
+        assertEquals(1, avviksvurderinger.size)
+        val avviksvurderingen = avviksvurderinger.single()
+        assertEquals(nyAvviksvurdering.id, avviksvurderingen.id)
+        assertEquals(oppdatertAvviksvurdering.id, avviksvurderingen.id)
+        assertNotEquals(nyAvviksvurdering.beregningsgrunnlag, avviksvurderingen.beregningsgrunnlag)
+        assertEquals(oppdatertAvviksvurdering.beregningsgrunnlag, avviksvurderingen.beregningsgrunnlag)
+    }
+
+    @Test
     fun `Oppdater eksisterende avviksvurdering`() {
         val fødselsnummer = Fødselsnummer("12345678910")
         val skjæringstidspunkt = 1.januar

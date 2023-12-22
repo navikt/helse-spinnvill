@@ -144,8 +144,26 @@ internal class Avviksvurdering {
     ): AvviksvurderingDto {
         return transaction {
             EnAvviksvurdering.findById(id)?.let {
-                update(id, beregningsgrunnlag)
+                update(it, beregningsgrunnlag)
             } ?: insert(id, fødselsnummer, skjæringstidspunkt, kilde, opprettet, sammenligningsgrunnlag, beregningsgrunnlag)
+        }
+    }
+
+    internal fun upsertAll(avviksvurderinger: List<AvviksvurderingDto>) {
+        return transaction {
+            avviksvurderinger.forEach { avviksvurdering ->
+                EnAvviksvurdering.findById(avviksvurdering.id)?.let {
+                    update(it, avviksvurdering.beregningsgrunnlag)
+                } ?: insert(
+                    avviksvurdering.id,
+                    avviksvurdering.fødselsnummer,
+                    avviksvurdering.skjæringstidspunkt,
+                    avviksvurdering.kilde,
+                    avviksvurdering.opprettet,
+                    avviksvurdering.sammenligningsgrunnlag,
+                    avviksvurdering.beregningsgrunnlag
+                )
+            }
         }
     }
 
@@ -212,9 +230,7 @@ internal class Avviksvurdering {
         enAvviksvurdering.dto()
     }
 
-    private fun Transaction.update(id: UUID, beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?): AvviksvurderingDto = this.run {
-        val enAvviksvurdering =
-            requireNotNull(EnAvviksvurdering.findById(id)) { "Forventer å finne avviksvurdering med id=${id}" }
+    private fun Transaction.update(enAvviksvurdering: EnAvviksvurdering, beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?): AvviksvurderingDto = this.run {
         beregningsgrunnlag?.omregnedeÅrsinntekter?.forEach { (arbeidsgiverreferanse, inntekt) ->
             Beregningsgrunnlag.upsert(
                 Beregningsgrunnlag.avviksvurdering, Beregningsgrunnlag.organisasjonsnummer, Beregningsgrunnlag.inntekt
