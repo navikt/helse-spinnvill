@@ -6,10 +6,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import no.nav.helse.helpers.januar
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.*
 
 class UtkastTilVedtakRiverTest {
 
@@ -54,14 +53,8 @@ class UtkastTilVedtakRiverTest {
     }
 
     @Test
-    fun `leser ikke inn godkjenningsbehov markert med behandlingStartet`() {
-        testRapid.sendTestMessage(utkastTilVedtakJsonMedBehandlingStartet(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, skjæringstidspunkt))
-        assertEquals(0, messageHandler.messages.size)
-    }
-
-    @Test
-    fun `leser ikke inn godkjenningsbehov som har avviksvurderingId`() {
-        testRapid.sendTestMessage(utkastTilVedtakJsonMedAvviksvurderingId(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, skjæringstidspunkt))
+    fun `leser ikke inn godkjenningsbehov markert med behandletAvSpinnvill`() {
+        testRapid.sendTestMessage(utkastTilVedtakJsonMedBehandletAvSpinnvill(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, skjæringstidspunkt))
         assertEquals(0, messageHandler.messages.size)
     }
 
@@ -133,23 +126,14 @@ class UtkastTilVedtakRiverTest {
         .med("@løsning" to "{}")
         .let(objectMapper::writeValueAsString)
 
-    private fun utkastTilVedtakJsonMedBehandlingStartet(
+    private fun utkastTilVedtakJsonMedBehandletAvSpinnvill(
         aktørId: String,
         fødselsnummer: String,
         organisasjonsnummer: String,
         skjæringstidspunkt: LocalDate
     ) = utkastTilVedtakJsonNode(aktørId, fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
-        .med("behandlingStartet" to "true")
+        .med("behandletAvSpinnvill" to "true")
         .let(objectMapper::writeValueAsString)
-
-    private fun utkastTilVedtakJsonMedAvviksvurderingId(
-        aktørId: String,
-        fødselsnummer: String,
-        organisasjonsnummer: String,
-        skjæringstidspunkt: LocalDate
-    ) = utkastTilVedtakJsonNode(aktørId, fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
-        .med("avviksvurderingId" to UUID.randomUUID())
-        .run(objectMapper::writeValueAsString)
 }
 
 private fun ObjectNode.med(vararg felter: Pair<String, Any>): ObjectNode {
