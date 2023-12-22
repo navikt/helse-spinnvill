@@ -24,7 +24,7 @@ class UtkastTilVedtakMessage(packet: JsonMessage) {
     fun finalize(): Map<String, Any> =
         objectMapper.convertValue(result.apply {
             if (::avviksvurderingId.isInitialized) put("avviksvurderingId", avviksvurderingId.toString())
-            else put("behandlingStartet", true)
+            put("behandletAvSpinnvill", true)
         })
 
     val vilkårsgrunnlagId: UUID = packet["Godkjenning.vilkårsgrunnlagId"].asUUID()
