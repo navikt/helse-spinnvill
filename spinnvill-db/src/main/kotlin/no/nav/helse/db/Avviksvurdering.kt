@@ -123,6 +123,16 @@ internal class Avviksvurdering {
         }
     }
 
+    internal fun findAll(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<AvviksvurderingDto> {
+        return transaction {
+            EnAvviksvurdering.find {
+                Avviksvurderinger.fødselsnummer eq fødselsnummer.value and (Avviksvurderinger.skjæringstidspunkt eq skjæringstidspunkt)
+            }
+                .orderBy(Avviksvurderinger.opprettet to SortOrder.ASC)
+                .map { it.dto() }
+        }
+    }
+
     internal fun upsert(
         id: UUID,
         fødselsnummer: Fødselsnummer,

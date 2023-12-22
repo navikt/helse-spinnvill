@@ -3,6 +3,7 @@ package no.nav.helse.db
 import no.nav.helse.*
 import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.dto.AvviksvurderingDto.KildeDto.SPINNVILL
+import no.nav.helse.helpers.februar
 import no.nav.helse.helpers.januar
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.BeforeEach
@@ -12,10 +13,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import java.time.LocalDateTime
 import java.time.YearMonth
 import java.util.*
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.*
 
 internal class AvviksvurderingTest {
 
@@ -185,6 +183,39 @@ internal class AvviksvurderingTest {
         )
         val siste = avviksvurdering.findLatest(fødselsnummer, 1.januar)
         assertNotNull(siste)
+    }
+
+    @Test
+    fun `henter liste av avviksvurderinger`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val avviksvurdering1 = avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), null)
+        val avviksvurdering2 = avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), null)
+        val avviksvurderinger = avviksvurdering.findAll(fødselsnummer, 1.januar)
+        assertEquals(2, avviksvurderinger.size)
+        assertTrue(avviksvurderinger.contains(avviksvurdering1))
+        assertTrue(avviksvurderinger.contains(avviksvurdering2))
+    }
+
+    @Test
+    fun `henter ikke avviksvurderinger med annet skjæringstidspunkt`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val avviksvurdering1 = avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), null)
+        val avviksvurdering2 = avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, 2.februar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), null)
+        val avviksvurderinger = avviksvurdering.findAll(fødselsnummer, 1.januar)
+        assertEquals(1, avviksvurderinger.size)
+        assertTrue(avviksvurderinger.contains(avviksvurdering1))
+        assertFalse(avviksvurderinger.contains(avviksvurdering2))
+    }
+
+    @Test
+    fun `henter ikke avviksvurderinger med annet fødselsnummer`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val avviksvurdering1 = avviksvurdering.upsert(UUID.randomUUID(), fødselsnummer, 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), null)
+        val avviksvurdering2 = avviksvurdering.upsert(UUID.randomUUID(), Fødselsnummer("0101010101"), 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), null)
+        val avviksvurderinger = avviksvurdering.findAll(fødselsnummer, 1.januar)
+        assertEquals(1, avviksvurderinger.size)
+        assertTrue(avviksvurderinger.contains(avviksvurdering1))
+        assertFalse(avviksvurderinger.contains(avviksvurdering2))
     }
 
     private fun beregningsgrunnlag(omregnetÅrsinntekt: Double = 20000.0): AvviksvurderingDto.BeregningsgrunnlagDto {
