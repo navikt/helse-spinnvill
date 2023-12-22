@@ -108,7 +108,6 @@ class MediatorMigreringTest {
         assertEquals(0, testRapid.inspektør.size)
     }
 
-
     @Test
     fun `lagre en avviksvurdering fra Spleis`() {
         Toggle.LesemodusOnly.enable()

@@ -262,6 +262,15 @@ internal class MediatorTest {
         assertEquals("Godkjenning", testRapid.inspektør.field(0, "@behov").first().asText())
     }
 
+    @Test
+    fun `ikke gjør ny avviksvurdering hvis avvik vurdert i Infotrygd`() {
+        mottaAvviksvurderingFraSpleisGjortIInfotrygd()
+        testRapid.reset()
+        mottaUtkastTilVedtak()
+        assertEquals(1, testRapid.inspektør.size)
+        assertEquals("Godkjenning", testRapid.inspektør.field(0, "@behov").first().asText())
+    }
+
     private fun mottaUtkastTilVedtak(beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto = BEREGNINGSGRUNNLAG) {
         testRapid.sendTestMessage(
             utkastTilVedtakJson(
@@ -311,6 +320,16 @@ internal class MediatorTest {
         )
     }
 
+    private fun mottaAvviksvurderingFraSpleisGjortIInfotrygd() {
+        testRapid.sendTestMessage(
+            avviksvurderingFraSpleisGjortIInfotrygdJson(
+                AKTØR_ID,
+                FØDSELSNUMMER,
+                SKJÆRINGSTIDSPUNKT,
+                UUID.randomUUID()
+            )
+        )
+    }
 
     private fun TestRapid.RapidInspector.meldinger() =
         (0 until size).map { index -> message(index) }
@@ -358,6 +377,36 @@ internal class MediatorTest {
                   "beløp": 600000.0
                 }
               ],
+              "sammenligningsgrunnlag": []
+            }
+          ]
+        }
+    """.trimIndent()
+        return json
+    }
+
+    private fun avviksvurderingFraSpleisGjortIInfotrygdJson(
+        aktørId: String,
+        fødselsnummer: String,
+        skjæringstidspunkt: LocalDate,
+        vilkårsgrunnlagId: UUID
+    ): String {
+        @Language("JSON")
+        val json = """
+        {
+          "@event_name": "avviksvurderinger",
+          "fødselsnummer": "$fødselsnummer",
+          "aktørId": "$aktørId",
+          "skjæringstidspunkter": [
+            {
+              "skjæringstidspunkt": "$skjæringstidspunkt",
+              "vurderingstidspunkt": "2018-01-01T00:00:00.000",
+              "vilkårsgrunnlagId": "$vilkårsgrunnlagId",
+              "avviksprosent": 0.0,
+              "sammenligningsgrunnlagTotalbeløp": 50000.0,
+              "beregningsgrunnlagTotalbeløp": 30000.0,
+              "type": "INFOTRYGD",
+              "omregnedeÅrsinntekter": [],
               "sammenligningsgrunnlag": []
             }
           ]

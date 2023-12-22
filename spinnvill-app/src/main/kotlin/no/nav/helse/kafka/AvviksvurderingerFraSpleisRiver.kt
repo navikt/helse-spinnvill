@@ -16,9 +16,7 @@ class AvviksvurderingerFraSpleisRiver(
                 it.demandValue("@event_name", "avviksvurderinger")
                 it.requireKey("fødselsnummer")
                 it.requireArray("skjæringstidspunkter") {
-                    requireKey(
-                        "skjæringstidspunkt", "vurderingstidspunkt", "type", "vilkårsgrunnlagId",
-                    )
+                    requireKey("skjæringstidspunkt", "vurderingstidspunkt", "type", "vilkårsgrunnlagId")
                     interestedIn("avviksprosent", "beregningsgrunnlagTotalbeløp", "sammenligningsgrunnlagTotalbeløp")
                     requireArray("omregnedeÅrsinntekter") {
                         requireKey("orgnummer", "beløp")

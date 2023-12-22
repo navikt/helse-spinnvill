@@ -287,6 +287,7 @@ class Mediator(
                 skjæringstidspunkt = skjæringstidspunkt,
                 beregningsgrunnlag = beregningsgrunnlag,
                 opprettet = opprettet,
+                kilde = this.kilde.tilDomene(),
                 sammenligningsgrunnlag = Sammenligningsgrunnlag(
                     sammenligningsgrunnlag.innrapporterteInntekter.map { (organisasjonsnummer, inntekter) ->
                         ArbeidsgiverInntekt(
@@ -337,6 +338,12 @@ class Mediator(
                 AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD -> ArbeidsgiverInntekt.Inntektstype.PENSJON_ELLER_TRYGD
                 AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE -> ArbeidsgiverInntekt.Inntektstype.YTELSE_FRA_OFFENTLIGE
             }
+        }
+
+        private fun AvviksvurderingDto.KildeDto.tilDomene() = when (this) {
+            AvviksvurderingDto.KildeDto.SPINNVILL -> Kilde.SPINNVILL
+            AvviksvurderingDto.KildeDto.SPLEIS -> Kilde.SPLEIS
+            AvviksvurderingDto.KildeDto.INFOTRYGD -> Kilde.INFOTRYGD
         }
     }
 }

@@ -134,7 +134,7 @@ internal class Avviksvurdering {
     ): AvviksvurderingDto {
         return transaction {
             EnAvviksvurdering.findById(id)?.let {
-                update(id, requireNotNull(beregningsgrunnlag))
+                update(id, beregningsgrunnlag)
             } ?: insert(id, fødselsnummer, skjæringstidspunkt, kilde, opprettet, sammenligningsgrunnlag, beregningsgrunnlag)
         }
     }
@@ -202,10 +202,10 @@ internal class Avviksvurdering {
         enAvviksvurdering.dto()
     }
 
-    private fun Transaction.update(id: UUID, beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto): AvviksvurderingDto = this.run {
+    private fun Transaction.update(id: UUID, beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?): AvviksvurderingDto = this.run {
         val enAvviksvurdering =
             requireNotNull(EnAvviksvurdering.findById(id)) { "Forventer å finne avviksvurdering med id=${id}" }
-        beregningsgrunnlag.omregnedeÅrsinntekter.forEach { (arbeidsgiverreferanse, inntekt) ->
+        beregningsgrunnlag?.omregnedeÅrsinntekter?.forEach { (arbeidsgiverreferanse, inntekt) ->
             Beregningsgrunnlag.upsert(
                 Beregningsgrunnlag.avviksvurdering, Beregningsgrunnlag.organisasjonsnummer, Beregningsgrunnlag.inntekt
             ) {

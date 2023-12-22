@@ -2,6 +2,7 @@ package no.nav.helse.mediator.producer
 
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.avviksvurdering.Avviksvurdering
+import no.nav.helse.avviksvurdering.Kilde
 import no.nav.helse.avviksvurdering.Visitor
 import no.nav.helse.kafka.UtkastTilVedtakMessage
 import java.time.LocalDate
@@ -28,7 +29,14 @@ internal class UtkastTilVedtakProducer(
     }
 
     private class Sammensyer(private val utkastTilVedtakMessage: UtkastTilVedtakMessage) : Visitor {
-        override fun visitAvviksvurdering(id: UUID, fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate, opprettet: LocalDateTime) {
+        override fun visitAvviksvurdering(
+            id: UUID,
+            fødselsnummer: Fødselsnummer,
+            skjæringstidspunkt: LocalDate,
+            kilde: Kilde,
+            opprettet: LocalDateTime
+        ) {
+            if (kilde == Kilde.INFOTRYGD) return
             utkastTilVedtakMessage.leggTilAvviksvurderingId(id)
         }
     }

@@ -4,6 +4,7 @@ import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
+import no.nav.helse.avviksvurdering.Kilde
 import no.nav.helse.avviksvurdering.Visitor
 import no.nav.helse.dto.AvviksvurderingDto
 import java.time.LocalDate
@@ -17,18 +18,21 @@ class DatabaseDtoBuilder : Visitor {
     private lateinit var skjæringstidspunkt: LocalDate
     private lateinit var omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
     private lateinit var opprettet: LocalDateTime
+    private lateinit var kilde: Kilde
     private val innrapporterteInntekter: MutableMap<Arbeidsgiverreferanse, List<AvviksvurderingDto.MånedligInntektDto>> = mutableMapOf()
 
     override fun visitAvviksvurdering(
         id: UUID,
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
+        kilde: Kilde,
         opprettet: LocalDateTime
     ) {
         this.id = id
         this.fødselsnummer = fødselsnummer.value
         this.skjæringstidspunkt = skjæringstidspunkt
         this.opprettet = opprettet
+        this.kilde = kilde
     }
 
     override fun visitBeregningsgrunnlag(
@@ -59,6 +63,12 @@ class DatabaseDtoBuilder : Visitor {
         }
     }
 
+    private fun Kilde.tilDto() = when (this) {
+        Kilde.SPLEIS -> AvviksvurderingDto.KildeDto.SPLEIS
+        Kilde.SPINNVILL -> AvviksvurderingDto.KildeDto.SPINNVILL
+        Kilde.INFOTRYGD -> AvviksvurderingDto.KildeDto.INFOTRYGD
+    }
+
     internal fun build(): AvviksvurderingDto {
         return AvviksvurderingDto(
             id = id,
@@ -66,6 +76,7 @@ class DatabaseDtoBuilder : Visitor {
             skjæringstidspunkt = skjæringstidspunkt,
             sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(innrapporterteInntekter = innrapporterteInntekter),
             opprettet = opprettet,
+            kilde = kilde.tilDto(),
             beregningsgrunnlag = omregnedeÅrsinntekter
                 .takeUnless { it.isEmpty() }
                 ?.let { AvviksvurderingDto.BeregningsgrunnlagDto(omregnedeÅrsinntekter = it) }
