@@ -13,13 +13,8 @@ import java.util.*
 
 class DatabaseDtoBuilder : Visitor {
 
-    private lateinit var id: UUID
-    private lateinit var fødselsnummer: String
-    private lateinit var skjæringstidspunkt: LocalDate
-    private lateinit var omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
-    private lateinit var opprettet: LocalDateTime
-    private lateinit var kilde: Kilde
-    private val innrapporterteInntekter: MutableMap<Arbeidsgiverreferanse, List<AvviksvurderingDto.MånedligInntektDto>> = mutableMapOf()
+    private val avviksvurderinger = mutableListOf<AvviksvurderingDto>()
+    private val gjeldende get() = avviksvurderinger.last()
 
     override fun visitAvviksvurdering(
         id: UUID,
@@ -28,30 +23,50 @@ class DatabaseDtoBuilder : Visitor {
         kilde: Kilde,
         opprettet: LocalDateTime
     ) {
-        this.id = id
-        this.fødselsnummer = fødselsnummer.value
-        this.skjæringstidspunkt = skjæringstidspunkt
-        this.opprettet = opprettet
-        this.kilde = kilde
+        avviksvurderinger.add(
+            AvviksvurderingDto(
+                id = id,
+                fødselsnummer = fødselsnummer,
+                skjæringstidspunkt = skjæringstidspunkt,
+                opprettet = opprettet,
+                kilde = kilde.tilDto(),
+                sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()),
+                beregningsgrunnlag = null
+            )
+        )
     }
 
     override fun visitBeregningsgrunnlag(
         totaltOmregnetÅrsinntekt: Double,
         omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
     ) {
-        this.omregnedeÅrsinntekter = omregnedeÅrsinntekter
+        val beregningsgrunnlag =
+            if (omregnedeÅrsinntekter.isNotEmpty()) AvviksvurderingDto.BeregningsgrunnlagDto(omregnedeÅrsinntekter)
+            else null
+        val nyGjeldende = gjeldende.copy(beregningsgrunnlag = beregningsgrunnlag)
+        erstattGjeldendeMed(nyGjeldende)
     }
 
     override fun visitArbeidsgiverInntekt(arbeidsgiverreferanse: Arbeidsgiverreferanse, inntekter: List<ArbeidsgiverInntekt.MånedligInntekt>) {
-        innrapporterteInntekter[arbeidsgiverreferanse] = inntekter.map {
+        val innrapporterteInntekterCopy = gjeldende.sammenligningsgrunnlag.innrapporterteInntekter.toMutableMap()
+        innrapporterteInntekterCopy[arbeidsgiverreferanse] = inntekter.map { månedligInntekt ->
             AvviksvurderingDto.MånedligInntektDto(
-                inntekt = it.inntekt,
-                måned = it.måned,
-                fordel = it.fordel,
-                beskrivelse = it.beskrivelse,
-                inntektstype = it.inntektstype.tilDto()
+                inntekt = månedligInntekt.inntekt,
+                måned = månedligInntekt.måned,
+                fordel = månedligInntekt.fordel,
+                beskrivelse = månedligInntekt.beskrivelse,
+                inntektstype = månedligInntekt.inntektstype.tilDto()
             )
         }
+        val nyGjeldende = gjeldende.copy(
+            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(innrapporterteInntekterCopy.toMap())
+        )
+        erstattGjeldendeMed(nyGjeldende)
+    }
+
+    private fun erstattGjeldendeMed(nyGjeldende: AvviksvurderingDto) {
+        val index = avviksvurderinger.indexOf(gjeldende)
+        avviksvurderinger[index] = nyGjeldende
     }
 
     private fun ArbeidsgiverInntekt.Inntektstype.tilDto(): AvviksvurderingDto.InntektstypeDto {
@@ -69,17 +84,7 @@ class DatabaseDtoBuilder : Visitor {
         Kilde.INFOTRYGD -> AvviksvurderingDto.KildeDto.INFOTRYGD
     }
 
-    internal fun build(): AvviksvurderingDto {
-        return AvviksvurderingDto(
-            id = id,
-            fødselsnummer = Fødselsnummer(fødselsnummer),
-            skjæringstidspunkt = skjæringstidspunkt,
-            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(innrapporterteInntekter = innrapporterteInntekter),
-            opprettet = opprettet,
-            kilde = kilde.tilDto(),
-            beregningsgrunnlag = omregnedeÅrsinntekter
-                .takeUnless { it.isEmpty() }
-                ?.let { AvviksvurderingDto.BeregningsgrunnlagDto(omregnedeÅrsinntekter = it) }
-        )
-    }
+    internal fun build(): AvviksvurderingDto = avviksvurderinger.single()
+
+    internal fun buildAll(): List<AvviksvurderingDto> = avviksvurderinger
 }
