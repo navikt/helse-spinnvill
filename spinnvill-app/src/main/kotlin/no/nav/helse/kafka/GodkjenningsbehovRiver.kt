@@ -7,7 +7,7 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import org.slf4j.LoggerFactory
 
-internal class UtkastTilVedtakRiver(rapidsConnection: RapidsConnection, private val messageHandler: MessageHandler) : River.PacketListener {
+internal class GodkjenningsbehovRiver(rapidsConnection: RapidsConnection, private val messageHandler: MessageHandler) : River.PacketListener {
     init {
         River(rapidsConnection).apply {
             validate {
@@ -28,7 +28,7 @@ internal class UtkastTilVedtakRiver(rapidsConnection: RapidsConnection, private 
             "Leser godkjenningsbehov {}",
             kv("Fødselsnummer", packet["fødselsnummer"].asText())
         )
-        messageHandler.håndter(UtkastTilVedtakMessage(packet))
+        messageHandler.håndter(GodkjenningsbehovMessage(packet))
     }
 
     private companion object {

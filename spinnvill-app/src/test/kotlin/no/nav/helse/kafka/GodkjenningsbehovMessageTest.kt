@@ -10,12 +10,12 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class UtkastTilVedtakMessageTest {
+class GodkjenningsbehovMessageTest {
 
     private val testRapid = TestRapid()
     private val messageHandler = object : MessageHandler {
-        val messages = mutableListOf<UtkastTilVedtakMessage>()
-        override fun håndter(message: UtkastTilVedtakMessage) {
+        val messages = mutableListOf<GodkjenningsbehovMessage>()
+        override fun håndter(message: GodkjenningsbehovMessage) {
             messages.add(message)
         }
 
@@ -25,7 +25,7 @@ class UtkastTilVedtakMessageTest {
     }
 
     init {
-        UtkastTilVedtakRiver(testRapid, messageHandler)
+        GodkjenningsbehovRiver(testRapid, messageHandler)
     }
 
     @Test

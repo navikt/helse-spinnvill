@@ -8,7 +8,7 @@ import no.nav.helse.rapids_rivers.asLocalDate
 import java.time.LocalDate
 import java.util.*
 
-class UtkastTilVedtakMessage(packet: JsonMessage) {
+class GodkjenningsbehovMessage(packet: JsonMessage) {
 
     // Litt usikker på om vi trenger denne, det føltes bare litt feil å fikle på det objektet vi får inn i konstruktøren
     private val result = objectMapper.readTree(packet.toJson()) as ObjectNode

@@ -18,7 +18,7 @@ class Mediator(
 ) : MessageHandler {
 
     init {
-        UtkastTilVedtakRiver(rapidsConnection, this)
+        GodkjenningsbehovRiver(rapidsConnection, this)
         SammenligningsgrunnlagRiver(rapidsConnection, this)
         AvviksvurderingerFraSpleisRiver(rapidsConnection, this)
         AvviksvurderingFraSpleisRiver(rapidsConnection, this)
@@ -52,7 +52,7 @@ class Mediator(
         sikkerlogg.info("Migrering med avviksvurderinger fra Spleis ferdigbehandlet")
     }
 
-    override fun håndter(message: UtkastTilVedtakMessage) {
+    override fun håndter(message: GodkjenningsbehovMessage) {
         val meldingProducer = nyMeldingProducer(message)
 
         if (Toggle.LesemodusOnly.enabled) {
@@ -67,9 +67,9 @@ class Mediator(
         val varselProducer = VarselProducer(vedtaksperiodeId = message.vedtaksperiodeId)
         val subsumsjonProducer = nySubsumsjonProducer(message)
         val avvikVurdertProducer = AvvikVurdertProducer(vilkårsgrunnlagId = message.vilkårsgrunnlagId)
-        val utkastTilVedtakProducer = UtkastTilVedtakProducer(message)
+        val godkjenningsbehovProducer = GodkjenningsbehovProducer(message)
 
-        meldingProducer.nyProducer(behovProducer, varselProducer, subsumsjonProducer, avvikVurdertProducer, utkastTilVedtakProducer)
+        meldingProducer.nyProducer(behovProducer, varselProducer, subsumsjonProducer, avvikVurdertProducer, godkjenningsbehovProducer)
 
         val beregningsgrunnlag = nyttBeregningsgrunnlag(message)
         val avviksvurderinger = hentAvviksvurderinger(Fødselsnummer(message.fødselsnummer), message.skjæringstidspunkt)
@@ -78,7 +78,7 @@ class Mediator(
         avviksvurderinger.registrer(varselProducer, subsumsjonProducer, avvikVurdertProducer)
 
         val avviksvurdering = avviksvurderinger.håndterNytt(beregningsgrunnlag)
-        if (avviksvurdering != null) utkastTilVedtakProducer.registrerUtkastForUtsending(avviksvurdering)
+        if (avviksvurdering != null) godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(avviksvurdering)
         avviksvurderinger.lagre()
 
         meldingProducer.publiserMeldinger()
@@ -102,25 +102,25 @@ class Mediator(
         rapidsConnection.queueReplayMessage(fødselsnummer.value, sammenligningsgrunnlagMessage.utkastTilVedtakJson)
     }
 
-    private fun håndterLesemodus(meldingProducer: MeldingProducer, utkastTilVedtakMessage: UtkastTilVedtakMessage) {
+    private fun håndterLesemodus(meldingProducer: MeldingProducer, godkjenningsbehovMessage: GodkjenningsbehovMessage) {
         sikkerlogg.info("Spinnvill er i lesemodus")
-        val utkastTilVedtakProducer = UtkastTilVedtakProducer(utkastTilVedtakMessage)
-        meldingProducer.nyProducer(utkastTilVedtakProducer)
-        val avviksvurdering = database.finnSisteAvviksvurdering(utkastTilVedtakMessage.fødselsnummer.somFnr(), utkastTilVedtakMessage.skjæringstidspunkt)
+        val godkjenningsbehovProducer = GodkjenningsbehovProducer(godkjenningsbehovMessage)
+        meldingProducer.nyProducer(godkjenningsbehovProducer)
+        val avviksvurdering = database.finnSisteAvviksvurdering(godkjenningsbehovMessage.fødselsnummer.somFnr(), godkjenningsbehovMessage.skjæringstidspunkt)
         if (avviksvurdering != null) {
-            utkastTilVedtakProducer.registrerUtkastForUtsending(avviksvurdering.tilDomene())
+            godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(avviksvurdering.tilDomene())
             meldingProducer.publiserMeldinger()
             sikkerlogg.info(
                 "Avviksvurdering finnes, vidersender godkjenningsbehov med avviksvurderingId, {}, {}, {}",
-                kv("vilkårsgrunnlagId", utkastTilVedtakMessage.vilkårsgrunnlagId),
-                kv("skjæringstidspunkt", utkastTilVedtakMessage.skjæringstidspunkt),
-                kv("fødselsnummer", utkastTilVedtakMessage.fødselsnummer)
+                kv("vilkårsgrunnlagId", godkjenningsbehovMessage.vilkårsgrunnlagId),
+                kv("skjæringstidspunkt", godkjenningsbehovMessage.skjæringstidspunkt),
+                kv("fødselsnummer", godkjenningsbehovMessage.fødselsnummer)
             )
         } else {
             sikkerlogg.info("Avviksvurdering finnes ikke, vidersender ikke godkjenningsbehov med avviksvurderingId, {}, {}, {}",
-                kv("vilkårsgrunnlagId", utkastTilVedtakMessage.vilkårsgrunnlagId),
-                kv("skjæringstidspunkt", utkastTilVedtakMessage.skjæringstidspunkt),
-                kv("fødselsnummer", utkastTilVedtakMessage.fødselsnummer)
+                kv("vilkårsgrunnlagId", godkjenningsbehovMessage.vilkårsgrunnlagId),
+                kv("skjæringstidspunkt", godkjenningsbehovMessage.skjæringstidspunkt),
+                kv("fødselsnummer", godkjenningsbehovMessage.fødselsnummer)
             )
         }
     }
@@ -158,28 +158,28 @@ class Mediator(
         return Avviksvurderinger(fødselsnummer, skjæringstidspunkt, avviksvurderinger)
     }
 
-    private fun nyMeldingProducer(utkastTilVedtakMessage: UtkastTilVedtakMessage) = MeldingProducer(
-        aktørId = utkastTilVedtakMessage.aktørId.somAktørId(),
-        fødselsnummer = utkastTilVedtakMessage.fødselsnummer.somFnr(),
-        vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
-        organisasjonsnummer = utkastTilVedtakMessage.organisasjonsnummer.somArbeidsgiverref(),
-        skjæringstidspunkt = utkastTilVedtakMessage.skjæringstidspunkt,
+    private fun nyMeldingProducer(godkjenningsbehovMessage: GodkjenningsbehovMessage) = MeldingProducer(
+        aktørId = godkjenningsbehovMessage.aktørId.somAktørId(),
+        fødselsnummer = godkjenningsbehovMessage.fødselsnummer.somFnr(),
+        vedtaksperiodeId = godkjenningsbehovMessage.vedtaksperiodeId,
+        organisasjonsnummer = godkjenningsbehovMessage.organisasjonsnummer.somArbeidsgiverref(),
+        skjæringstidspunkt = godkjenningsbehovMessage.skjæringstidspunkt,
         rapidsConnection = rapidsConnection
     )
 
-    private fun nySubsumsjonProducer(utkastTilVedtakMessage: UtkastTilVedtakMessage): SubsumsjonProducer {
+    private fun nySubsumsjonProducer(godkjenningsbehovMessage: GodkjenningsbehovMessage): SubsumsjonProducer {
         return SubsumsjonProducer(
-            fødselsnummer = utkastTilVedtakMessage.fødselsnummer.somFnr(),
-            vedtaksperiodeId = utkastTilVedtakMessage.vedtaksperiodeId,
-            organisasjonsnummer = utkastTilVedtakMessage.organisasjonsnummer.somArbeidsgiverref(),
-            vilkårsgrunnlagId = utkastTilVedtakMessage.vilkårsgrunnlagId,
+            fødselsnummer = godkjenningsbehovMessage.fødselsnummer.somFnr(),
+            vedtaksperiodeId = godkjenningsbehovMessage.vedtaksperiodeId,
+            organisasjonsnummer = godkjenningsbehovMessage.organisasjonsnummer.somArbeidsgiverref(),
+            vilkårsgrunnlagId = godkjenningsbehovMessage.vilkårsgrunnlagId,
             versjonAvKode = versjonAvKode
         )
     }
 
-    private fun nyttBeregningsgrunnlag(utkastTilVedtakMessage: UtkastTilVedtakMessage): Beregningsgrunnlag {
+    private fun nyttBeregningsgrunnlag(godkjenningsbehovMessage: GodkjenningsbehovMessage): Beregningsgrunnlag {
         return Beregningsgrunnlag.opprett(
-            utkastTilVedtakMessage.beregningsgrunnlag.entries.associate {
+            godkjenningsbehovMessage.beregningsgrunnlag.entries.associate {
                 Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value)
             }
         )
