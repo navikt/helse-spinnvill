@@ -22,6 +22,7 @@ internal class BehovProducer(
         behovskø.clear()
         return listOf(compositeBehov)
     }
+
     override fun sammenligningsgrunnlag(behov: BehovForSammenligningsgrunnlag) {
         behovskø["InntekterForSammenligningsgrunnlag"] = behov.toMap()
     }
