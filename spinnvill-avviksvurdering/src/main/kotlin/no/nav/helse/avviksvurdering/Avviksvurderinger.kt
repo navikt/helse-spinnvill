@@ -17,22 +17,31 @@ class Avviksvurderinger(
     private val behovObservers = mutableListOf<BehovObserver>()
     private val kriterieObservers = mutableListOf<KriterieObserver>()
 
-    internal fun registrer(observer: BehovObserver) {
+    fun registrer(observer: BehovObserver) {
         behovObservers.add(observer)
     }
 
-    internal fun registrer(observer: KriterieObserver) {
-        kriterieObservers.add(observer)
+    fun registrer(vararg observers: KriterieObserver) {
+        kriterieObservers.addAll(observers)
+        avviksvurderinger.forEach { it.register(*observers) }
     }
 
-    internal fun håndterNytt(beregningsgrunnlag: Beregningsgrunnlag) {
-        val siste = siste ?: return behovForSammenligningsgrunnlag()
+    fun accept(visitor: Visitor) {
+        avviksvurderinger.forEach { it.accept(visitor) }
+    }
+
+    fun håndterNytt(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurdering? {
+        val siste = siste ?: run {
+            behovForSammenligningsgrunnlag()
+            return null
+        }
         val gjeldende = siste.vurderBehovForNyVurdering(beregningsgrunnlag)
         if (siste != gjeldende) nyAvviksvurdering(gjeldende)
         gjeldende.håndter(beregningsgrunnlag)
+        return gjeldende
     }
 
-    internal fun håndterNytt(sammenligningsgrunnlag: Sammenligningsgrunnlag) {
+    fun håndterNytt(sammenligningsgrunnlag: Sammenligningsgrunnlag) {
         check(avviksvurderinger.isEmpty()) { "Forventer ikke å hente inn nytt sammenligningsgrunnlag hvis det tidligere er gjort en avviksvurdering" }
         val ny = Avviksvurdering.nyAvviksvurdering(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag)
         nyAvviksvurdering(ny)
@@ -42,7 +51,7 @@ class Avviksvurderinger(
         kriterieObservers.forEach { observer ->
             avviksvurdering.register(observer)
         }
-        avviksvurderinger.add(avviksvurdering)
+        avviksvurderinger.addLast(avviksvurdering)
     }
 
     private fun behovForSammenligningsgrunnlag() {

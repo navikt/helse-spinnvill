@@ -10,9 +10,6 @@ import no.nav.helse.mediator.producer.*
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.YearMonth
-import java.util.*
 
 class Mediator(
     private val versjonAvKode: VersjonAvKode,
@@ -64,11 +61,8 @@ class Mediator(
         }
 
         logg.info("Behandler utkast_til_vedtak for {}", kv("vedtaksperiodeId", message.vedtaksperiodeId))
-        sikkerlogg.info(
-            "Behandler utkast_til_vedtak for {}, {}",
-            kv("fødselsnummer", message.fødselsnummer),
-            kv("vedtaksperiodeId", message.vedtaksperiodeId)
-        )
+        sikkerlogg.info("Behandler utkast_til_vedtak for {}, {}", kv("fødselsnummer", message.fødselsnummer), kv("vedtaksperiodeId", message.vedtaksperiodeId))
+
         val behovProducer = BehovProducer(utkastTilVedtakJson = message.toJson())
         val varselProducer = VarselProducer(vedtaksperiodeId = message.vedtaksperiodeId)
         val subsumsjonProducer = nySubsumsjonProducer(message)
@@ -78,20 +72,15 @@ class Mediator(
         meldingProducer.nyProducer(behovProducer, varselProducer, subsumsjonProducer, avvikVurdertProducer, utkastTilVedtakProducer)
 
         val beregningsgrunnlag = nyttBeregningsgrunnlag(message)
-        val avviksvurdering = finnAvviksvurdering(
-            Fødselsnummer(message.fødselsnummer),
-            message.skjæringstidspunkt
-        )
-            ?.vurderBehovForNyVurdering(beregningsgrunnlag)
+        val avviksvurderinger = hentAvviksvurderinger(Fødselsnummer(message.fødselsnummer), message.skjæringstidspunkt)
 
-        if (avviksvurdering == null) {
-            logg.info("Trenger sammenligningsgrunnlag, {}", kv("vedtaksperiodeId", message.vedtaksperiodeId))
-            beOmSammenligningsgrunnlag(message.skjæringstidspunkt, behovProducer)
-        } else {
-            logg.info("Har sammenligningsgrunnlag, vurderer behov for ny avviksvurdering, {}", kv("vedtaksperiodeId", message.vedtaksperiodeId))
-            håndter(beregningsgrunnlag, avviksvurdering, utkastTilVedtakProducer, varselProducer, subsumsjonProducer, avvikVurdertProducer)
-            logg.info("Utkast til vedtak ferdig behandlet, {}", kv("vedtaksperiodeId", message.vedtaksperiodeId))
-        }
+        avviksvurderinger.registrer(behovProducer)
+        avviksvurderinger.registrer(varselProducer, subsumsjonProducer, avvikVurdertProducer)
+
+        val avviksvurdering = avviksvurderinger.håndterNytt(beregningsgrunnlag)
+        if (avviksvurdering != null) utkastTilVedtakProducer.registrerUtkastForUtsending(avviksvurdering)
+        avviksvurderinger.lagre()
+
         meldingProducer.publiserMeldinger()
     }
 
@@ -101,24 +90,14 @@ class Mediator(
 
         if (finnAvviksvurdering(fødselsnummer, skjæringstidspunkt) != null) {
             logg.warn("Ignorerer duplikat sammenligningsgrunnlag for eksisterende avviksvurdering")
-            sikkerlogg.warn(
-                "Ignorerer duplikat sammenligningsgrunnlag for {} {}",
-                kv("fødselsnummer", fødselsnummer.value),
-                kv("skjæringstidspunkt", skjæringstidspunkt)
-            )
+            sikkerlogg.warn("Ignorerer duplikat sammenligningsgrunnlag for {} {}", kv("fødselsnummer", fødselsnummer.value), kv("skjæringstidspunkt", skjæringstidspunkt))
             return
         }
 
-        database.lagreAvviksvurdering(
-            AvviksvurderingDto(
-                id = UUID.randomUUID(),
-                fødselsnummer = fødselsnummer,
-                skjæringstidspunkt = skjæringstidspunkt,
-                sammenligningsgrunnlag = sammenligningsgrunnlagMessage.sammenligningsgrunnlag.dto(),
-                opprettet = LocalDateTime.now(),
-                beregningsgrunnlag = null
-            )
-        )
+        val avviksvurderinger = hentAvviksvurderinger(fødselsnummer, skjæringstidspunkt)
+        val sammenligningsgrunnlag = nyttSammenligningsgrunnlag(sammenligningsgrunnlagMessage)
+        avviksvurderinger.håndterNytt(sammenligningsgrunnlag)
+        avviksvurderinger.lagre()
 
         rapidsConnection.queueReplayMessage(fødselsnummer.value, sammenligningsgrunnlagMessage.utkastTilVedtakJson)
     }
@@ -164,34 +143,19 @@ class Mediator(
         meldingProducer.nyAvviksvurdering(avviksvurdering.vilkårsgrunnlagId, avviksvurdering.skjæringstidspunkt, avviksvurdering.tilKafkaDto())
     }
 
-    private fun håndter(
-        beregningsgrunnlag: Beregningsgrunnlag,
-        avviksvurdering: Avviksvurdering,
-        utkastTilVedtakProducer: UtkastTilVedtakProducer,
-        vararg observers: KriterieObserver,
-    ) {
-        avviksvurdering.register(*observers)
-        avviksvurdering.håndter(beregningsgrunnlag)
-        utkastTilVedtakProducer.registrerUtkastForUtsending(avviksvurdering)
+    private fun Avviksvurderinger.lagre() {
         val builder = DatabaseDtoBuilder()
-        avviksvurdering.accept(builder)
-        database.lagreAvviksvurdering(builder.build())
+        this.accept(builder)
+        database.lagreAvviksvurderinger(builder.buildAll())
     }
 
     private fun finnAvviksvurdering(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurdering? {
         return database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)?.tilDomene()
     }
 
-    private fun beOmSammenligningsgrunnlag(skjæringstidspunkt: LocalDate, behovProducer: BehovProducer) {
-        val tom = YearMonth.from(skjæringstidspunkt).minusMonths(1)
-        val fom = tom.minusMonths(11)
-        behovProducer.sammenligningsgrunnlag(
-            BehovForSammenligningsgrunnlag(
-                skjæringstidspunkt = skjæringstidspunkt,
-                beregningsperiodeFom = fom,
-                beregningsperiodeTom = tom
-            )
-        )
+    private fun hentAvviksvurderinger(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurderinger {
+        val avviksvurderinger = database.finnAvviksvurderinger(fødselsnummer, skjæringstidspunkt).map { it.tilDomene() }
+        return Avviksvurderinger(fødselsnummer, skjæringstidspunkt, avviksvurderinger)
     }
 
     private fun nyMeldingProducer(utkastTilVedtakMessage: UtkastTilVedtakMessage) = MeldingProducer(
@@ -217,6 +181,22 @@ class Mediator(
         return Beregningsgrunnlag.opprett(
             utkastTilVedtakMessage.beregningsgrunnlag.entries.associate {
                 Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value)
+            }
+        )
+    }
+
+    private fun nyttSammenligningsgrunnlag(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage): Sammenligningsgrunnlag {
+        return Sammenligningsgrunnlag(
+            sammenligningsgrunnlagMessage.sammenligningsgrunnlag.map {(arbeidsgiver, inntekter) ->
+                ArbeidsgiverInntekt(arbeidsgiver.somArbeidsgiverref(), inntekter.map {
+                    ArbeidsgiverInntekt.MånedligInntekt(
+                        inntekt = InntektPerMåned(it.beløp),
+                        måned = it.årMåned,
+                        fordel = it.fordel,
+                        beskrivelse = it.beskrivelse,
+                        inntektstype = it.inntektstype.tilDomene()
+                    )
+                })
             }
         )
     }
@@ -307,27 +287,12 @@ class Mediator(
             )
         }
 
-        private fun Map<String, List<SammenligningsgrunnlagMessage.Inntekt>>.dto(): AvviksvurderingDto.SammenligningsgrunnlagDto =
-            AvviksvurderingDto.SammenligningsgrunnlagDto(
-                this.entries.associate { (organisasjonsnummer, inntekter) ->
-                    Arbeidsgiverreferanse(organisasjonsnummer) to inntekter.map {
-                        AvviksvurderingDto.MånedligInntektDto(
-                            InntektPerMåned(it.beløp),
-                            it.årMåned,
-                            it.fordel,
-                            it.beskrivelse,
-                            it.inntektstype.tilDto()
-                        )
-                    }
-                }
-            )
-
-        private fun SammenligningsgrunnlagMessage.Inntektstype.tilDto(): AvviksvurderingDto.InntektstypeDto {
+        private fun SammenligningsgrunnlagMessage.Inntektstype.tilDomene(): ArbeidsgiverInntekt.Inntektstype {
             return when (this) {
-                SammenligningsgrunnlagMessage.Inntektstype.LØNNSINNTEKT -> AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
-                SammenligningsgrunnlagMessage.Inntektstype.NÆRINGSINNTEKT -> AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT
-                SammenligningsgrunnlagMessage.Inntektstype.PENSJON_ELLER_TRYGD -> AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD
-                SammenligningsgrunnlagMessage.Inntektstype.YTELSE_FRA_OFFENTLIGE -> AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE
+                SammenligningsgrunnlagMessage.Inntektstype.LØNNSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                SammenligningsgrunnlagMessage.Inntektstype.NÆRINGSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.NÆRINGSINNTEKT
+                SammenligningsgrunnlagMessage.Inntektstype.PENSJON_ELLER_TRYGD -> ArbeidsgiverInntekt.Inntektstype.PENSJON_ELLER_TRYGD
+                SammenligningsgrunnlagMessage.Inntektstype.YTELSE_FRA_OFFENTLIGE -> ArbeidsgiverInntekt.Inntektstype.YTELSE_FRA_OFFENTLIGE
             }
         }
 

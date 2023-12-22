@@ -6,6 +6,7 @@ import no.nav.helse.dto.AvviksvurderingDto.KildeDto.SPINNVILL
 import no.nav.helse.helpers.februar
 import no.nav.helse.helpers.januar
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -13,7 +14,6 @@ import org.junit.jupiter.params.provider.EnumSource
 import java.time.LocalDateTime
 import java.time.YearMonth
 import java.util.*
-import kotlin.test.*
 
 internal class AvviksvurderingTest {
 
@@ -58,8 +58,8 @@ internal class AvviksvurderingTest {
         val avviksvurderinger = avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt)
 
         assertEquals(2, avviksvurderinger.size)
-        assertContains(avviksvurderinger, avviksvurdering1)
-        assertContains(avviksvurderinger, avviksvurdering2)
+        assertTrue(avviksvurderinger.contains(avviksvurdering1))
+        assertTrue(avviksvurderinger.contains(avviksvurdering2))
     }
 
     @Test
@@ -111,9 +111,9 @@ internal class AvviksvurderingTest {
         val avviksvurdering = avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
 
         assertNotNull(avviksvurdering)
-        assertEquals(expectedLatest.id, avviksvurdering.id)
-        assertEquals(expectedLatest.sammenligningsgrunnlag, avviksvurdering.sammenligningsgrunnlag)
-        assertEquals(expectedLatest.beregningsgrunnlag, avviksvurdering.beregningsgrunnlag)
+        assertEquals(expectedLatest.id, avviksvurdering?.id)
+        assertEquals(expectedLatest.sammenligningsgrunnlag, avviksvurdering?.sammenligningsgrunnlag)
+        assertEquals(expectedLatest.beregningsgrunnlag, avviksvurdering?.beregningsgrunnlag)
     }
 
     @Test
@@ -127,8 +127,8 @@ internal class AvviksvurderingTest {
         val avviksvurdering = avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
 
         assertNotNull(avviksvurdering)
-        assertEquals(expectedLatest.id, avviksvurdering.id)
-        assertNull(avviksvurdering.beregningsgrunnlag)
+        assertEquals(expectedLatest.id, avviksvurdering?.id)
+        assertNull(avviksvurdering?.beregningsgrunnlag)
     }
 
     @Test
@@ -178,9 +178,9 @@ internal class AvviksvurderingTest {
 
         assertNotEquals(expectedLatest.id, expectedNotLatest.id)
         assertNotNull(avviksvurdering)
-        assertEquals(expectedLatest.id, avviksvurdering.id)
-        assertEquals(expectedLatest.sammenligningsgrunnlag, avviksvurdering.sammenligningsgrunnlag)
-        assertEquals(expectedLatest.beregningsgrunnlag, avviksvurdering.beregningsgrunnlag)
+        assertEquals(expectedLatest.id, avviksvurdering?.id)
+        assertEquals(expectedLatest.sammenligningsgrunnlag, avviksvurdering?.sammenligningsgrunnlag)
+        assertEquals(expectedLatest.beregningsgrunnlag, avviksvurdering?.beregningsgrunnlag)
     }
 
     @ParameterizedTest

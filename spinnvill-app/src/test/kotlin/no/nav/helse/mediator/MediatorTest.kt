@@ -208,7 +208,7 @@ internal class MediatorTest {
     }
 
     @Test
-    fun `bruker ikke nytt sammenligningsgrunnlag hvis vi har en eksisterende vilkårsvurdering for samme fnr og skjæringstidspunkt`() {
+    fun `bruker ikke nytt sammenligningsgrunnlag hvis vi har en eksisterende avviksvurdering for samme fnr og skjæringstidspunkt`() {
         mottaUtkastTilVedtak()
 
         mottaSammenligningsgrunnlag()
