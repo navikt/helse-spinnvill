@@ -41,7 +41,7 @@ class UtkastTilVedtakMessageTest {
 
         val melding = messageHandler.messages.first()
 
-        assertNull(melding.toJson()["behandlingStartet"])
+        assertNull(melding.toJson()["behandletAvSpinnvill"])
         assertEquals(true, melding.finalize()["behandletAvSpinnvill"])
     }
 
