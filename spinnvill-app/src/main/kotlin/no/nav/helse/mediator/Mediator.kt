@@ -25,7 +25,6 @@ class Mediator(
     }
 
     override fun håndter(enAvviksvurderingFraSpleisMessage: EnAvviksvurderingFraSpleisMessage) {
-        if (!Toggle.LesemodusOnly.enabled) return
         logg.info("Mottok avviksvurdering fra Spleis")
         sikkerlogg.info("Mottok avviksvurdering fra Spleis")
         val fødselsnummer = enAvviksvurderingFraSpleisMessage.fødselsnummer
