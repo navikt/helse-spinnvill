@@ -10,8 +10,8 @@ spec:
   image: {{image}}
   port: 8080
   replicas:
-    min: 3
-    max: 6
+    min: 0
+    max: 0
   liveness:
     path: isalive
     initialDelay: 5
