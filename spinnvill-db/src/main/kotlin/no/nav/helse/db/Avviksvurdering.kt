@@ -168,6 +168,7 @@ internal class Avviksvurdering {
     }
 
     internal fun opprettKoblingTilVilkårsgrunnlag(fødselsnummer: Fødselsnummer, vilkårsgrunnlagId: UUID, avviksvurderingId: UUID) {
+        if (harKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId)) return
         transaction {
             EnVilkårsgrunnlagKobling.new {
                 this.vilkårsgrunnlagId = vilkårsgrunnlagId
@@ -182,6 +183,42 @@ internal class Avviksvurdering {
             EnVilkårsgrunnlagKobling.find {
                 VilkårsgrunnlagKobling.vilkårsgrunnlagId eq vilkårsgrunnlagId and (VilkårsgrunnlagKobling.fødselsnummer eq fødselsnummer.value)
             }.count() >= 1
+        }
+    }
+
+    internal fun avviksvurderingId(vilkårsgrunnlagId: UUID): UUID? {
+        return transaction {
+            EnVilkårsgrunnlagKobling.find {
+                VilkårsgrunnlagKobling.vilkårsgrunnlagId eq vilkårsgrunnlagId
+            }.lastOrNull()?.avviksvurderingId
+        }
+    }
+
+    internal fun spleismigrering(
+        avviksvurderingId: UUID,
+        fødselsnummer: Fødselsnummer,
+        skjæringstidspunkt: LocalDate,
+        kilde: AvviksvurderingDto.KildeDto,
+        opprettet: LocalDateTime,
+        sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
+        beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?
+    ) {
+        // Om vi ikke finner en eksisterende avviksvrudering inserter og returner vi
+        transaction {
+            val eksisterendeAvviksvurdering = EnAvviksvurdering.findById(avviksvurderingId)
+            if (eksisterendeAvviksvurdering == null) insert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, kilde, opprettet, sammenligningsgrunnlag, beregningsgrunnlag)
+            eksisterendeAvviksvurdering
+        } ?: return
+
+        // TODO: HMM, opprettet-tidspunktet?
+
+        // Om vi finner en eksisterender avviksvurdering oppdaterer vi alle inntektene
+        val statements = beregningsgrunnlag?.omregnedeÅrsinntekter?.map { (arbeidsgiver, årsinntekt) ->
+            "UPDATE beregningsgrunnlag SET inntekt = ${årsinntekt.value} WHERE avviksvurdering_ref='$avviksvurderingId' AND organisasjonsnummer='${arbeidsgiver.value}'"
+        } ?: return
+
+        transaction {
+            execInBatch(statements)
         }
     }
 

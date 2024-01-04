@@ -31,6 +31,15 @@ class Database private constructor(env: Map<String, String>) {
             beregningsgrunnlag = avviksvurderingDto.beregningsgrunnlag
         )
     }
+    fun spleisMigrering(avviksvurderingDto: AvviksvurderingDto) = avviksvurdering.spleismigrering(
+        avviksvurderingId = avviksvurderingDto.id,
+        fødselsnummer = avviksvurderingDto.fødselsnummer,
+        skjæringstidspunkt = avviksvurderingDto.skjæringstidspunkt,
+        kilde = avviksvurderingDto.kilde,
+        opprettet = avviksvurderingDto.opprettet,
+        sammenligningsgrunnlag = avviksvurderingDto.sammenligningsgrunnlag,
+        beregningsgrunnlag = avviksvurderingDto.beregningsgrunnlag
+    )
 
     fun finnSisteAvviksvurdering(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
         return avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
@@ -47,6 +56,8 @@ class Database private constructor(env: Map<String, String>) {
     fun harAvviksvurderingAllerede(fødselsnummer: Fødselsnummer, vilkårsgrunnlagId: UUID): Boolean {
         return avviksvurdering.harKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId)
     }
+
+    fun avviksvurderingId(vilkårsgrunnlagId: UUID) = avviksvurdering.avviksvurderingId(vilkårsgrunnlagId)
 
     fun opprettKoblingTilVilkårsgrunnlag(fødselsnummer: Fødselsnummer, vilkårsgrunnlagId: UUID, avviksvurderingId: UUID) {
         avviksvurdering.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId, avviksvurderingId)

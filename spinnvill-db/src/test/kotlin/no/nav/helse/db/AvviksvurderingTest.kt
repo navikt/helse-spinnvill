@@ -3,6 +3,7 @@ package no.nav.helse.db
 import no.nav.helse.*
 import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.dto.AvviksvurderingDto.KildeDto.SPINNVILL
+import no.nav.helse.dto.AvviksvurderingDto.KildeDto.SPLEIS
 import no.nav.helse.helpers.februar
 import no.nav.helse.helpers.januar
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -148,6 +149,68 @@ internal class AvviksvurderingTest {
 
         assertEquals(1, antallBeregningsgrunnlag)
     }
+    @Test
+    fun `migrering av data fra Spleis hvor feil beløp er lagret per arbeidsgiver`() {
+        val avviksvurderingId = UUID.randomUUID()
+        val vilkårsgrunnlagId = UUID.randomUUID()
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+        val sammenligningsgrunnlag = sammenligningsgrunnlag(20000.0)
+        val feilBeregningsgrunnlag = beregningsgrunnlag("123456789" to 200000.0, "987654321" to 210000.0)
+        val riktigBeregningsgrunnlag = beregningsgrunnlag("123456789" to 220000.0, "987654321" to 230000.0)
+
+        // Det den første migreringen gjorde
+        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPLEIS, LocalDateTime.now().minusDays(1), sammenligningsgrunnlag, feilBeregningsgrunnlag)
+        avviksvurdering.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId, avviksvurderingId)
+        val beregningsgrunnlagFør = transaction {
+            Avviksvurdering.Companion.EttBeregningsgrunnlag.find { Avviksvurdering.Companion.Beregningsgrunnlag.avviksvurdering eq avviksvurderingId }.toList()
+        }
+        assertEquals(2, beregningsgrunnlagFør.size)
+        assertEquals(200000.0, beregningsgrunnlagFør.single { it.organisasjonsnummer == "123456789" }.inntekt)
+        assertEquals(210000.0, beregningsgrunnlagFør.single { it.organisasjonsnummer == "987654321" }.inntekt)
+
+        // Det den nye migreringen gjør
+        assertEquals(avviksvurderingId, avviksvurdering.avviksvurderingId(vilkårsgrunnlagId))
+        avviksvurdering.spleismigrering(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPLEIS, LocalDateTime.now(), sammenligningsgrunnlag, riktigBeregningsgrunnlag)
+        avviksvurdering.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId, avviksvurderingId)
+
+        val beregningsgrunnlagEtter = transaction {
+            Avviksvurdering.Companion.EttBeregningsgrunnlag.find { Avviksvurdering.Companion.Beregningsgrunnlag.avviksvurdering eq avviksvurderingId }.toList()
+        }
+
+        assertEquals(2, beregningsgrunnlagEtter.size)
+        assertEquals(220000.0, beregningsgrunnlagEtter.single { it.organisasjonsnummer == "123456789" }.inntekt)
+        assertEquals(230000.0, beregningsgrunnlagEtter.single { it.organisasjonsnummer == "987654321" }.inntekt)
+    }
+    @Test
+    fun `migrering av historiske data fra Spleis som Spinnvill ikke har fått tidligere`() {
+        val avviksvurderingId = UUID.randomUUID()
+        val vilkårsgrunnlagId = UUID.randomUUID()
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+        val sammenligningsgrunnlag = sammenligningsgrunnlag(20000.0)
+        val beregningsgrunnlag = beregningsgrunnlag("123456789" to 200000.0, "987654321" to 210000.0)
+
+
+        val beregningsgrunnlagFør = transaction {
+            Avviksvurdering.Companion.EttBeregningsgrunnlag.find { Avviksvurdering.Companion.Beregningsgrunnlag.avviksvurdering eq avviksvurderingId }.count()
+        }
+        assertEquals(0, beregningsgrunnlagFør)
+        assertNull(avviksvurdering.avviksvurderingId(vilkårsgrunnlagId))
+
+        // Det migreringen gjør
+        avviksvurdering.spleismigrering(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPLEIS, LocalDateTime.now(), sammenligningsgrunnlag, beregningsgrunnlag)
+        avviksvurdering.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId, avviksvurderingId)
+        assertEquals(avviksvurderingId, avviksvurdering.avviksvurderingId(vilkårsgrunnlagId))
+
+        val beregningsgrunnlagEtter = transaction {
+            Avviksvurdering.Companion.EttBeregningsgrunnlag.find { Avviksvurdering.Companion.Beregningsgrunnlag.avviksvurdering eq avviksvurderingId }.toList()
+        }
+
+        assertEquals(2, beregningsgrunnlagEtter.size)
+        assertEquals(200000.0, beregningsgrunnlagEtter.single { it.organisasjonsnummer == "123456789" }.inntekt)
+        assertEquals(210000.0, beregningsgrunnlagEtter.single { it.organisasjonsnummer == "987654321" }.inntekt)
+    }
 
     @Test
     fun `oppretter ikke nytt sammenligningsgrunnlag om det samme finnes fra før`() {
@@ -261,6 +324,11 @@ internal class AvviksvurderingTest {
     private fun beregningsgrunnlag(omregnetÅrsinntekt: Double = 20000.0): AvviksvurderingDto.BeregningsgrunnlagDto {
         return AvviksvurderingDto.BeregningsgrunnlagDto(
             mapOf(Arbeidsgiverreferanse("123456789") to OmregnetÅrsinntekt(omregnetÅrsinntekt))
+        )
+    }
+    private fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>): AvviksvurderingDto.BeregningsgrunnlagDto {
+        return AvviksvurderingDto.BeregningsgrunnlagDto(
+            arbeidsgivere.associate { (orgnr, inntekt) -> Arbeidsgiverreferanse(orgnr) to OmregnetÅrsinntekt(inntekt) }
         )
     }
 
