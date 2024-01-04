@@ -135,10 +135,10 @@ class Mediator(
         avviksvurdering: AvviksvurderingFraSpleis,
         meldingProducer: MigrerteAvviksvurderingerProducer
     ) {
-        val avviksvurderingId = database.avviksvurderingId(avviksvurdering.vilkårsgrunnlagId) ?: UUID.randomUUID()
+        val avviksvurderingId = database.avviksvurderingId(avviksvurdering.vilkårsgrunnlagId) ?: return sikkerlogg.warn("Fant ikke avviksvurderingId for vilkårsgrunnlag ${avviksvurdering.vilkårsgrunnlagId}, fødselsnummer ${fødselsnummer.value}")
 
-        database.spleisMigrering(avviksvurdering.tilDatabaseDto(fødselsnummer, avviksvurderingId))
-        database.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, avviksvurdering.vilkårsgrunnlagId, avviksvurderingId)
+        //database.spleisMigrering(avviksvurdering.tilDatabaseDto(fødselsnummer, avviksvurderingId))
+        //database.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, avviksvurdering.vilkårsgrunnlagId, avviksvurderingId)
 
         // sender ikke avvik_vurdert dersom avviksvurderingen er gjort i Infotrygd
         // Vi viser hverken avviksprosent eller sammenligningsgrunnlag i Speil når
