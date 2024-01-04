@@ -14,14 +14,12 @@ import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import no.nav.helse.somFnr
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-@Disabled
 class MediatorMigreringTest {
     private val testRapid = TestRapid()
     private val database = TestDatabase.database()
@@ -32,7 +30,7 @@ class MediatorMigreringTest {
     private val SKJÆRINGSTIDSPUNKT = 1.januar
 
     init {
-        Mediator(VersjonAvKode("1.0.0"), testRapid, database, kunMigrering = false)
+        Mediator(VersjonAvKode("1.0.0"), testRapid, database)
     }
 
     @BeforeEach

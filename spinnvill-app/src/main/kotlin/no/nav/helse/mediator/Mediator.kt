@@ -10,24 +10,18 @@ import no.nav.helse.mediator.producer.*
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import java.util.UUID
 
 class Mediator(
     private val versjonAvKode: VersjonAvKode,
     private val rapidsConnection: RapidsConnection,
-    private val database: Database,
-    kunMigrering: Boolean = true
+    private val database: Database
 ) : MessageHandler {
 
     init {
-        if (kunMigrering) {
-            AvviksvurderingerFraSpleisRiver(rapidsConnection, this)
-        } else {
-            GodkjenningsbehovRiver(rapidsConnection, this)
-            SammenligningsgrunnlagRiver(rapidsConnection, this)
-            AvviksvurderingerFraSpleisRiver(rapidsConnection, this)
-            AvviksvurderingFraSpleisRiver(rapidsConnection, this)
-        }
+        GodkjenningsbehovRiver(rapidsConnection, this)
+        SammenligningsgrunnlagRiver(rapidsConnection, this)
+        AvviksvurderingerFraSpleisRiver(rapidsConnection, this)
+        AvviksvurderingFraSpleisRiver(rapidsConnection, this)
     }
 
     override fun håndter(enAvviksvurderingFraSpleisMessage: EnAvviksvurderingFraSpleisMessage) {
@@ -135,17 +129,17 @@ class Mediator(
         avviksvurdering: AvviksvurderingFraSpleis,
         meldingProducer: MigrerteAvviksvurderingerProducer
     ) {
-        val avviksvurderingId = database.avviksvurderingId(avviksvurdering.vilkårsgrunnlagId) ?: return sikkerlogg.warn("Fant ikke avviksvurderingId for vilkårsgrunnlag ${avviksvurdering.vilkårsgrunnlagId}, fødselsnummer ${fødselsnummer.value}")
+        if (database.harAvviksvurderingAllerede(fødselsnummer, avviksvurdering.vilkårsgrunnlagId)) return
 
-        //database.spleisMigrering(avviksvurdering.tilDatabaseDto(fødselsnummer, avviksvurderingId))
-        //database.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, avviksvurdering.vilkårsgrunnlagId, avviksvurderingId)
+        database.lagreAvviksvurdering(avviksvurdering.tilDatabaseDto(fødselsnummer))
+        database.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, avviksvurdering.vilkårsgrunnlagId, avviksvurdering.id)
 
         // sender ikke avvik_vurdert dersom avviksvurderingen er gjort i Infotrygd
         // Vi viser hverken avviksprosent eller sammenligningsgrunnlag i Speil når
         // inngangsvilkårene er vurdert i Infotrygd
         if (avviksvurdering.kilde == Avviksvurderingkilde.INFOTRYGD) return
 
-        meldingProducer.nyAvviksvurdering(avviksvurdering.vilkårsgrunnlagId, avviksvurdering.skjæringstidspunkt, avviksvurdering.tilKafkaDto(avviksvurderingId))
+        meldingProducer.nyAvviksvurdering(avviksvurdering.vilkårsgrunnlagId, avviksvurdering.skjæringstidspunkt, avviksvurdering.tilKafkaDto())
     }
 
     private fun Avviksvurderinger.lagre() {
@@ -206,9 +200,9 @@ class Mediator(
         )
     }
 
-    private fun AvviksvurderingFraSpleis.tilKafkaDto(avviksvurderingId: UUID): AvvikVurdertProducer.AvviksvurderingDto {
+    private fun AvviksvurderingFraSpleis.tilKafkaDto(): AvvikVurdertProducer.AvviksvurderingDto {
         return AvvikVurdertProducer.AvviksvurderingDto(
-            avviksvurderingId,
+            this.id,
             requireNotNull(this.avviksprosent),
             requireNotNull(this.beregningsgrunnlagTotalbeløp),
             requireNotNull(this.sammenligningsgrunnlagTotalbeløp),
@@ -227,14 +221,14 @@ class Mediator(
         )
     }
 
-    private fun AvviksvurderingFraSpleis.tilDatabaseDto(fødselsnummer: Fødselsnummer, avviksvurderingId: UUID): AvviksvurderingDto {
+    private fun AvviksvurderingFraSpleis.tilDatabaseDto(fødselsnummer: Fødselsnummer): AvviksvurderingDto {
         fun Avviksvurderingkilde.tilKildeDto() = when (this) {
             Avviksvurderingkilde.SPLEIS -> AvviksvurderingDto.KildeDto.SPLEIS
             Avviksvurderingkilde.INFOTRYGD -> AvviksvurderingDto.KildeDto.INFOTRYGD
         }
 
         return AvviksvurderingDto(
-            id = avviksvurderingId,
+            id = this.id,
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = this.skjæringstidspunkt,
             sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
