@@ -210,15 +210,14 @@ internal class Avviksvurdering {
             eksisterendeAvviksvurdering
         } ?: return
 
-        // TODO: HMM, opprettet-tidspunktet?
-
         // Om vi finner en eksisterender avviksvurdering oppdaterer vi alle inntektene
-        val statements = beregningsgrunnlag?.omregnedeÅrsinntekter?.map { (arbeidsgiver, årsinntekt) ->
+        val oppdaterInntekter = beregningsgrunnlag?.omregnedeÅrsinntekter?.map { (arbeidsgiver, årsinntekt) ->
             "UPDATE beregningsgrunnlag SET inntekt = ${årsinntekt.value} WHERE avviksvurdering_ref='$avviksvurderingId' AND organisasjonsnummer='${arbeidsgiver.value}'"
-        } ?: return
+        } ?: emptyList()
+
 
         transaction {
-            execInBatch(statements)
+            execInBatch(oppdaterInntekter + "UPDATE avviksvurdering SET opprettet='$opprettet' WHERE id='$avviksvurderingId'")
         }
     }
 

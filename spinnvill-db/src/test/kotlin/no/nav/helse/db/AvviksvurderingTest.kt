@@ -157,10 +157,12 @@ internal class AvviksvurderingTest {
         val skjæringstidspunkt = 1.januar
         val sammenligningsgrunnlag = sammenligningsgrunnlag(20000.0)
         val feilBeregningsgrunnlag = beregningsgrunnlag("123456789" to 200000.0, "987654321" to 210000.0)
+        val tidspunktFeil =  LocalDateTime.parse("2023-12-21T09:00:15")
+        val tidspunktRiktig =  LocalDateTime.parse("2024-01-04T15:00:20")
         val riktigBeregningsgrunnlag = beregningsgrunnlag("123456789" to 220000.0, "987654321" to 230000.0)
 
         // Det den første migreringen gjorde
-        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPLEIS, LocalDateTime.now().minusDays(1), sammenligningsgrunnlag, feilBeregningsgrunnlag)
+        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPLEIS, tidspunktFeil, sammenligningsgrunnlag, feilBeregningsgrunnlag)
         avviksvurdering.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId, avviksvurderingId)
         val beregningsgrunnlagFør = transaction {
             Avviksvurdering.Companion.EttBeregningsgrunnlag.find { Avviksvurdering.Companion.Beregningsgrunnlag.avviksvurdering eq avviksvurderingId }.toList()
@@ -168,10 +170,12 @@ internal class AvviksvurderingTest {
         assertEquals(2, beregningsgrunnlagFør.size)
         assertEquals(200000.0, beregningsgrunnlagFør.single { it.organisasjonsnummer == "123456789" }.inntekt)
         assertEquals(210000.0, beregningsgrunnlagFør.single { it.organisasjonsnummer == "987654321" }.inntekt)
+        val avvikFør = transaction { Avviksvurdering.Companion.EnAvviksvurdering.findById(avviksvurderingId) }!!
+        assertEquals(tidspunktFeil, avvikFør.opprettet)
 
         // Det den nye migreringen gjør
         assertEquals(avviksvurderingId, avviksvurdering.avviksvurderingId(vilkårsgrunnlagId))
-        avviksvurdering.spleismigrering(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPLEIS, LocalDateTime.now(), sammenligningsgrunnlag, riktigBeregningsgrunnlag)
+        avviksvurdering.spleismigrering(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPLEIS, tidspunktRiktig, sammenligningsgrunnlag, riktigBeregningsgrunnlag)
         avviksvurdering.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId, avviksvurderingId)
 
         val beregningsgrunnlagEtter = transaction {
@@ -181,7 +185,11 @@ internal class AvviksvurderingTest {
         assertEquals(2, beregningsgrunnlagEtter.size)
         assertEquals(220000.0, beregningsgrunnlagEtter.single { it.organisasjonsnummer == "123456789" }.inntekt)
         assertEquals(230000.0, beregningsgrunnlagEtter.single { it.organisasjonsnummer == "987654321" }.inntekt)
+
+        val avvikEtter = transaction { Avviksvurdering.Companion.EnAvviksvurdering.findById(avviksvurderingId) }!!
+        assertEquals(tidspunktRiktig, avvikEtter.opprettet)
     }
+
     @Test
     fun `migrering av historiske data fra Spleis som Spinnvill ikke har fått tidligere`() {
         val avviksvurderingId = UUID.randomUUID()
@@ -190,6 +198,7 @@ internal class AvviksvurderingTest {
         val skjæringstidspunkt = 1.januar
         val sammenligningsgrunnlag = sammenligningsgrunnlag(20000.0)
         val beregningsgrunnlag = beregningsgrunnlag("123456789" to 200000.0, "987654321" to 210000.0)
+        val tidspunkt =  LocalDateTime.parse("2024-01-04T15:15:20")
 
 
         val beregningsgrunnlagFør = transaction {
@@ -197,15 +206,19 @@ internal class AvviksvurderingTest {
         }
         assertEquals(0, beregningsgrunnlagFør)
         assertNull(avviksvurdering.avviksvurderingId(vilkårsgrunnlagId))
+        val avvikFør = transaction { Avviksvurdering.Companion.EnAvviksvurdering.findById(avviksvurderingId) }
+        assertNull(avvikFør)
 
         // Det migreringen gjør
-        avviksvurdering.spleismigrering(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPLEIS, LocalDateTime.now(), sammenligningsgrunnlag, beregningsgrunnlag)
+        avviksvurdering.spleismigrering(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPLEIS, tidspunkt, sammenligningsgrunnlag, beregningsgrunnlag)
         avviksvurdering.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId, avviksvurderingId)
         assertEquals(avviksvurderingId, avviksvurdering.avviksvurderingId(vilkårsgrunnlagId))
 
         val beregningsgrunnlagEtter = transaction {
             Avviksvurdering.Companion.EttBeregningsgrunnlag.find { Avviksvurdering.Companion.Beregningsgrunnlag.avviksvurdering eq avviksvurderingId }.toList()
         }
+        val avvikEtter = transaction { Avviksvurdering.Companion.EnAvviksvurdering.findById(avviksvurderingId) }!!
+        assertEquals(tidspunkt, avvikEtter.opprettet)
 
         assertEquals(2, beregningsgrunnlagEtter.size)
         assertEquals(200000.0, beregningsgrunnlagEtter.single { it.organisasjonsnummer == "123456789" }.inntekt)
