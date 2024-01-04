@@ -41,7 +41,7 @@ internal class MediatorTest {
     )
 
     init {
-        Mediator(VersjonAvKode("1.0.0"), testRapid, database)
+        Mediator(VersjonAvKode("1.0.0"), testRapid, database, kunMigrering = false)
     }
 
     @BeforeEach

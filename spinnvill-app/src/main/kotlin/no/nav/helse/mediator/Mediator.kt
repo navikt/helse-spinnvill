@@ -15,14 +15,19 @@ import java.util.UUID
 class Mediator(
     private val versjonAvKode: VersjonAvKode,
     private val rapidsConnection: RapidsConnection,
-    private val database: Database
+    private val database: Database,
+    kunMigrering: Boolean = true
 ) : MessageHandler {
 
     init {
-        GodkjenningsbehovRiver(rapidsConnection, this)
-        SammenligningsgrunnlagRiver(rapidsConnection, this)
-        AvviksvurderingerFraSpleisRiver(rapidsConnection, this)
-        AvviksvurderingFraSpleisRiver(rapidsConnection, this)
+        if (kunMigrering) {
+            AvviksvurderingerFraSpleisRiver(rapidsConnection, this)
+        } else {
+            GodkjenningsbehovRiver(rapidsConnection, this)
+            SammenligningsgrunnlagRiver(rapidsConnection, this)
+            AvviksvurderingerFraSpleisRiver(rapidsConnection, this)
+            AvviksvurderingFraSpleisRiver(rapidsConnection, this)
+        }
     }
 
     override fun håndter(enAvviksvurderingFraSpleisMessage: EnAvviksvurderingFraSpleisMessage) {
