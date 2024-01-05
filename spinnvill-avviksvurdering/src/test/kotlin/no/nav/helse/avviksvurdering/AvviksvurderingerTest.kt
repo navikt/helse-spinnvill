@@ -54,6 +54,22 @@ class AvviksvurderingerTest {
         assertEquals(0, behovObserver.behov.size)
     }
 
+    @Test
+    fun `gjør ikke ny avviksvurdering når vi har avviksvurdering fra før og beregningsgrunnlag bare er litt forskjellig`() {
+        val avviksvurderinger = avviksvurderinger()
+        avviksvurderinger.håndterNytt(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0))
+        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
+        kriterieObserver.reset()
+
+        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.1))
+        assertEquals(0, kriterieObserver.avvikVurdert.size)
+        assertEquals(0, behovObserver.behov.size)
+
+        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 599999.999999994))
+        assertEquals(0, kriterieObserver.avvikVurdert.size)
+        assertEquals(0, behovObserver.behov.size)
+    }
+
     private val behovObserver = object : BehovObserver {
         val behov = mutableListOf<BehovForSammenligningsgrunnlag>()
         override fun sammenligningsgrunnlag(behov: BehovForSammenligningsgrunnlag) {

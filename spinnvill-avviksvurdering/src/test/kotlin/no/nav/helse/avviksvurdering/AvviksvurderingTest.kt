@@ -22,6 +22,46 @@ internal class AvviksvurderingTest {
     }
 
     @Test
+    fun `gjør ikke ny avviksvurdering når vi allerede har avviksvurdert og beregningsgrunnlag bare er litt forskjellig`() {
+        val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
+        avviksvurdering.register(observer)
+
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.0))
+        observer.clear()
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.1))
+        assertEquals(0, observer.avviksvurderinger.size)
+
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 599999.88888884))
+        assertEquals(0, observer.avviksvurderinger.size)
+    }
+
+    @Test
+    fun `gjør ny avviksvurdering når vi allerede har avviksvurdert og beregningsgrunnlag er akkurat bare litt forskjellig`() {
+        val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
+        avviksvurdering.register(observer)
+
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 599999.88888884))
+        observer.clear()
+
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.99999994))
+        assertEquals(1, observer.avviksvurderinger.size)
+    }
+
+    @Test
+    fun `gjør ny avviksvurdering når vi allerede har avviksvurdert og beregningsgrunnlag er rett over bare litt forskjellig`() {
+        val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
+        avviksvurdering.register(observer)
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.0))
+        observer.clear()
+
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.9999999994))
+        assertEquals(0, observer.avviksvurderinger.size)
+
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600001.0))
+        assertEquals(1, observer.avviksvurderinger.size)
+    }
+
+    @Test
     fun `har ikke gjort avviksvurdering før og avvik innenfor akseptabelt avvik`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)

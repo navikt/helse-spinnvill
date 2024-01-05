@@ -29,7 +29,7 @@ class Avviksvurdering(
 
     fun håndter(beregningsgrunnlag: Beregningsgrunnlag) {
         if (kilde == Kilde.INFOTRYGD) return
-        if (beregningsgrunnlag == this.beregningsgrunnlag) return
+        if (!this.beregningsgrunnlag.erOverGrenseForNyAvviksvurdering(beregningsgrunnlag)) return
         this.beregningsgrunnlag = beregningsgrunnlag
         avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
         observers.forEach {
@@ -50,11 +50,17 @@ class Avviksvurdering(
         sammenligningsgrunnlag.accept(visitor)
     }
 
-    fun vurderBehovForNyVurdering(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurdering {
-        if (this.kilde == Kilde.INFOTRYGD) return this
-        if (this.beregningsgrunnlag == Beregningsgrunnlag.INGEN) return this
-        if (this.beregningsgrunnlag != beregningsgrunnlag) return nyAvviksvurdering(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag)
-        return this
+    fun trengerNyVurdering(beregningsgrunnlag: Beregningsgrunnlag): Boolean {
+        return when {
+            this.kilde == Kilde.INFOTRYGD -> false
+            this.beregningsgrunnlag == Beregningsgrunnlag.INGEN -> false
+            this.beregningsgrunnlag.erOverGrenseForNyAvviksvurdering(beregningsgrunnlag) -> true
+            else -> false
+        }
+    }
+
+    fun nyAvviksvurdering(): Avviksvurdering {
+        return nyAvviksvurdering(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag)
     }
 
     internal companion object {

@@ -2,16 +2,21 @@ package no.nav.helse.avviksvurdering
 
 import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.Arbeidsgiverreferanse
+import kotlin.math.absoluteValue
 
 class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>) {
 
     private val totalOmregnetÅrsinntekt = omregnedeÅrsinntekter.values.sumOf { it.value }
-
+    private val GRENSE_FOR_NY_AVVIKSVURDERING = 1.0
     internal fun beregnAvvik(sammenligningsgrunnlag: Double): Avviksprosent {
         return Avviksprosent.avvik(
             beregningsgrunnlag = totalOmregnetÅrsinntekt,
             sammenligningsgrunnlag = sammenligningsgrunnlag
         )
+    }
+
+    internal fun erOverGrenseForNyAvviksvurdering(other: Beregningsgrunnlag): Boolean {
+        return (this.totalOmregnetÅrsinntekt - other.totalOmregnetÅrsinntekt).absoluteValue >= GRENSE_FOR_NY_AVVIKSVURDERING
     }
 
     override fun equals(other: Any?): Boolean {
@@ -34,7 +39,7 @@ class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter:
     companion object {
         val INGEN = Beregningsgrunnlag(emptyMap())
         fun opprett(omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>) : Beregningsgrunnlag {
-            require(omregnedeÅrsinntekter.isNotEmpty()) { "Omregmede årsinntekter kan ikke være en tom liste"}
+            require(omregnedeÅrsinntekter.isNotEmpty()) { "Omregnede årsinntekter kan ikke være en tom liste"}
             return Beregningsgrunnlag(omregnedeÅrsinntekter)
         }
     }
