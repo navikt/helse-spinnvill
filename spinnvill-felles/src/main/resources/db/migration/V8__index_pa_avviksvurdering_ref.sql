@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS sammenligningsgrunnlag_avviksvurdering_ref_idx ON sammenligningsgrunnlag(avviksvurdering_ref);
