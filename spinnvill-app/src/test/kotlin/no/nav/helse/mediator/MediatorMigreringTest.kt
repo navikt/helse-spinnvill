@@ -30,7 +30,7 @@ class MediatorMigreringTest {
     private val SKJÆRINGSTIDSPUNKT = 1.januar
 
     init {
-        Mediator(VersjonAvKode("1.0.0"), testRapid, database)
+        Mediator(VersjonAvKode("1.0.0"), testRapid, ::database)
     }
 
     @BeforeEach

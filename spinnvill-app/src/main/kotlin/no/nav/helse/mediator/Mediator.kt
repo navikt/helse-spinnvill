@@ -14,8 +14,10 @@ import java.time.LocalDate
 class Mediator(
     private val versjonAvKode: VersjonAvKode,
     private val rapidsConnection: RapidsConnection,
-    private val database: Database
+    private val databaseProvider: () -> Database
 ) : MessageHandler {
+
+    private val database by lazy(databaseProvider)
 
     init {
         GodkjenningsbehovRiver(rapidsConnection, this)

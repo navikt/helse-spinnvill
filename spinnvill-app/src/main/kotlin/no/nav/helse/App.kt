@@ -3,26 +3,32 @@ package no.nav.helse
 import no.nav.helse.db.Database
 import no.nav.helse.mediator.Mediator
 import no.nav.helse.rapids_rivers.RapidApplication
+import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal fun main() {
     App().start()
 }
 
-class App {
-    private val rapidsConnection = RapidApplication.create(System.getenv())
-    private val database = Database.instance(System.getenv())
+class App(private val env: Map<String, String> = System.getenv()) : RapidsConnection.StatusListener {
+    private lateinit var database: Database
+    private val rapidsConnection = RapidApplication.create(env)
+
+    init {
+        rapidsConnection.register(this)
+        Mediator(
+            versjonAvKode = VersjonAvKode(versjonAvKode(env)),
+            rapidsConnection = rapidsConnection,
+            databaseProvider = { database }
+        )
+    }
 
     internal fun start() {
-        database.migrate()
         rapidsConnection.start()
     }
 
-    init {
-        Mediator(
-            versjonAvKode = VersjonAvKode(versjonAvKode(System.getenv())),
-            rapidsConnection = rapidsConnection,
-            database = database
-        )
+    override fun onStartup(rapidsConnection: RapidsConnection) {
+        database = Database.instance(env)
+        database.migrate()
     }
 
     private fun versjonAvKode(env: Map<String, String>): String {
