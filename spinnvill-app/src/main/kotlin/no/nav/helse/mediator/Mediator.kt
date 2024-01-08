@@ -10,20 +10,26 @@ import no.nav.helse.mediator.producer.*
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
+import java.util.UUID
 
 class Mediator(
     private val versjonAvKode: VersjonAvKode,
     private val rapidsConnection: RapidsConnection,
-    private val databaseProvider: () -> Database
+    private val databaseProvider: () -> Database,
+    kunMigrering: Boolean = true
 ) : MessageHandler {
 
     private val database by lazy(databaseProvider)
 
     init {
-        GodkjenningsbehovRiver(rapidsConnection, this)
-        SammenligningsgrunnlagRiver(rapidsConnection, this)
-        AvviksvurderingerFraSpleisRiver(rapidsConnection, this)
-        AvviksvurderingFraSpleisRiver(rapidsConnection, this)
+        if (kunMigrering) {
+            AvviksvurderingerFraSpleisRiver(rapidsConnection, this)
+        } else {
+            GodkjenningsbehovRiver(rapidsConnection, this)
+            SammenligningsgrunnlagRiver(rapidsConnection, this)
+            AvviksvurderingerFraSpleisRiver(rapidsConnection, this)
+            AvviksvurderingFraSpleisRiver(rapidsConnection, this)
+        }
     }
 
     override fun håndter(enAvviksvurderingFraSpleisMessage: EnAvviksvurderingFraSpleisMessage) {
@@ -131,17 +137,17 @@ class Mediator(
         avviksvurdering: AvviksvurderingFraSpleis,
         meldingProducer: MigrerteAvviksvurderingerProducer
     ) {
-        if (database.harAvviksvurderingAllerede(fødselsnummer, avviksvurdering.vilkårsgrunnlagId)) return
+        val avviksvurderingId = database.avviksvurderingId(avviksvurdering.vilkårsgrunnlagId) ?: UUID.randomUUID()
 
-        database.lagreAvviksvurdering(avviksvurdering.tilDatabaseDto(fødselsnummer))
-        database.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, avviksvurdering.vilkårsgrunnlagId, avviksvurdering.id)
+        database.spleisMigrering(avviksvurdering.tilDatabaseDto(fødselsnummer, avviksvurderingId))
+        database.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, avviksvurdering.vilkårsgrunnlagId, avviksvurderingId)
 
         // sender ikke avvik_vurdert dersom avviksvurderingen er gjort i Infotrygd
         // Vi viser hverken avviksprosent eller sammenligningsgrunnlag i Speil når
         // inngangsvilkårene er vurdert i Infotrygd
         if (avviksvurdering.kilde == Avviksvurderingkilde.INFOTRYGD) return
 
-        meldingProducer.nyAvviksvurdering(avviksvurdering.vilkårsgrunnlagId, avviksvurdering.skjæringstidspunkt, avviksvurdering.tilKafkaDto())
+        meldingProducer.nyAvviksvurdering(avviksvurdering.vilkårsgrunnlagId, avviksvurdering.skjæringstidspunkt, avviksvurdering.tilKafkaDto(avviksvurderingId))
     }
 
     private fun Avviksvurderinger.lagre() {
@@ -202,9 +208,9 @@ class Mediator(
         )
     }
 
-    private fun AvviksvurderingFraSpleis.tilKafkaDto(): AvvikVurdertProducer.AvviksvurderingDto {
+    private fun AvviksvurderingFraSpleis.tilKafkaDto(avviksvurderingId: UUID): AvvikVurdertProducer.AvviksvurderingDto {
         return AvvikVurdertProducer.AvviksvurderingDto(
-            this.id,
+            avviksvurderingId,
             requireNotNull(this.avviksprosent),
             requireNotNull(this.beregningsgrunnlagTotalbeløp),
             requireNotNull(this.sammenligningsgrunnlagTotalbeløp),
@@ -223,14 +229,14 @@ class Mediator(
         )
     }
 
-    private fun AvviksvurderingFraSpleis.tilDatabaseDto(fødselsnummer: Fødselsnummer): AvviksvurderingDto {
+    private fun AvviksvurderingFraSpleis.tilDatabaseDto(fødselsnummer: Fødselsnummer, avviksvurderingId: UUID): AvviksvurderingDto {
         fun Avviksvurderingkilde.tilKildeDto() = when (this) {
             Avviksvurderingkilde.SPLEIS -> AvviksvurderingDto.KildeDto.SPLEIS
             Avviksvurderingkilde.INFOTRYGD -> AvviksvurderingDto.KildeDto.INFOTRYGD
         }
 
         return AvviksvurderingDto(
-            id = this.id,
+            id = avviksvurderingId,
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = this.skjæringstidspunkt,
             sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
