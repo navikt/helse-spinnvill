@@ -42,6 +42,7 @@ class AvvikVurdertProducer(private val vilkårsgrunnlagId: UUID) : KriterieObser
     internal data class AvviksvurderingDto(
         val id: UUID,
         val avviksprosent: Double,
+        val vurderingstidspunkt: LocalDateTime,
         val beregningsgrunnlagTotalbeløp: Double,
         val sammenligningsgrunnlagTotalbeløp: Double,
         val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>,
@@ -66,7 +67,7 @@ class AvvikVurdertProducer(private val vilkårsgrunnlagId: UUID) : KriterieObser
                     "avviksvurdering" to mapOf(
                         "id" to id,
                         "vilkårsgrunnlagId" to vilkårsgrunnlagId,
-                        "opprettet" to LocalDateTime.now(),
+                        "opprettet" to vurderingstidspunkt,
                         "avviksprosent" to avviksprosent,
                         "beregningsgrunnlag" to mapOf(
                             "totalbeløp" to beregningsgrunnlagTotalbeløp,

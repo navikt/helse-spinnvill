@@ -212,6 +212,7 @@ class Mediator(
         return AvvikVurdertProducer.AvviksvurderingDto(
             avviksvurderingId,
             requireNotNull(this.avviksprosent),
+            this.vurderingstidspunkt,
             requireNotNull(this.beregningsgrunnlagTotalbeløp),
             requireNotNull(this.sammenligningsgrunnlagTotalbeløp),
             this.omregnedeÅrsinntekter,
