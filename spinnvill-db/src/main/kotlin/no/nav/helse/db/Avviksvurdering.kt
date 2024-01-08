@@ -212,7 +212,8 @@ internal class Avviksvurdering {
 
         // Om vi finner en eksisterender avviksvurdering oppdaterer vi alle inntektene
         val oppdaterInntekter = beregningsgrunnlag?.omregnedeÅrsinntekter?.map { (arbeidsgiver, årsinntekt) ->
-            "UPDATE beregningsgrunnlag SET inntekt = ${årsinntekt.value} WHERE avviksvurdering_ref='$avviksvurderingId' AND organisasjonsnummer='${arbeidsgiver.value}'"
+            "UPDATE beregningsgrunnlag SET inntekt = ${årsinntekt.value} WHERE avviksvurdering_ref='$avviksvurderingId' AND organisasjonsnummer='${arbeidsgiver.value}' " +
+                "and not exists (select 1 from beregningsgrunnlag where avviksvurdering_ref='$avviksvurderingId' and organisasjonsnummer='${arbeidsgiver.value}' and inntekt=${årsinntekt.value});"
         } ?: emptyList()
 
 
