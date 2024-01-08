@@ -15,8 +15,8 @@ import java.util.UUID
 class Mediator(
     private val versjonAvKode: VersjonAvKode,
     private val rapidsConnection: RapidsConnection,
-    private val databaseProvider: () -> Database,
-    kunMigrering: Boolean = true
+    databaseProvider: () -> Database,
+    kunMigrering: Boolean = false
 ) : MessageHandler {
 
     private val database by lazy(databaseProvider)

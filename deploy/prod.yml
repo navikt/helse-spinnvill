@@ -10,8 +10,8 @@ spec:
   image: {{image}}
   port: 8080
   replicas:
-    min: 70
-    max: 70
+    min: 3
+    max: 6
   liveness:
     path: isalive
     initialDelay: 5
@@ -30,7 +30,7 @@ spec:
       - type: POSTGRES_15
         diskAutoresize: true
         pointInTimeRecovery: true
-        tier: db-custom-96-215040
+        tier: db-custom-4-8960
         databases:
           - name: spinnvill
             envVarPrefix: DATABASE
