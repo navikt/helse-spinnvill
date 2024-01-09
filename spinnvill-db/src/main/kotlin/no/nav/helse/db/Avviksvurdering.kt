@@ -26,6 +26,7 @@ internal class Avviksvurdering {
             val skjæringstidspunkt: Column<LocalDate> = date("skjæringstidspunkt")
             val opprettet: Column<LocalDateTime> = datetime("opprettet")
             val kilde: Column<String> = varchar("kilde", 255)
+            val slettet: Column<LocalDateTime?> = datetime("slettet").nullable()
         }
 
         class EnAvviksvurdering(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -115,7 +116,7 @@ internal class Avviksvurdering {
     internal fun findLatest(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
         return transaction {
             EnAvviksvurdering.find {
-                Avviksvurderinger.fødselsnummer eq fødselsnummer.value and (Avviksvurderinger.skjæringstidspunkt eq skjæringstidspunkt)
+                Avviksvurderinger.fødselsnummer eq fødselsnummer.value and (Avviksvurderinger.skjæringstidspunkt eq skjæringstidspunkt) and Avviksvurderinger.slettet.isNull()
             }
                 .orderBy(Avviksvurderinger.opprettet to SortOrder.DESC)
                 .firstOrNull()
@@ -126,7 +127,7 @@ internal class Avviksvurdering {
     internal fun findAll(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<AvviksvurderingDto> {
         return transaction {
             EnAvviksvurdering.find {
-                Avviksvurderinger.fødselsnummer eq fødselsnummer.value and (Avviksvurderinger.skjæringstidspunkt eq skjæringstidspunkt)
+                Avviksvurderinger.fødselsnummer eq fødselsnummer.value and (Avviksvurderinger.skjæringstidspunkt eq skjæringstidspunkt) and Avviksvurderinger.slettet.isNull()
             }
                 .orderBy(Avviksvurderinger.opprettet to SortOrder.ASC)
                 .map { it.dto() }
