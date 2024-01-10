@@ -272,9 +272,7 @@ internal class Avviksvurdering {
         val enAvviksvurdering =
             requireNotNull(EnAvviksvurdering.findById(id)) { "Forventer å finne avviksvurdering med id=${id}" }
         beregningsgrunnlag?.omregnedeÅrsinntekter?.forEach { (arbeidsgiverreferanse, inntekt) ->
-            Beregningsgrunnlag.upsert(
-                Beregningsgrunnlag.avviksvurdering, Beregningsgrunnlag.organisasjonsnummer, Beregningsgrunnlag.inntekt
-            ) {
+            Beregningsgrunnlag.insertIgnore {
                 it[organisasjonsnummer] = arbeidsgiverreferanse.value
                 it[this.inntekt] = inntekt.value
                 it[avviksvurdering] = enAvviksvurdering.id

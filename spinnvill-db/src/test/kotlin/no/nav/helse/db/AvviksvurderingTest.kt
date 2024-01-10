@@ -149,6 +149,27 @@ internal class AvviksvurderingTest {
 
         assertEquals(1, antallBeregningsgrunnlag)
     }
+
+    @Test
+    fun `lagrer ikke duplikate beregningsgrunnlag`() {
+        val avviksvurderingId = UUID.randomUUID()
+        val fødselsnummer = Fødselsnummer("12345678910")
+        val skjæringstidspunkt = 1.januar
+        val beregningsgrunnlag1 = beregningsgrunnlag(200000.001)
+        val beregningsgrunnlag2 = beregningsgrunnlag(300000.05)
+        val sammenligningsgrunnlag = sammenligningsgrunnlag(20000.0)
+
+        avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now().minusDays(1), sammenligningsgrunnlag, beregningsgrunnlag1)
+        val upsert = avviksvurdering.upsert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag, beregningsgrunnlag2)
+
+        val antallBeregningsgrunnlag = transaction {
+            Avviksvurdering.Companion.EttBeregningsgrunnlag.find { Avviksvurdering.Companion.Beregningsgrunnlag.avviksvurdering eq avviksvurderingId}.count()
+        }
+
+        assertEquals(beregningsgrunnlag1, upsert.beregningsgrunnlag)
+        assertEquals(1, antallBeregningsgrunnlag)
+    }
+
     @Test
     fun `migrering av data fra Spleis hvor feil beløp er lagret per arbeidsgiver`() {
         val avviksvurderingId = UUID.randomUUID()
