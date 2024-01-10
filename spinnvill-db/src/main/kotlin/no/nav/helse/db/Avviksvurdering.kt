@@ -242,27 +242,23 @@ internal class Avviksvurdering {
             }
         }
 
-        beregningsgrunnlag?.omregnedeÅrsinntekter?.forEach { (organisasjonsnummer, inntekt) ->
-            EttBeregningsgrunnlag.new {
-                this.organisasjonsnummer = organisasjonsnummer.value
-                this.inntekt = inntekt.value
-                this.avviksvurdering = enAvviksvurdering
-            }
-        }
+        beregningsgrunnlag?.omregnedeÅrsinntekter?.batchInsert(enAvviksvurdering)
         enAvviksvurdering.dto()
     }
 
     private fun Transaction.update(id: UUID, beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?): AvviksvurderingDto = this.run {
         val enAvviksvurdering =
             requireNotNull(EnAvviksvurdering.findById(id)) { "Forventer å finne avviksvurdering med id=${id}" }
-        beregningsgrunnlag?.omregnedeÅrsinntekter?.forEach { (arbeidsgiverreferanse, inntekt) ->
-            Beregningsgrunnlag.insertIgnore {
-                it[organisasjonsnummer] = arbeidsgiverreferanse.value
-                it[this.inntekt] = inntekt.value
-                it[avviksvurdering] = enAvviksvurdering.id
-            }
-        }
+        beregningsgrunnlag?.omregnedeÅrsinntekter?.batchInsert(enAvviksvurdering)
         enAvviksvurdering.dto()
+    }
+
+    private fun Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>.batchInsert(enAvviksvurdering: EnAvviksvurdering) {
+        Beregningsgrunnlag.batchInsert(this.toList(), ignore = true) { (organisasjonsnummer, inntekt) ->
+            this[Beregningsgrunnlag.organisasjonsnummer] = organisasjonsnummer.value
+            this[Beregningsgrunnlag.inntekt] = inntekt.value
+            this[Beregningsgrunnlag.avviksvurdering] = enAvviksvurdering.id
+        }
     }
 
     private fun EnAvviksvurdering.dto(): AvviksvurderingDto {
