@@ -134,25 +134,9 @@ internal class Avviksvurdering {
         }
     }
 
-    internal fun upsert(
-        id: UUID,
-        fødselsnummer: Fødselsnummer,
-        skjæringstidspunkt: LocalDate,
-        kilde: AvviksvurderingDto.KildeDto,
-        opprettet: LocalDateTime,
-        sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
-        beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?
-    ): AvviksvurderingDto {
+    internal fun upsertAll(avviksvurderinger: List<AvviksvurderingDto>): List<AvviksvurderingDto> {
         return transaction {
-            EnAvviksvurdering.findById(id)?.let {
-                update(id, beregningsgrunnlag)
-            } ?: insert(id, fødselsnummer, skjæringstidspunkt, kilde, opprettet, sammenligningsgrunnlag, beregningsgrunnlag)
-        }
-    }
-
-    internal fun upsertAll(avviksvurderinger: List<AvviksvurderingDto>) {
-        return transaction {
-            avviksvurderinger.forEach { avviksvurdering ->
+            avviksvurderinger.map { avviksvurdering ->
                 EnAvviksvurdering.findById(avviksvurdering.id)?.let {
                     update(avviksvurdering.id, avviksvurdering.beregningsgrunnlag)
                 } ?: insert(

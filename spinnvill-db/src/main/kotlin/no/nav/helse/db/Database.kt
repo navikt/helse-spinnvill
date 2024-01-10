@@ -20,17 +20,6 @@ class Database private constructor(env: Map<String, String>) {
 
     internal fun datasource(): HikariDataSource = dataSourceBuilder.getDataSource()
 
-    fun lagreAvviksvurdering(avviksvurderingDto: AvviksvurderingDto): AvviksvurderingDto {
-        return avviksvurdering.upsert(
-            id = avviksvurderingDto.id,
-            fødselsnummer = avviksvurderingDto.fødselsnummer,
-            skjæringstidspunkt = avviksvurderingDto.skjæringstidspunkt,
-            kilde = avviksvurderingDto.kilde,
-            opprettet = avviksvurderingDto.opprettet,
-            sammenligningsgrunnlag = avviksvurderingDto.sammenligningsgrunnlag,
-            beregningsgrunnlag = avviksvurderingDto.beregningsgrunnlag
-        )
-    }
     fun spleisMigrering(avviksvurderingDto: AvviksvurderingDto) = avviksvurdering.spleismigrering(
         avviksvurderingId = avviksvurderingDto.id,
         fødselsnummer = avviksvurderingDto.fødselsnummer,
@@ -50,11 +39,7 @@ class Database private constructor(env: Map<String, String>) {
     }
 
     fun lagreAvviksvurderinger(avviksvurderinger: List<AvviksvurderingDto>) {
-        return avviksvurdering.upsertAll(avviksvurderinger)
-    }
-
-    fun harAvviksvurderingAllerede(fødselsnummer: Fødselsnummer, vilkårsgrunnlagId: UUID): Boolean {
-        return avviksvurdering.harKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId)
+        avviksvurdering.upsertAll(avviksvurderinger)
     }
 
     fun avviksvurderingId(vilkårsgrunnlagId: UUID) = avviksvurdering.avviksvurderingId(vilkårsgrunnlagId)
