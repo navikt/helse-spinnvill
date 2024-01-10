@@ -138,8 +138,8 @@ internal class Avviksvurdering {
         return transaction {
             avviksvurderinger.map { avviksvurdering ->
                 EnAvviksvurdering.findById(avviksvurdering.id)?.let {
-                    update(avviksvurdering.id, avviksvurdering.beregningsgrunnlag)
-                } ?: insert(
+                    insertBeregningsgrunnlagIfNotExists(it, avviksvurdering.beregningsgrunnlag)
+                } ?: insertAvviksvurdering(
                     avviksvurdering.id,
                     avviksvurdering.fødselsnummer,
                     avviksvurdering.skjæringstidspunkt,
@@ -191,7 +191,7 @@ internal class Avviksvurdering {
         // Om vi ikke finner en eksisterende avviksvrudering inserter og returner vi
         transaction {
             val eksisterendeAvviksvurdering = EnAvviksvurdering.findById(avviksvurderingId)
-            if (eksisterendeAvviksvurdering == null) insert(avviksvurderingId, fødselsnummer, skjæringstidspunkt, kilde, opprettet, sammenligningsgrunnlag, beregningsgrunnlag)
+            if (eksisterendeAvviksvurdering == null) insertAvviksvurdering(avviksvurderingId, fødselsnummer, skjæringstidspunkt, kilde, opprettet, sammenligningsgrunnlag, beregningsgrunnlag)
             eksisterendeAvviksvurdering
         } ?: return
 
@@ -207,7 +207,7 @@ internal class Avviksvurdering {
         }
     }
 
-    private fun Transaction.insert(
+    private fun Transaction.insertAvviksvurdering(
         id: UUID,
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
@@ -246,11 +246,12 @@ internal class Avviksvurdering {
         enAvviksvurdering.dto()
     }
 
-    private fun Transaction.update(id: UUID, beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?): AvviksvurderingDto = this.run {
-        val enAvviksvurdering =
-            requireNotNull(EnAvviksvurdering.findById(id)) { "Forventer å finne avviksvurdering med id=${id}" }
+    private fun insertBeregningsgrunnlagIfNotExists(
+        enAvviksvurdering: EnAvviksvurdering,
+        beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?,
+    ): AvviksvurderingDto {
         beregningsgrunnlag?.omregnedeÅrsinntekter?.batchInsert(enAvviksvurdering)
-        enAvviksvurdering.dto()
+        return enAvviksvurdering.dto()
     }
 
     private fun Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>.batchInsert(enAvviksvurdering: EnAvviksvurdering) {
