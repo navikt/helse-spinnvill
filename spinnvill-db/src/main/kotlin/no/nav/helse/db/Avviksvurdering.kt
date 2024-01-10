@@ -229,16 +229,14 @@ internal class Avviksvurdering {
                 this.arbeidsgiverreferanse = arbeidsgiverreferanse.value
             }
 
-            inntekter.forEach { (inntekt, yearMonth, fordel, beskrivelse, inntektstype) ->
-                EnMånedsinntekt.new {
-                    this.sammenligningsgrunnlag = ettSammenligningsgrunnlag
-                    this.inntekt = inntekt.value
-                    this.måned = yearMonth.monthValue
-                    this.år = yearMonth.year
-                    this.fordel = fordel?.value
-                    this.beskrivelse = beskrivelse?.value
-                    this.inntektstype = inntektstype.tilDatabase()
-                }
+            Månedsinntekter.batchInsert(inntekter) {
+                this[Månedsinntekter.sammenligningsgrunnlag] = ettSammenligningsgrunnlag.id
+                this[Månedsinntekter.inntekt] = it.inntekt.value
+                this[Månedsinntekter.måned] = it.måned.monthValue
+                this[Månedsinntekter.år] = it.måned.year
+                this[Månedsinntekter.fordel] = it.fordel?.value
+                this[Månedsinntekter.beskrivelse] = it.beskrivelse?.value
+                this[Månedsinntekter.inntektstype] = it.inntektstype.tilDatabase()
             }
         }
 
