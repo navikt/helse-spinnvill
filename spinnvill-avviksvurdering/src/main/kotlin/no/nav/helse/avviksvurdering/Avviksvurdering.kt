@@ -27,9 +27,14 @@ class Avviksvurdering(
         this.observers.addAll(observers)
     }
 
-    fun håndter(beregningsgrunnlag: Beregningsgrunnlag) {
-        if (kilde == Kilde.INFOTRYGD) return
-        if (!this.beregningsgrunnlag.erForskjelligFra(beregningsgrunnlag)) return
+    fun håndter(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurdering {
+        if (kilde == Kilde.INFOTRYGD) return this
+        if (!this.beregningsgrunnlag.erForskjelligFra(beregningsgrunnlag)) return this
+        if (this.beregningsgrunnlag is Ingen) return vurderAvvik(beregningsgrunnlag)
+        return nyAvviksvurdering().vurderAvvik(beregningsgrunnlag)
+    }
+
+    private fun vurderAvvik(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurdering {
         this.beregningsgrunnlag = beregningsgrunnlag
         avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
         observers.forEach {
@@ -42,6 +47,7 @@ class Avviksvurdering(
                 maksimaltTillattAvvik = Avviksprosent.MAKSIMALT_TILLATT_AVVIK.avrundetTilToDesimaler()
             )
         }
+        return this
     }
 
     fun accept(visitor: Visitor) {
@@ -50,17 +56,12 @@ class Avviksvurdering(
         sammenligningsgrunnlag.accept(visitor)
     }
 
-    fun trengerNyVurdering(beregningsgrunnlag: Beregningsgrunnlag): Boolean {
-        return when {
-            this.kilde == Kilde.INFOTRYGD -> false
-            this.beregningsgrunnlag is Ingen -> false
-            this.beregningsgrunnlag.erForskjelligFra(beregningsgrunnlag) -> true
-            else -> false
+    private fun nyAvviksvurdering(): Avviksvurdering {
+        return nyAvviksvurdering(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag).also { nyAvviksvurdering ->
+            this.observers.forEach {
+                nyAvviksvurdering.register(it)
+            }
         }
-    }
-
-    fun nyAvviksvurdering(): Avviksvurdering {
-        return nyAvviksvurdering(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag)
     }
 
     internal companion object {

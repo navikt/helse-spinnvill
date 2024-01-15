@@ -35,11 +35,8 @@ class Avviksvurderinger(
             behovForSammenligningsgrunnlag()
             return null
         }
-        val gjeldende = siste.run {
-            if (trengerNyVurdering(beregningsgrunnlag)) nyAvviksvurdering() else this
-        }
+        val gjeldende = siste.håndter(beregningsgrunnlag)
         if (siste != gjeldende) nyAvviksvurdering(gjeldende)
-        gjeldende.håndter(beregningsgrunnlag)
         return gjeldende
     }
 
@@ -50,9 +47,6 @@ class Avviksvurderinger(
     }
 
     private fun nyAvviksvurdering(avviksvurdering: Avviksvurdering) {
-        kriterieObservers.forEach { observer ->
-            avviksvurdering.register(observer)
-        }
         avviksvurderinger.addLast(avviksvurdering)
     }
 
