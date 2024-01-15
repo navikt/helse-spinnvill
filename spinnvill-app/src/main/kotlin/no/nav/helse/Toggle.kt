@@ -5,5 +5,4 @@ abstract class Toggle(private var _enabled: Boolean) {
 
     val enabled get() = _enabled
 
-    object LesemodusOnly : Toggle("LESEMODUS", default = false)
 }

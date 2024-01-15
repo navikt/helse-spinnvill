@@ -3,12 +3,9 @@ package no.nav.helse.db
 import no.nav.helse.*
 import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.dto.AvviksvurderingDto.KildeDto.*
-import org.jetbrains.exposed.dao.LongEntity
-import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.javatime.date
@@ -89,27 +86,13 @@ internal class Avviksvurdering {
             var sammenligningsgrunnlag by EttSammenligningsgrunnlag referencedOn Månedsinntekter.sammenligningsgrunnlag
 
             var inntekt by Månedsinntekter.inntekt
-            var år by Månedsinntekter.år
-            var måned by Månedsinntekter.måned
+            private var år by Månedsinntekter.år
+            private var måned by Månedsinntekter.måned
             var inntektstype by Månedsinntekter.inntektstype
             var fordel by Månedsinntekter.fordel
             var beskrivelse by Månedsinntekter.beskrivelse
 
             internal val yearMonth: YearMonth get() = YearMonth.of(år, måned)
-        }
-
-        private object VilkårsgrunnlagKobling: LongIdTable(name = "vilkårsgrunnlag_kobling", columnName = "løpenummer") {
-            val vilkårsgrunnlagId: Column<UUID> = uuid("vilkårsgrunnlag_id")
-            val avviksvurderingId: Column<UUID> = uuid("avviksvurdering_id")
-            val fødselsnummer: Column<String> = varchar("fødselsnummer", 255)
-        }
-
-        class EnVilkårsgrunnlagKobling(id: EntityID<Long>): LongEntity(id) {
-            companion object : LongEntityClass<EnVilkårsgrunnlagKobling>(VilkårsgrunnlagKobling)
-
-            var vilkårsgrunnlagId by VilkårsgrunnlagKobling.vilkårsgrunnlagId
-            var avviksvurderingId by VilkårsgrunnlagKobling.avviksvurderingId
-            var fødselsnummer by VilkårsgrunnlagKobling.fødselsnummer
         }
     }
 
@@ -149,61 +132,6 @@ internal class Avviksvurdering {
                     avviksvurdering.beregningsgrunnlag
                 )
             }
-        }
-    }
-
-    internal fun opprettKoblingTilVilkårsgrunnlag(fødselsnummer: Fødselsnummer, vilkårsgrunnlagId: UUID, avviksvurderingId: UUID) {
-        if (harKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId)) return
-        transaction {
-            EnVilkårsgrunnlagKobling.new {
-                this.vilkårsgrunnlagId = vilkårsgrunnlagId
-                this.avviksvurderingId = avviksvurderingId
-                this.fødselsnummer = fødselsnummer.value
-            }
-        }
-    }
-
-    internal fun harKoblingTilVilkårsgrunnlag(fødselsnummer: Fødselsnummer, vilkårsgrunnlagId: UUID): Boolean {
-        return transaction {
-            EnVilkårsgrunnlagKobling.find {
-                VilkårsgrunnlagKobling.vilkårsgrunnlagId eq vilkårsgrunnlagId and (VilkårsgrunnlagKobling.fødselsnummer eq fødselsnummer.value)
-            }.count() >= 1
-        }
-    }
-
-    internal fun avviksvurderingId(vilkårsgrunnlagId: UUID): UUID? {
-        return transaction {
-            EnVilkårsgrunnlagKobling.find {
-                VilkårsgrunnlagKobling.vilkårsgrunnlagId eq vilkårsgrunnlagId
-            }.lastOrNull()?.avviksvurderingId
-        }
-    }
-
-    internal fun spleismigrering(
-        avviksvurderingId: UUID,
-        fødselsnummer: Fødselsnummer,
-        skjæringstidspunkt: LocalDate,
-        kilde: AvviksvurderingDto.KildeDto,
-        opprettet: LocalDateTime,
-        sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
-        beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?
-    ) {
-        // Om vi ikke finner en eksisterende avviksvrudering inserter og returner vi
-        transaction {
-            val eksisterendeAvviksvurdering = EnAvviksvurdering.findById(avviksvurderingId)
-            if (eksisterendeAvviksvurdering == null) insertAvviksvurdering(avviksvurderingId, fødselsnummer, skjæringstidspunkt, kilde, opprettet, sammenligningsgrunnlag, beregningsgrunnlag)
-            eksisterendeAvviksvurdering
-        } ?: return
-
-        // Om vi finner en eksisterender avviksvurdering oppdaterer vi alle inntektene
-        val oppdaterInntekter = beregningsgrunnlag?.omregnedeÅrsinntekter?.map { (arbeidsgiver, årsinntekt) ->
-            "UPDATE beregningsgrunnlag SET inntekt = ${årsinntekt.value} WHERE avviksvurdering_ref='$avviksvurderingId' AND organisasjonsnummer='${arbeidsgiver.value}' " +
-                "and not exists (select 1 from beregningsgrunnlag where avviksvurdering_ref='$avviksvurderingId' and organisasjonsnummer='${arbeidsgiver.value}' and inntekt=${årsinntekt.value});"
-        } ?: emptyList()
-
-
-        transaction {
-            execInBatch(oppdaterInntekter + "UPDATE avviksvurdering SET opprettet='$opprettet' WHERE id='$avviksvurderingId'")
         }
     }
 

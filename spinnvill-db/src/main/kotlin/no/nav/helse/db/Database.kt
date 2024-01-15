@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariDataSource
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.dto.AvviksvurderingDto
 import java.time.LocalDate
-import java.util.UUID
 
 class Database private constructor(env: Map<String, String>) {
     private val dataSourceBuilder = DataSourceBuilder(env)
@@ -20,16 +19,6 @@ class Database private constructor(env: Map<String, String>) {
 
     internal fun datasource(): HikariDataSource = dataSourceBuilder.getDataSource()
 
-    fun spleisMigrering(avviksvurderingDto: AvviksvurderingDto) = avviksvurdering.spleismigrering(
-        avviksvurderingId = avviksvurderingDto.id,
-        fødselsnummer = avviksvurderingDto.fødselsnummer,
-        skjæringstidspunkt = avviksvurderingDto.skjæringstidspunkt,
-        kilde = avviksvurderingDto.kilde,
-        opprettet = avviksvurderingDto.opprettet,
-        sammenligningsgrunnlag = avviksvurderingDto.sammenligningsgrunnlag,
-        beregningsgrunnlag = avviksvurderingDto.beregningsgrunnlag
-    )
-
     fun finnSisteAvviksvurdering(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
         return avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
     }
@@ -40,12 +29,6 @@ class Database private constructor(env: Map<String, String>) {
 
     fun lagreAvviksvurderinger(avviksvurderinger: List<AvviksvurderingDto>) {
         avviksvurdering.upsertAll(avviksvurderinger)
-    }
-
-    fun avviksvurderingId(vilkårsgrunnlagId: UUID) = avviksvurdering.avviksvurderingId(vilkårsgrunnlagId)
-
-    fun opprettKoblingTilVilkårsgrunnlag(fødselsnummer: Fødselsnummer, vilkårsgrunnlagId: UUID, avviksvurderingId: UUID) {
-        avviksvurdering.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, vilkårsgrunnlagId, avviksvurderingId)
     }
 
     companion object {

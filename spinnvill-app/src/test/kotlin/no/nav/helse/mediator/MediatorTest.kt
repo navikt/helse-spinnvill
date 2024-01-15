@@ -7,8 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import no.nav.helse.*
 import no.nav.helse.db.TestDatabase
 import no.nav.helse.dto.AvviksvurderingDto
-import no.nav.helse.helpers.ToggleHelpers.disable
-import no.nav.helse.helpers.ToggleHelpers.enable
 import no.nav.helse.helpers.januar
 import no.nav.helse.helpers.objectMapper
 import no.nav.helse.kafka.asUUID
@@ -41,7 +39,7 @@ internal class MediatorTest {
     )
 
     init {
-        Mediator(VersjonAvKode("1.0.0"), testRapid, ::database, kunMigrering = false)
+        Mediator(VersjonAvKode("1.0.0"), testRapid, ::database)
     }
 
     @BeforeEach
@@ -233,44 +231,6 @@ internal class MediatorTest {
         assertEquals("Godkjenning", testRapid.inspektør.field(4, "@behov").first().asText())
     }
 
-    @Test
-    fun `ikke behandle godkjenningsbehov hvis lesemodus er på`() {
-        Toggle.LesemodusOnly.enable()
-        mottaUtkastTilVedtak()
-        assertEquals(0, testRapid.inspektør.size)
-        Toggle.LesemodusOnly.disable()
-    }
-
-    @Test
-    fun `videresend godkjenningsbehov hvis Spinnvill er i lesemodus men det finnes avviksvurdering allerede`() {
-        mottaUtkastTilVedtak()
-        mottaSammenligningsgrunnlag()
-        testRapid.reset()
-        Toggle.LesemodusOnly.enable()
-        mottaUtkastTilVedtak()
-        assertEquals(1, testRapid.inspektør.size)
-        assertEquals("Godkjenning", testRapid.inspektør.field(0, "@behov").first().asText())
-        Toggle.LesemodusOnly.disable()
-    }
-
-    @Test
-    fun `ikke gjør ny avviksvurdering hvis avvik allerede vurdert i Spleis med manglende data`() {
-        mottaAvviksvurderingFraSpleisUtenSammenligningsgrunnlag()
-        testRapid.reset()
-        mottaUtkastTilVedtak()
-        assertEquals(1, testRapid.inspektør.size)
-        assertEquals("Godkjenning", testRapid.inspektør.field(0, "@behov").first().asText())
-    }
-
-    @Test
-    fun `ikke gjør ny avviksvurdering hvis avvik vurdert i Infotrygd`() {
-        mottaAvviksvurderingFraSpleisGjortIInfotrygd()
-        testRapid.reset()
-        mottaUtkastTilVedtak()
-        assertEquals(1, testRapid.inspektør.size)
-        assertEquals("Godkjenning", testRapid.inspektør.field(0, "@behov").first().asText())
-    }
-
     private fun mottaUtkastTilVedtak(beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto = BEREGNINGSGRUNNLAG) {
         testRapid.sendTestMessage(
             utkastTilVedtakJson(
@@ -308,29 +268,6 @@ internal class MediatorTest {
         testRapid.sendTestMessage(objectMapper.writeValueAsString(løsning))
     }
 
-    private fun mottaAvviksvurderingFraSpleisUtenSammenligningsgrunnlag() {
-        testRapid.sendTestMessage(
-            avviksvurderingFraSpleisUtenSammenligningsgrunnlagJson(
-                AKTØR_ID,
-                FØDSELSNUMMER,
-                ORGANISASJONSNUMMER,
-                SKJÆRINGSTIDSPUNKT,
-                UUID.randomUUID()
-            )
-        )
-    }
-
-    private fun mottaAvviksvurderingFraSpleisGjortIInfotrygd() {
-        testRapid.sendTestMessage(
-            avviksvurderingFraSpleisGjortIInfotrygdJson(
-                AKTØR_ID,
-                FØDSELSNUMMER,
-                SKJÆRINGSTIDSPUNKT,
-                UUID.randomUUID()
-            )
-        )
-    }
-
     private fun TestRapid.RapidInspector.meldinger() =
         (0 until size).map { index -> message(index) }
 
@@ -348,72 +285,6 @@ internal class MediatorTest {
 
     private fun TestRapid.RapidInspector.assertGodkjenningsbehovHarAvviksvurderingId(id: UUID) =
         assertEquals(id, behov("Godkjenning").single()["avviksvurderingId"].asUUID())
-
-    private fun avviksvurderingFraSpleisUtenSammenligningsgrunnlagJson(
-        aktørId: String,
-        fødselsnummer: String,
-        organisasjonsnummer: String,
-        skjæringstidspunkt: LocalDate,
-        vilkårsgrunnlagId: UUID
-    ): String {
-        @Language("JSON")
-        val json = """
-        {
-          "@event_name": "avviksvurderinger",
-          "fødselsnummer": "$fødselsnummer",
-          "aktørId": "$aktørId",
-          "skjæringstidspunkter": [
-            {
-              "skjæringstidspunkt": "$skjæringstidspunkt",
-              "vurderingstidspunkt": "2018-01-01T00:00:00.000",
-              "vilkårsgrunnlagId": "$vilkårsgrunnlagId",
-              "avviksprosent": 0.0,
-              "sammenligningsgrunnlagTotalbeløp": 50000.0,
-              "beregningsgrunnlagTotalbeløp": 30000.0,
-              "type": "SPLEIS",
-              "omregnedeÅrsinntekter": [
-                {
-                  "orgnummer": "$organisasjonsnummer",
-                  "beløp": 600000.0
-                }
-              ],
-              "sammenligningsgrunnlag": []
-            }
-          ]
-        }
-    """.trimIndent()
-        return json
-    }
-
-    private fun avviksvurderingFraSpleisGjortIInfotrygdJson(
-        aktørId: String,
-        fødselsnummer: String,
-        skjæringstidspunkt: LocalDate,
-        vilkårsgrunnlagId: UUID
-    ): String {
-        @Language("JSON")
-        val json = """
-        {
-          "@event_name": "avviksvurderinger",
-          "fødselsnummer": "$fødselsnummer",
-          "aktørId": "$aktørId",
-          "skjæringstidspunkter": [
-            {
-              "skjæringstidspunkt": "$skjæringstidspunkt",
-              "vurderingstidspunkt": "2018-01-01T00:00:00.000",
-              "vilkårsgrunnlagId": "$vilkårsgrunnlagId",
-              "avviksprosent": 0.0,
-              "sammenligningsgrunnlagTotalbeløp": 50000.0,
-              "beregningsgrunnlagTotalbeløp": 30000.0,
-              "type": "INFOTRYGD",
-              "omregnedeÅrsinntekter": [],
-              "sammenligningsgrunnlag": []
-            }
-          ]
-        }
-    """.trimIndent()
-        return json
-    }
 
     private fun utkastTilVedtakJson(
         aktørId: String,

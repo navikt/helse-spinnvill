@@ -10,62 +10,22 @@ import no.nav.helse.mediator.producer.*
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
-import java.util.UUID
 
 class Mediator(
     private val versjonAvKode: VersjonAvKode,
     private val rapidsConnection: RapidsConnection,
     databaseProvider: () -> Database,
-    kunMigrering: Boolean = false
 ) : MessageHandler {
 
     private val database by lazy(databaseProvider)
 
     init {
-        if (kunMigrering) {
-            AvviksvurderingerFraSpleisRiver(rapidsConnection, this)
-        } else {
-            GodkjenningsbehovRiver(rapidsConnection, this)
-            SammenligningsgrunnlagRiver(rapidsConnection, this)
-            AvviksvurderingerFraSpleisRiver(rapidsConnection, this)
-            AvviksvurderingFraSpleisRiver(rapidsConnection, this)
-        }
-    }
-
-    override fun håndter(enAvviksvurderingFraSpleisMessage: EnAvviksvurderingFraSpleisMessage) {
-        logg.info("Mottok avviksvurdering fra Spleis")
-        sikkerlogg.info("Mottok avviksvurdering fra Spleis")
-        val fødselsnummer = enAvviksvurderingFraSpleisMessage.fødselsnummer
-        val meldingProducer = MigrerteAvviksvurderingerProducer(fødselsnummer, rapidsConnection)
-
-        lagreOgVideresendAvviksvurdering(fødselsnummer, enAvviksvurderingFraSpleisMessage.avviksvurdering, meldingProducer)
-        meldingProducer.publiserMeldinger()
-        logg.info("Avviksvurdering fra Spleis ferdigbehandlet")
-        sikkerlogg.info("Avviksvurdering fra Spleis ferdigbehandlet")
-    }
-
-    override fun håndter(avviksvurderingerFraSpleisMessage: AvviksvurderingerFraSpleisMessage) {
-        logg.info("Mottok migrering med ${avviksvurderingerFraSpleisMessage.avviksvurderinger.size} avviksvurderinger fra Spleis")
-        sikkerlogg.info("Mottok migrering med ${avviksvurderingerFraSpleisMessage.avviksvurderinger.size} avviksvurderinger fra Spleis")
-        val fødselsnummer = avviksvurderingerFraSpleisMessage.fødselsnummer
-
-        val meldingProducer = MigrerteAvviksvurderingerProducer(fødselsnummer, rapidsConnection)
-
-        avviksvurderingerFraSpleisMessage.avviksvurderinger.forEach { avviksvurdering ->
-            lagreOgVideresendAvviksvurdering(fødselsnummer, avviksvurdering, meldingProducer)
-        }
-        meldingProducer.publiserMeldinger()
-        logg.info("Migrering med avviksvurderinger fra Spleis ferdigbehandlet")
-        sikkerlogg.info("Migrering med avviksvurderinger fra Spleis ferdigbehandlet")
+        GodkjenningsbehovRiver(rapidsConnection, this)
+        SammenligningsgrunnlagRiver(rapidsConnection, this)
     }
 
     override fun håndter(message: GodkjenningsbehovMessage) {
         val meldingProducer = nyMeldingProducer(message)
-
-        if (Toggle.LesemodusOnly.enabled) {
-            håndterLesemodus(meldingProducer, message)
-            return
-        }
 
         logg.info("Behandler utkast_til_vedtak for {}", kv("vedtaksperiodeId", message.vedtaksperiodeId))
         sikkerlogg.info("Behandler utkast_til_vedtak for {}, {}", kv("fødselsnummer", message.fødselsnummer), kv("vedtaksperiodeId", message.vedtaksperiodeId))
@@ -107,47 +67,6 @@ class Mediator(
         avviksvurderinger.lagre()
 
         rapidsConnection.queueReplayMessage(fødselsnummer.value, sammenligningsgrunnlagMessage.utkastTilVedtakJson)
-    }
-
-    private fun håndterLesemodus(meldingProducer: MeldingProducer, godkjenningsbehovMessage: GodkjenningsbehovMessage) {
-        sikkerlogg.info("Spinnvill er i lesemodus")
-        val godkjenningsbehovProducer = GodkjenningsbehovProducer(godkjenningsbehovMessage)
-        meldingProducer.nyProducer(godkjenningsbehovProducer)
-        val avviksvurdering = database.finnSisteAvviksvurdering(godkjenningsbehovMessage.fødselsnummer.somFnr(), godkjenningsbehovMessage.skjæringstidspunkt)
-        if (avviksvurdering != null) {
-            godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(avviksvurdering.tilDomene())
-            meldingProducer.publiserMeldinger()
-            sikkerlogg.info(
-                "Avviksvurdering finnes, vidersender godkjenningsbehov med avviksvurderingId, {}, {}, {}",
-                kv("vilkårsgrunnlagId", godkjenningsbehovMessage.vilkårsgrunnlagId),
-                kv("skjæringstidspunkt", godkjenningsbehovMessage.skjæringstidspunkt),
-                kv("fødselsnummer", godkjenningsbehovMessage.fødselsnummer)
-            )
-        } else {
-            sikkerlogg.info("Avviksvurdering finnes ikke, vidersender ikke godkjenningsbehov med avviksvurderingId, {}, {}, {}",
-                kv("vilkårsgrunnlagId", godkjenningsbehovMessage.vilkårsgrunnlagId),
-                kv("skjæringstidspunkt", godkjenningsbehovMessage.skjæringstidspunkt),
-                kv("fødselsnummer", godkjenningsbehovMessage.fødselsnummer)
-            )
-        }
-    }
-
-    private fun lagreOgVideresendAvviksvurdering(
-        fødselsnummer: Fødselsnummer,
-        avviksvurdering: AvviksvurderingFraSpleis,
-        meldingProducer: MigrerteAvviksvurderingerProducer
-    ) {
-        val avviksvurderingId = database.avviksvurderingId(avviksvurdering.vilkårsgrunnlagId) ?: UUID.randomUUID()
-
-        database.spleisMigrering(avviksvurdering.tilDatabaseDto(fødselsnummer, avviksvurderingId))
-        database.opprettKoblingTilVilkårsgrunnlag(fødselsnummer, avviksvurdering.vilkårsgrunnlagId, avviksvurderingId)
-
-        // sender ikke avvik_vurdert dersom avviksvurderingen er gjort i Infotrygd
-        // Vi viser hverken avviksprosent eller sammenligningsgrunnlag i Speil når
-        // inngangsvilkårene er vurdert i Infotrygd
-        if (avviksvurdering.kilde == Avviksvurderingkilde.INFOTRYGD) return
-
-        meldingProducer.nyAvviksvurdering(avviksvurdering.vilkårsgrunnlagId, avviksvurdering.skjæringstidspunkt, avviksvurdering.tilKafkaDto(avviksvurderingId))
     }
 
     private fun Avviksvurderinger.lagre() {
@@ -205,57 +124,6 @@ class Mediator(
                     )
                 })
             }
-        )
-    }
-
-    private fun AvviksvurderingFraSpleis.tilKafkaDto(avviksvurderingId: UUID): AvvikVurdertProducer.AvviksvurderingDto {
-        return AvvikVurdertProducer.AvviksvurderingDto(
-            avviksvurderingId,
-            requireNotNull(this.avviksprosent),
-            this.vurderingstidspunkt,
-            requireNotNull(this.beregningsgrunnlagTotalbeløp),
-            requireNotNull(this.sammenligningsgrunnlagTotalbeløp),
-            this.omregnedeÅrsinntekter,
-            this.innrapporterteInntekter.map { innrapportertInntekt ->
-                AvvikVurdertProducer.AvviksvurderingDto.InnrapportertInntektDto(
-                    innrapportertInntekt.orgnummer.somArbeidsgiverref(),
-                    innrapportertInntekt.inntekter.map { månedligInntekt ->
-                        AvvikVurdertProducer.AvviksvurderingDto.MånedligInntektDto(
-                            månedligInntekt.måned,
-                            InntektPerMåned(månedligInntekt.beløp)
-                        )
-                    }
-                )
-            }
-        )
-    }
-
-    private fun AvviksvurderingFraSpleis.tilDatabaseDto(fødselsnummer: Fødselsnummer, avviksvurderingId: UUID): AvviksvurderingDto {
-        fun Avviksvurderingkilde.tilKildeDto() = when (this) {
-            Avviksvurderingkilde.SPLEIS -> AvviksvurderingDto.KildeDto.SPLEIS
-            Avviksvurderingkilde.INFOTRYGD -> AvviksvurderingDto.KildeDto.INFOTRYGD
-        }
-
-        return AvviksvurderingDto(
-            id = avviksvurderingId,
-            fødselsnummer = fødselsnummer,
-            skjæringstidspunkt = this.skjæringstidspunkt,
-            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
-                innrapporterteInntekter = this.innrapporterteInntekter.associate { innrapportertInntekt ->
-                    innrapportertInntekt.orgnummer.somArbeidsgiverref() to innrapportertInntekt.inntekter.map { inntekt ->
-                        AvviksvurderingDto.MånedligInntektDto(
-                            InntektPerMåned(inntekt.beløp),
-                            inntekt.måned,
-                            Fordel(inntekt.fordel),
-                            Beskrivelse(inntekt.beskrivelse),
-                            inntektstype = enumValueOf(inntekt.type)
-                        )
-                    }
-                }
-            ),
-            opprettet = this.vurderingstidspunkt,
-            kilde = this.kilde.tilKildeDto(),
-            beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(this.omregnedeÅrsinntekter)
         )
     }
 
