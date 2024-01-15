@@ -14,7 +14,7 @@ class Avviksvurdering(
     private val id: UUID,
     private val fødselsnummer: Fødselsnummer,
     private val skjæringstidspunkt: LocalDate,
-    private var beregningsgrunnlag: Beregningsgrunnlag,
+    private var beregningsgrunnlag: IBeregningsgrunnlag,
     private val sammenligningsgrunnlag: Sammenligningsgrunnlag,
     private val opprettet: LocalDateTime,
     private val kilde: Kilde
@@ -29,7 +29,7 @@ class Avviksvurdering(
 
     fun håndter(beregningsgrunnlag: Beregningsgrunnlag) {
         if (kilde == Kilde.INFOTRYGD) return
-        if (this.beregningsgrunnlag != Beregningsgrunnlag.INGEN && !this.beregningsgrunnlag.erOverGrenseForNyAvviksvurdering(beregningsgrunnlag)) return
+        if (!this.beregningsgrunnlag.erForskjelligFra(beregningsgrunnlag)) return
         this.beregningsgrunnlag = beregningsgrunnlag
         avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
         observers.forEach {
@@ -53,8 +53,8 @@ class Avviksvurdering(
     fun trengerNyVurdering(beregningsgrunnlag: Beregningsgrunnlag): Boolean {
         return when {
             this.kilde == Kilde.INFOTRYGD -> false
-            this.beregningsgrunnlag == Beregningsgrunnlag.INGEN -> false
-            this.beregningsgrunnlag.erOverGrenseForNyAvviksvurdering(beregningsgrunnlag) -> true
+            this.beregningsgrunnlag is Ingen -> false
+            this.beregningsgrunnlag.erForskjelligFra(beregningsgrunnlag) -> true
             else -> false
         }
     }
@@ -72,7 +72,7 @@ class Avviksvurdering(
             id = UUID.randomUUID(),
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = skjæringstidspunkt,
-            beregningsgrunnlag = Beregningsgrunnlag.INGEN,
+            beregningsgrunnlag = Ingen,
             sammenligningsgrunnlag = sammenligningsgrunnlag,
             opprettet = LocalDateTime.now(),
             kilde = Kilde.SPINNVILL

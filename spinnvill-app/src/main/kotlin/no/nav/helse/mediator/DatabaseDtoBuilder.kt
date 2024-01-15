@@ -40,11 +40,11 @@ class DatabaseDtoBuilder : Visitor {
         totaltOmregnetÅrsinntekt: Double,
         omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
     ) {
-        val beregningsgrunnlag =
-            if (omregnedeÅrsinntekter.isNotEmpty()) AvviksvurderingDto.BeregningsgrunnlagDto(omregnedeÅrsinntekter)
-            else null
-        val nyGjeldende = gjeldende.copy(beregningsgrunnlag = beregningsgrunnlag)
-        erstattGjeldendeMed(nyGjeldende)
+        erstattGjeldendeMed(gjeldende.copy(beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(omregnedeÅrsinntekter)))
+    }
+
+    override fun visitBeregningsgrunnlagIngen() {
+        erstattGjeldendeMed(gjeldende.copy(beregningsgrunnlag = null))
     }
 
     override fun visitArbeidsgiverInntekt(arbeidsgiverreferanse: Arbeidsgiverreferanse, inntekter: List<ArbeidsgiverInntekt.MånedligInntekt>) {

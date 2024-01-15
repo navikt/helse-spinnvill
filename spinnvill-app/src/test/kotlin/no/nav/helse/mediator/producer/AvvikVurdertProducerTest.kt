@@ -6,6 +6,7 @@ import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
+import no.nav.helse.helpers.beregningsgrunnlag
 import no.nav.helse.helpers.januar
 import no.nav.helse.helpers.toJson
 import no.nav.helse.rapids_rivers.asYearMonth
@@ -26,7 +27,7 @@ class AvvikVurdertProducerTest {
             id = UUID.randomUUID(),
             harAkseptabeltAvvik = true,
             avviksprosent = 24.9,
-            beregningsgrunnlag = Beregningsgrunnlag.INGEN,
+            beregningsgrunnlag = beregningsgrunnlag("a1" to 500000.0),
             sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
             maksimaltTillattAvvik = 25.0
         )
@@ -40,7 +41,7 @@ class AvvikVurdertProducerTest {
             id = UUID.randomUUID(),
             harAkseptabeltAvvik = false,
             avviksprosent = 25.0,
-            beregningsgrunnlag = Beregningsgrunnlag.INGEN,
+            beregningsgrunnlag = beregningsgrunnlag("a1" to 500000.0),
             sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
             maksimaltTillattAvvik = 25.0
         )
@@ -54,7 +55,7 @@ class AvvikVurdertProducerTest {
             id = UUID.randomUUID(),
             harAkseptabeltAvvik = true,
             avviksprosent = 24.9,
-            beregningsgrunnlag = Beregningsgrunnlag.INGEN,
+            beregningsgrunnlag = beregningsgrunnlag("a1" to 500000.0),
             sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
             maksimaltTillattAvvik = 25.0
         )

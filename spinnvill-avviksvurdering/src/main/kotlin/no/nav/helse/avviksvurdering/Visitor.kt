@@ -10,6 +10,7 @@ import java.util.*
 interface Visitor {
     fun visitAvviksvurdering(id: UUID, fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate, kilde: Kilde, opprettet: LocalDateTime) {}
     fun visitBeregningsgrunnlag(totaltOmregnetÅrsinntekt: Double, omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>) {}
+    fun visitBeregningsgrunnlagIngen() {}
     fun visitArbeidsgiverInntekt(arbeidsgiverreferanse: Arbeidsgiverreferanse, inntekter: List<ArbeidsgiverInntekt.MånedligInntekt>) {}
     fun visitSammenligningsgrunnlag(sammenligningsgrunnlag: Double) {}
 }

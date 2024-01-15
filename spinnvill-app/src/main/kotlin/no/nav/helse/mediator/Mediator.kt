@@ -135,7 +135,7 @@ class Mediator(
         internal fun AvviksvurderingDto.tilDomene(): Avviksvurdering {
             val beregningsgrunnlag = beregningsgrunnlag?.let {
                 Beregningsgrunnlag.opprett(it.omregnedeÅrsinntekter)
-            } ?: Beregningsgrunnlag.INGEN
+            } ?: Ingen
 
             return Avviksvurdering(
                 id = id,

@@ -4,7 +4,21 @@ import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.Arbeidsgiverreferanse
 import kotlin.math.absoluteValue
 
-class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>) {
+interface IBeregningsgrunnlag{
+    fun erForskjelligFra(other: IBeregningsgrunnlag): Boolean
+    fun accept(visitor: Visitor)
+}
+
+object Ingen: IBeregningsgrunnlag {
+    override fun erForskjelligFra(other: IBeregningsgrunnlag): Boolean {
+        return other != this
+    }
+
+    override fun accept(visitor: Visitor) {
+        visitor.visitBeregningsgrunnlagIngen()
+    }
+}
+class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>): IBeregningsgrunnlag {
 
     private val totalOmregnetÅrsinntekt = omregnedeÅrsinntekter.values.sumOf { it.value }
     private val GRENSE_FOR_NY_AVVIKSVURDERING = 1.0
@@ -15,8 +29,12 @@ class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter:
         )
     }
 
-    internal fun erOverGrenseForNyAvviksvurdering(other: Beregningsgrunnlag): Boolean {
+    private fun erOverGrenseForNyAvviksvurdering(other: Beregningsgrunnlag): Boolean {
         return (this.totalOmregnetÅrsinntekt - other.totalOmregnetÅrsinntekt).absoluteValue >= GRENSE_FOR_NY_AVVIKSVURDERING
+    }
+
+    override fun erForskjelligFra(other: IBeregningsgrunnlag): Boolean {
+        return other is Beregningsgrunnlag && erOverGrenseForNyAvviksvurdering(other)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -32,12 +50,11 @@ class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter:
         return omregnedeÅrsinntekter.hashCode()
     }
 
-    fun accept(visitor: Visitor) {
+    override fun accept(visitor: Visitor) {
         visitor.visitBeregningsgrunnlag(totalOmregnetÅrsinntekt, omregnedeÅrsinntekter)
     }
 
     companion object {
-        val INGEN = Beregningsgrunnlag(emptyMap())
         fun opprett(omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>) : Beregningsgrunnlag {
             require(omregnedeÅrsinntekter.isNotEmpty()) { "Omregnede årsinntekter kan ikke være en tom liste"}
             return Beregningsgrunnlag(omregnedeÅrsinntekter)
