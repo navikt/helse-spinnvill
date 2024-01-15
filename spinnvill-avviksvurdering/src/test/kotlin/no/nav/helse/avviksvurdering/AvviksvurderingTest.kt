@@ -22,6 +22,15 @@ internal class AvviksvurderingTest {
     }
 
     @Test
+    fun `gjør ny avviksvurdering når vi sammenligner beregningsgrunnlag med beløo 0 mot INGEN`() {
+        val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
+        avviksvurdering.register(observer)
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 0.0))
+
+        assertEquals(1, observer.avviksvurderinger.size)
+    }
+
+    @Test
     fun `gjør ikke ny avviksvurdering når vi allerede har avviksvurdert og beregningsgrunnlag bare er litt forskjellig`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)

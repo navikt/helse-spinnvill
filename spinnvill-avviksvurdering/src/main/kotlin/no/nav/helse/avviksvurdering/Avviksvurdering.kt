@@ -29,7 +29,7 @@ class Avviksvurdering(
 
     fun håndter(beregningsgrunnlag: Beregningsgrunnlag) {
         if (kilde == Kilde.INFOTRYGD) return
-        if (!this.beregningsgrunnlag.erOverGrenseForNyAvviksvurdering(beregningsgrunnlag)) return
+        if (this.beregningsgrunnlag != Beregningsgrunnlag.INGEN && !this.beregningsgrunnlag.erOverGrenseForNyAvviksvurdering(beregningsgrunnlag)) return
         this.beregningsgrunnlag = beregningsgrunnlag
         avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
         observers.forEach {
