@@ -44,6 +44,16 @@ class AvviksvurderingerTest {
     }
 
     @Test
+    fun `gjør ny avviksvurdering når vi har avviksvurdering fra før og mottar beregningsgrunnlag med beløp 0 kr`() {
+        val avviksvurderinger = avviksvurderinger()
+        avviksvurderinger.håndterNytt(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0))
+        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
+        kriterieObserver.reset()
+        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 0.0))
+        assertEquals(1, kriterieObserver.avvikVurdert.size)
+    }
+
+    @Test
     fun `gjør ny avviksvurdering når vi har avviksvurdering fra før og beregningsgrunnlag er forskjellig`() {
         val avviksvurderinger = avviksvurderinger()
         avviksvurderinger.håndterNytt(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0))
