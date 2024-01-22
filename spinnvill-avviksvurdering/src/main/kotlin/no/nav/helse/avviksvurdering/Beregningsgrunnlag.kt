@@ -34,7 +34,7 @@ class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter:
     }
 
     override fun erForskjelligFra(other: IBeregningsgrunnlag): Boolean {
-        return other is Beregningsgrunnlag && erOverGrenseForNyAvviksvurdering(other)
+        return other !is Beregningsgrunnlag || erOverGrenseForNyAvviksvurdering(other)
     }
 
     override fun equals(other: Any?): Boolean {
