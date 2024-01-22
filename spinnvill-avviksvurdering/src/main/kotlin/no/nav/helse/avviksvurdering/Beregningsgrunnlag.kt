@@ -5,13 +5,13 @@ import no.nav.helse.Arbeidsgiverreferanse
 import kotlin.math.absoluteValue
 
 interface IBeregningsgrunnlag{
-    fun erForskjelligFra(other: IBeregningsgrunnlag): Boolean
+    fun erLikt(other: IBeregningsgrunnlag): Boolean
     fun accept(visitor: Visitor)
 }
 
 object Ingen: IBeregningsgrunnlag {
-    override fun erForskjelligFra(other: IBeregningsgrunnlag): Boolean {
-        return other != this
+    override fun erLikt(other: IBeregningsgrunnlag): Boolean {
+        return other == this
     }
 
     override fun accept(visitor: Visitor) {
@@ -33,8 +33,8 @@ class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter:
         return (this.totalOmregnetÅrsinntekt - other.totalOmregnetÅrsinntekt).absoluteValue >= GRENSE_FOR_NY_AVVIKSVURDERING
     }
 
-    override fun erForskjelligFra(other: IBeregningsgrunnlag): Boolean {
-        return other !is Beregningsgrunnlag || erOverGrenseForNyAvviksvurdering(other)
+    override fun erLikt(other: IBeregningsgrunnlag): Boolean {
+        return other is Beregningsgrunnlag && !erOverGrenseForNyAvviksvurdering(other)
     }
 
     override fun equals(other: Any?): Boolean {

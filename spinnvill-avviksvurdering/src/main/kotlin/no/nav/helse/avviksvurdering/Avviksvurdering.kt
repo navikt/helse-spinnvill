@@ -28,8 +28,7 @@ class Avviksvurdering(
     }
 
     fun håndter(beregningsgrunnlag: Beregningsgrunnlag) {
-        if (kilde == Kilde.INFOTRYGD) return
-        if (!this.beregningsgrunnlag.erForskjelligFra(beregningsgrunnlag)) return
+        if (kilde == Kilde.INFOTRYGD || this.beregningsgrunnlag.erLikt(beregningsgrunnlag)) return
         this.beregningsgrunnlag = beregningsgrunnlag
         avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
         observers.forEach {
@@ -54,7 +53,7 @@ class Avviksvurdering(
         return when {
             this.kilde == Kilde.INFOTRYGD -> false
             this.beregningsgrunnlag is Ingen -> false
-            this.beregningsgrunnlag.erForskjelligFra(beregningsgrunnlag) -> true
+            !this.beregningsgrunnlag.erLikt(beregningsgrunnlag) -> true
             else -> false
         }
     }
