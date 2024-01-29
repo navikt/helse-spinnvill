@@ -29,7 +29,7 @@ jobs:
           distribution: "temurin"
           java-version: "21.x"
       - name: Sett opp Gradle
-        uses: gradle/gradle-build-action@v2.11.1
+        uses: gradle/gradle-build-action@v3
         env:
           ORG_GRADLE_PROJECT_githubUser: x-access-token
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
