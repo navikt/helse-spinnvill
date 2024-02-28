@@ -7,12 +7,22 @@ plugins {
     kotlin("jvm") version "1.9.22"
 }
 
+val githubUser: String by project
+val githubPassword: String by project
+
 allprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
     repositories {
         mavenCentral()
-        maven("https://jitpack.io")
+        maven {
+            url = uri("https://maven.pkg.github.com/navikt/*")
+            credentials {
+                username = githubUser
+                password = githubPassword
+            }
+        }
+        maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
     }
 
     dependencies {
