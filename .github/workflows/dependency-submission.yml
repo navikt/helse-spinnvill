@@ -24,5 +24,7 @@ jobs:
         uses: gradle/gradle-build-action@v3
         with:
           dependency-graph: generate-and-submit
+        env:
+          ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
       - name: Build gradle (dependency-graph will be generated and submitted post-job)
         run: ./gradlew build

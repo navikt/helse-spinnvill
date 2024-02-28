@@ -30,7 +30,6 @@ jobs:
         with:
           arguments: test build
         env:
-          ORG_GRADLE_PROJECT_githubUser: x-access-token
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
       - name: Bygg docker image
         uses: nais/docker-build-push@v0
