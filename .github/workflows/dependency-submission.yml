@@ -6,6 +6,7 @@ on:
     paths:
       - "**.gradle.kts"
       - "gradle.properties"
+      - ".github/workflows/dependency-submission.yml"
   workflow_dispatch:
 jobs:
   dependabot:
