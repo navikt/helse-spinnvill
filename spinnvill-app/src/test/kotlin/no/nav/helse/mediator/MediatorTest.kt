@@ -181,25 +181,6 @@ internal class MediatorTest {
     }
 
     @Test
-    fun `gjør ikke ny avviksvurdering dersom nytt skjæringstidspunkt er i samme måned som lagret avviksvurdering`() {
-        mottaUtkastTilVedtak()
-        mottaSammenligningsgrunnlag()
-
-        testRapid.reset()
-
-        val avviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
-
-        mottaUtkastTilVedtak(skjæringstidspunkt = SKJÆRINGSTIDSPUNKT.plusDays(1))
-
-        val sisteAvviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
-
-        assertEquals(avviksvurdering, sisteAvviksvurdering)
-        assertEquals(1, testRapid.inspektør.size)
-        assertNotNull(testRapid.inspektør.sisteBehovAvType("Godkjenning"))
-        assertNull(testRapid.inspektør.sisteBehovAvType("InntekterForSammenligningsgrunnlag"))
-    }
-
-    @Test
     fun `gjør ny avviksvurdering om beregningsgrunnlaget er forskjellig fra forrige avviksvurdering`() {
         mottaUtkastTilVedtak()
         mottaSammenligningsgrunnlag()
@@ -250,13 +231,13 @@ internal class MediatorTest {
         assertEquals("Godkjenning", testRapid.inspektør.field(4, "@behov").first().asText())
     }
 
-    private fun mottaUtkastTilVedtak(beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto = BEREGNINGSGRUNNLAG, skjæringstidspunkt: LocalDate = SKJÆRINGSTIDSPUNKT) {
+    private fun mottaUtkastTilVedtak(beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto = BEREGNINGSGRUNNLAG) {
         testRapid.sendTestMessage(
             utkastTilVedtakJson(
                 AKTØR_ID,
                 FØDSELSNUMMER,
                 ORGANISASJONSNUMMER,
-                skjæringstidspunkt,
+                SKJÆRINGSTIDSPUNKT,
                 beregningsgrunnlag
             )
         )
