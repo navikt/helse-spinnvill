@@ -40,7 +40,7 @@ class GodkjenningsbehovMessageTest {
         val melding = messageHandler.messages.first()
 
         assertNull(melding.toJson()["behandletAvSpinnvill"])
-        assertEquals(true, melding.finalize()["behandletAvSpinnvill"])
+        assertEquals(true, melding.utgående()["behandletAvSpinnvill"])
     }
 
     private fun utkastTilVedtakJson(

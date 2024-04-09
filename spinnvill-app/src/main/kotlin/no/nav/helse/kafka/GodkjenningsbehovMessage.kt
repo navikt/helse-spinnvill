@@ -20,8 +20,7 @@ class GodkjenningsbehovMessage(packet: JsonMessage) {
         avviksvurderingId = id
     }
 
-    @Suppress("removal")
-    fun finalize(): Map<String, Any> =
+    fun utgående(): Map<String, Any> =
         objectMapper.convertValue(result.apply {
             if (::avviksvurderingId.isInitialized) put("avviksvurderingId", avviksvurderingId.toString())
             put("behandletAvSpinnvill", true)

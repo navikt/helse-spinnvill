@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 internal class GodkjenningsbehovProducer(
-    private val godkjenningsbehovMessage: GodkjenningsbehovMessage
+    private val godkjenningsbehovMessage: GodkjenningsbehovMessage,
 ) : Producer {
 
     private val godkjenningsbehov = mutableListOf<GodkjenningsbehovMessage>()
@@ -20,13 +20,8 @@ internal class GodkjenningsbehovProducer(
         godkjenningsbehov.add(godkjenningsbehovMessage)
     }
 
-    override fun ferdigstill(): List<Message> {
-        return godkjenningsbehov.map {
-            Message.Behov(
-                setOf("Godkjenning"), it.finalize()
-            )
-        }
-    }
+    override fun ferdigstill(): List<Message> =
+        godkjenningsbehov.map { Message.Behov(setOf("Godkjenning"), it.utgående()) }
 
     private class Sammensyer(private val godkjenningsbehovMessage: GodkjenningsbehovMessage) : Visitor {
         override fun visitAvviksvurdering(
@@ -34,7 +29,7 @@ internal class GodkjenningsbehovProducer(
             fødselsnummer: Fødselsnummer,
             skjæringstidspunkt: LocalDate,
             kilde: Kilde,
-            opprettet: LocalDateTime
+            opprettet: LocalDateTime,
         ) {
             if (kilde == Kilde.INFOTRYGD) return
             godkjenningsbehovMessage.leggTilAvviksvurderingId(id)
