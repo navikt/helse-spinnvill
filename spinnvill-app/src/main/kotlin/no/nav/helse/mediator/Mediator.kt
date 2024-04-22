@@ -44,7 +44,7 @@ class Mediator(
         avviksvurderinger.registrer(behovProducer)
         avviksvurderinger.registrer(varselProducer, subsumsjonProducer, avvikVurdertProducer)
 
-        val avviksvurdering = avviksvurderinger.håndterNytt(beregningsgrunnlag)
+        val avviksvurdering = avviksvurderinger.håndterNytt(beregningsgrunnlag, message.tags.contains("InngangsvilkårFraInfotrygd"))
         if (avviksvurdering != null) godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(avviksvurdering)
         avviksvurderinger.lagre()
 

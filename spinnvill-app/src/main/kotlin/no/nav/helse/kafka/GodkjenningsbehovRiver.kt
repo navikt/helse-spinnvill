@@ -19,6 +19,7 @@ internal class GodkjenningsbehovRiver(rapidsConnection: RapidsConnection, privat
                 it.requireArray("Godkjenning.omregnedeÅrsinntekter") {
                     requireKey("organisasjonsnummer", "beløp")
                 }
+                it.interestedIn("Godkjenning.tags")
             }
         }.register(this)
     }

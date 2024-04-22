@@ -30,13 +30,13 @@ class Avviksvurderinger(
         avviksvurderinger.forEach { it.accept(visitor) }
     }
 
-    fun håndterNytt(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurdering? {
+    fun håndterNytt(beregningsgrunnlag: Beregningsgrunnlag, inngangsvilkårFraInfotrygd: Boolean = false): Avviksvurdering? {
         val siste = siste ?: run {
             behovForSammenligningsgrunnlag()
             return null
         }
         val gjeldende = siste.run {
-            if (trengerNyVurdering(beregningsgrunnlag)) nyAvviksvurdering() else this
+            if (trengerNyVurdering(beregningsgrunnlag, inngangsvilkårFraInfotrygd)) nyAvviksvurdering() else this
         }
         if (siste != gjeldende) nyAvviksvurdering(gjeldende)
         gjeldende.håndter(beregningsgrunnlag)

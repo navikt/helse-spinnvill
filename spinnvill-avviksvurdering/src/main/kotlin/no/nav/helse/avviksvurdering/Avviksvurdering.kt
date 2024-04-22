@@ -49,9 +49,9 @@ class Avviksvurdering(
         sammenligningsgrunnlag.accept(visitor)
     }
 
-    fun trengerNyVurdering(beregningsgrunnlag: Beregningsgrunnlag): Boolean {
+    fun trengerNyVurdering(beregningsgrunnlag: Beregningsgrunnlag, inngangsvilkårFraInfotrygd: Boolean): Boolean {
         return when {
-            this.kilde == Kilde.INFOTRYGD -> false
+            this.kilde == Kilde.INFOTRYGD -> !inngangsvilkårFraInfotrygd
             this.beregningsgrunnlag is Ingen -> false
             !this.beregningsgrunnlag.erLikt(beregningsgrunnlag) -> true
             else -> false

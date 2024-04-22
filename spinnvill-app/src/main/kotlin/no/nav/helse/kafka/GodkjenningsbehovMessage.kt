@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.asLocalDate
+import no.nav.helse.rapids_rivers.isMissingOrNull
 import java.time.LocalDate
 import java.util.*
 
@@ -35,4 +36,6 @@ class GodkjenningsbehovMessage(packet: JsonMessage) {
     val beregningsgrunnlag = packet["Godkjenning.omregnedeÅrsinntekter"].associate {
         it["organisasjonsnummer"].asText() to it["beløp"].asDouble()
     }
+    val tags = packet["Godkjenning.tags"].takeUnless(JsonNode::isMissingOrNull)?.map { it.asText() }?.toList()
+        ?: emptyList<String>()
 }
