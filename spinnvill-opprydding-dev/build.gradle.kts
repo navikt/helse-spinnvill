@@ -1,4 +1,4 @@
-private val rapidsAndRiversVersion = "2024022311041708682651.01821651ed22"
+private val rapidsAndRiversVersion = "2024082313161724411773.1db923f4402d"
 private val postgresqlVersion = "42.7.2"
 private val hikariCPVersion = "5.1.0"
 private val flywayCoreVersion = "10.17.1"
