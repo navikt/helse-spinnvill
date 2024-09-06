@@ -1,5 +1,10 @@
-FROM ghcr.io/navikt/baseimages/temurin:21
+FROM gcr.io/distroless/java21-debian12:nonroot
 
+ENV TZ="Europe/Oslo"
 ENV JAVA_OPTS='-XX:MaxRAMPercentage=90'
 
-COPY spinnvill-app/build/libs/*.jar ./
+WORKDIR /app
+
+COPY spinnvill-app/build/libs/*.jar .
+
+CMD ["app.jar"]
