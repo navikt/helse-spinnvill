@@ -24,9 +24,10 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
-          java-version: "21.x"
+          java-version: "21"
+      - name: Sett opp Gradle
+        uses: gradle/actions/setup-gradle@v4
       - name: Bygg med Gradle
-        uses: gradle/actions/setup-gradle@v3
         env:
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew build
