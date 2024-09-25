@@ -1,7 +1,7 @@
 private val logbackVersion = "1.5.7"
 private val logstashVersion = "7.4"
 private val mockkVersion = "1.13.12"
-private val junitJupiterVersion = "5.10.2"
+private val junitJupiterVersion = "5.11.1"
 
 plugins {
     kotlin("jvm") version "1.9.22"
