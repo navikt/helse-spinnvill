@@ -1,7 +1,7 @@
 FROM gcr.io/distroless/java21-debian12:nonroot
 
 ENV TZ="Europe/Oslo"
-ENV JAVA_OPTS='-XX:MaxRAMPercentage=90'
+ENV JDK_JAVA_OPTIONS='-XX:MaxRAMPercentage=90'
 
 WORKDIR /app
 
