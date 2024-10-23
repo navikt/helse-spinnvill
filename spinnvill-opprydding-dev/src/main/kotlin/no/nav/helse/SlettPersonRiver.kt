@@ -4,6 +4,7 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
+import org.intellij.lang.annotations.Language
 import org.slf4j.LoggerFactory
 
 internal class SlettPersonRiver(
@@ -28,5 +29,14 @@ internal class SlettPersonRiver(
         val fødselsnummer = packet["fødselsnummer"].asText()
         sikkerlogg.info("Sletter person med fødselsnummer: $fødselsnummer")
         dao.slett(fødselsnummer.somFnr())
+        context.publish(fødselsnummer, lagPersonSlettet(fødselsnummer))
     }
+
+    @Language("JSON")
+    private fun lagPersonSlettet(fødselsnummer: String) = """
+        {
+            "@event_name": "person_slettet",
+            "fødselsnummer": $fødselsnummer
+        }
+    """.trimIndent()
 }
