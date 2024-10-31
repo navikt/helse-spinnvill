@@ -1,7 +1,6 @@
 apiVersion: nais.io/v1alpha1
 kind: Application
 metadata:
-  creationTimestamp: null
   labels:
     team: tbd
   name: spinnvill
@@ -9,9 +8,6 @@ metadata:
 spec:
   image: {{image}}
   port: 8080
-  replicas:
-    min: 3
-    max: 6
   liveness:
     path: isalive
     initialDelay: 5
@@ -30,7 +26,7 @@ spec:
       - type: POSTGRES_15
         diskAutoresize: true
         pointInTimeRecovery: true
-        tier: db-custom-4-8960
+        tier: db-custom-64-65536
         databases:
           - name: spinnvill
             envVarPrefix: DATABASE
