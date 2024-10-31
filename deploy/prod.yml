@@ -21,6 +21,14 @@ spec:
     pool: nav-prod
   secureLogs:
     enabled: true
+  replicas:
+    min: 3
+    max: 24
+    scalingStrategy:
+      kafka:
+        topic: tbd.rapid.v1
+        consumerGroup: tbd-spinnvill-v1
+        threshold: 200
   gcp:
     sqlInstances:
       - type: POSTGRES_15
