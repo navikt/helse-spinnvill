@@ -4,7 +4,7 @@ private val mockkVersion = "1.13.12"
 private val junitJupiterVersion = "5.10.2"
 
 plugins {
-    kotlin("jvm") version "1.9.22"
+    kotlin("jvm") version "2.0.21"
 }
 
 allprojects {
