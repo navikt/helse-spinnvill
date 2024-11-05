@@ -42,7 +42,6 @@ class SammenligningsgrunnlagMessage(packet: JsonMessage) {
     private fun JsonNode.arbeidsgiver() = when {
         path("orgnummer").isTextual -> path("orgnummer").asText()
         path("fødselsnummer").isTextual -> path("fødselsnummer").asText()
-        path("aktørId").isTextual -> path("aktørId").asText()
         else -> error("Mangler arbeidsgiver for inntekt i svar på sammenligningsgrunnlagbehov")
     }
 
