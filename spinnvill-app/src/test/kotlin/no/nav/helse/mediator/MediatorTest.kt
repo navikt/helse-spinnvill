@@ -28,7 +28,6 @@ internal class MediatorTest {
     private val testRapid = TestRapid()
     private val database = TestDatabase.database()
 
-    private val AKTØR_ID = "1234567891011"
     private val FØDSELSNUMMER = "12345678910"
     private val ORGANISASJONSNUMMER = "987654321"
     private val SKJÆRINGSTIDSPUNKT = 1.januar
@@ -234,7 +233,6 @@ internal class MediatorTest {
     private fun mottaUtkastTilVedtak(beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto = BEREGNINGSGRUNNLAG) {
         testRapid.sendTestMessage(
             utkastTilVedtakJson(
-                AKTØR_ID,
                 FØDSELSNUMMER,
                 ORGANISASJONSNUMMER,
                 SKJÆRINGSTIDSPUNKT,
@@ -287,7 +285,6 @@ internal class MediatorTest {
         assertEquals(id, behov("Godkjenning").single()["avviksvurderingId"].asUUID())
 
     private fun utkastTilVedtakJson(
-        aktørId: String,
         fødselsnummer: String,
         organisasjonsnummer: String,
         skjæringstidspunkt: LocalDate,
@@ -307,7 +304,6 @@ internal class MediatorTest {
                 "Godkjenning"
               ],
               "meldingsreferanseId": "b63537e5-ffd9-4e9b-930c-45b0ab602d66",
-              "aktørId": "$aktørId",
               "fødselsnummer": "$fødselsnummer",
               "organisasjonsnummer": "$organisasjonsnummer",
               "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",

@@ -2,8 +2,6 @@ package no.nav.helse
 
 @JvmInline
 value class Fødselsnummer(val value: String)
-@JvmInline
-value class AktørId(val value: String)
 
 @JvmInline
 value class Arbeidsgiverreferanse(val value: String)
@@ -23,5 +21,4 @@ value class OmregnetÅrsinntekt(val value: Double)
 value class VersjonAvKode(val value: String)
 
 fun String.somFnr() = Fødselsnummer(this)
-fun String.somAktørId() = AktørId(this)
 fun String.somArbeidsgiverref() = Arbeidsgiverreferanse(this)
