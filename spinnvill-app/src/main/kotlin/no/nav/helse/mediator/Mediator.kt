@@ -85,11 +85,10 @@ class Mediator(
     }
 
     private fun nyMeldingProducer(godkjenningsbehovMessage: GodkjenningsbehovMessage) = MeldingProducer(
-        aktørId = godkjenningsbehovMessage.aktørId.somAktørId(),
         fødselsnummer = godkjenningsbehovMessage.fødselsnummer.somFnr(),
-        vedtaksperiodeId = godkjenningsbehovMessage.vedtaksperiodeId,
         organisasjonsnummer = godkjenningsbehovMessage.organisasjonsnummer.somArbeidsgiverref(),
         skjæringstidspunkt = godkjenningsbehovMessage.skjæringstidspunkt,
+        vedtaksperiodeId = godkjenningsbehovMessage.vedtaksperiodeId,
         rapidsConnection = rapidsConnection
     )
 
