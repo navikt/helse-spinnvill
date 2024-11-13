@@ -1,4 +1,4 @@
-private val rapidsAndRiversVersion = "2024022311041708682651.01821651ed22"
+private val rapidsAndRiversVersion = "2024111315151731507353.97facd5ee2cc"
 
 group = "no.nav.helse"
 
