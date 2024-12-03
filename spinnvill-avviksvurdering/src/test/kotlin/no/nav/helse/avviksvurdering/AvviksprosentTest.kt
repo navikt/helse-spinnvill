@@ -26,13 +26,13 @@ class AvviksprosentTest {
         assertFalse(avviksprosent.harAkseptabeltAvvik())
     }
     @Test
-    fun `avrunding til to desimaler`() {
-        val avviksprosent = Avviksprosent.avvik(8.8, 7.7)
-        assertEquals(14.29, avviksprosent.avrundetTilToDesimaler())
+    fun `avrunding til fire desimaler`() {
+        val avviksprosent = Avviksprosent.avvik(12.50001, 10.0)
+        assertEquals(25.0001, avviksprosent.avrundetTilFireDesimaler())
     }
     @Test
     fun INGEN() {
-        assertEquals(-1.0, Avviksprosent.INGEN.avrundetTilToDesimaler())
+        assertEquals(-1.0, Avviksprosent.INGEN.avrundetTilFireDesimaler())
     }
     @Test
     fun equals() {

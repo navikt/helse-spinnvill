@@ -22,6 +22,15 @@ internal class AvviksvurderingTest {
     }
 
     @Test
+    fun `har fire desimalers oppløsning på avviksprosent`() {
+        val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
+        avviksvurdering.register(observer)
+
+        avviksvurdering.håndter(beregningsgrunnlag("a" to 750000.6))
+        assertEquals(25.0001, observer.avviksvurderinger.first().second)
+    }
+
+    @Test
     fun `gjør ny avviksvurdering når vi sammenligner beregningsgrunnlag med beløo 0 mot INGEN`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)

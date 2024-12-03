@@ -38,10 +38,10 @@ class Avviksvurdering(
             it.avvikVurdert(
                 id = id,
                 harAkseptabeltAvvik = avviksprosent.harAkseptabeltAvvik(),
-                avviksprosent = avviksprosent.avrundetTilToDesimaler(),
+                avviksprosent = avviksprosent.avrundetTilFireDesimaler(),
                 beregningsgrunnlag = beregningsgrunnlag,
                 sammenligningsgrunnlag = sammenligningsgrunnlag,
-                maksimaltTillattAvvik = Avviksprosent.MAKSIMALT_TILLATT_AVVIK.avrundetTilToDesimaler()
+                maksimaltTillattAvvik = Avviksprosent.MAKSIMALT_TILLATT_AVVIK.avrundetTilFireDesimaler()
             )
         }
     }

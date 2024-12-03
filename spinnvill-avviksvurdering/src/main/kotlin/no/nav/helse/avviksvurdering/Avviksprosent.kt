@@ -8,7 +8,7 @@ internal class Avviksprosent private constructor(private val prosent: Double): C
 
     internal fun harAkseptabeltAvvik(): Boolean = this <= MAKSIMALT_TILLATT_AVVIK
 
-    internal fun avrundetTilToDesimaler(): Double = (prosent * 100).roundToInt() / 100.0
+    internal fun avrundetTilFireDesimaler(): Double = (prosent * 10000).roundToInt() / 10000.0
 
     internal companion object {
         private const val EPSILON = 0.0001
