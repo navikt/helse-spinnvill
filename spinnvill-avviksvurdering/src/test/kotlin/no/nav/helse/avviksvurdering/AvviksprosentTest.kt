@@ -45,11 +45,20 @@ class AvviksprosentTest {
         val avviksprosent1 = Avviksprosent.avvik(1.000002, 1.000003)
         val avviksprosent2 = Avviksprosent.avvik(1.0, 1.0)
         assertEquals(avviksprosent1, avviksprosent2)
+        assertFalse(avviksprosent1 < avviksprosent2)
+        assertFalse(avviksprosent1 > avviksprosent2)
     }
     @Test
     fun `når diff er større enn epsilon er prosentene ikke like`() {
         val avviksprosent1 = Avviksprosent.avvik(1.00001, 1.00002)
         val avviksprosent2 = Avviksprosent.avvik(1.0, 1.0)
         assertNotEquals(avviksprosent1, avviksprosent2)
+        assertTrue(avviksprosent1 > avviksprosent2)
+    }
+    @Test
+    fun compareTo() {
+        val avviksprosent1 = Avviksprosent.avvik(1.00002, 1.00003)
+        val avviksprosent2 = Avviksprosent.avvik(1.0, 1.0)
+        assertEquals(1, avviksprosent1.compareTo(avviksprosent2))
     }
 }

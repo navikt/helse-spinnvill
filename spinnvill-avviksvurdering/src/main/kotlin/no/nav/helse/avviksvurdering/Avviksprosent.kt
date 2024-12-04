@@ -8,10 +8,11 @@ internal class Avviksprosent private constructor(private val prosent: Double): C
 
     internal fun harAkseptabeltAvvik(): Boolean = this <= MAKSIMALT_TILLATT_AVVIK
 
-    internal fun avrundetTilFireDesimaler(): Double = (prosent * 10000).roundToInt() / 10000.0
+    internal fun avrundetTilFireDesimaler(): Double = (prosent * PRESISJON).roundToInt() / PRESISJON
 
     internal companion object {
-        private const val EPSILON = 0.0001
+        private const val PRESISJON = 10000.0
+        private const val EPSILON = 1 / PRESISJON
         internal val MAKSIMALT_TILLATT_AVVIK = Avviksprosent(25.0)
 
         internal fun avvik(beregningsgrunnlag: Double, sammenligningsgrunnlag: Double): Avviksprosent {
@@ -28,7 +29,7 @@ internal class Avviksprosent private constructor(private val prosent: Double): C
 
     override fun compareTo(other: Avviksprosent) =
         if (this == other) 0
-        else this.prosent.compareTo(other.prosent)
+        else this.avrundetTilFireDesimaler().compareTo(other.avrundetTilFireDesimaler())
 
     override fun equals(other: Any?) = other is Avviksprosent && (this.prosent - other.prosent).absoluteValue < EPSILON
 
