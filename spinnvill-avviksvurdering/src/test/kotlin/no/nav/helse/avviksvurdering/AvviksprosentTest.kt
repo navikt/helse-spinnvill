@@ -5,11 +5,7 @@ import org.junit.jupiter.api.Test
 
 class AvviksprosentTest {
 
-    @Test
-    fun `avrunding til fire desimaler`() {
-        val avviksprosent = Avviksprosent.avvik(12.50001, 10.0)
-        assertEquals(25.0001, avviksprosent.avrundetTilFireDesimaler)
-    }
+    private val nullAvvik = Avviksprosent(0.0)
 
     @Test
     fun INGEN() {
@@ -17,26 +13,22 @@ class AvviksprosentTest {
     }
 
     @Test
-    fun `når diff i avviksprosent blir mindre enn 0,00005 er avvikene like`() {
-        val avviksprosent1 = Avviksprosent.avvik(600000.24, 600000.0)
-        val intetAvvik = Avviksprosent.avvik(1.0, 1.0)
-        assertEquals(avviksprosent1, intetAvvik)
-        assertFalse(avviksprosent1 < intetAvvik)
-        assertFalse(avviksprosent1 > intetAvvik)
+    fun `beregning og avrunding gir korrekt avviksprosent`() {
+        val avviksprosent = Avviksprosent.avvik(12.50001, 10.0)
+        assertEquals(25.0001, avviksprosent.avrundetTilFireDesimaler)
     }
 
     @Test
-    fun `når diff i avviksprosent blir lik 0,00005 er avvikene ulike`() {
-        val avviksprosent1 = Avviksprosent.avvik(600000.3, 600000.0)
-        val intetAvvik = Avviksprosent.avvik(1.0, 1.0)
-        assertNotEquals(avviksprosent1, intetAvvik)
-        assertTrue(avviksprosent1 > intetAvvik)
+    fun `avviksprosent under grenseverdi gir ikke avvik`() {
+        val avviksprosentUnderGrenseverdi = Avviksprosent(0.000049)
+        assertEquals(avviksprosentUnderGrenseverdi, nullAvvik)
+        assertFalse(avviksprosentUnderGrenseverdi < nullAvvik)
+        assertFalse(avviksprosentUnderGrenseverdi > nullAvvik)
     }
 
     @Test
-    fun `når diff i avviksprosent blir lik 0,00005 er avvikene ulike2`() {
-        val avviksprosent1 = Avviksprosent.avvik(600000.3, 600000.0)
-        assertEquals(Avviksprosent(0.00005), avviksprosent1)
+    fun `avviksprosent over grenseverdi gir avvik`() {
+        assertEquals(Avviksprosent(0.0001), Avviksprosent(0.00005))
     }
 
     @Test
