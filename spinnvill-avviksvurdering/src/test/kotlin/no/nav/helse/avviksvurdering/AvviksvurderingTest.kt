@@ -3,7 +3,7 @@ package no.nav.helse.avviksvurdering
 import no.nav.helse.*
 import no.nav.helse.avviksvurdering.Avviksvurdering.Companion.siste
 import no.nav.helse.helpers.januar
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.YearMonth
 import java.util.*
@@ -92,15 +92,27 @@ internal class AvviksvurderingTest {
     }
 
     @Test
-    fun `har ikke gjort avviksvurdering før og avvik utenfor akseptabelt avvik`() {
+    fun `har ikke gjort avviksvurdering før og avvik akkurat utenfor akseptabelt avvik`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 360000.0))
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 449999.4))
         assertEquals(1, observer.avviksvurderinger.size)
         val (harAkseptabeltAvvik, avviksprosent) = observer.avviksvurderinger.single()
-        assertEquals(false, harAkseptabeltAvvik)
-        assertEquals(40.0, avviksprosent)
+        assertEquals(25.0001, avviksprosent)
+        assertFalse(harAkseptabeltAvvik) {"Forventet at $avviksprosent er et uakseptabelt avvik"}
+    }
+
+    @Test
+    fun `har ikke gjort avviksvurdering før og avvik akkurat innenfor akseptabelt avvik`() {
+        val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
+        avviksvurdering.register(observer)
+
+        avviksvurdering.håndter(beregningsgrunnlag("a1" to 449999.7))
+        assertEquals(1, observer.avviksvurderinger.size)
+        val (harAkseptabeltAvvik, avviksprosent) = observer.avviksvurderinger.single()
+        assertEquals(25.0, avviksprosent)
+        assertTrue(harAkseptabeltAvvik) {"Forventet at $avviksprosent er et akseptabelt avvik"}
     }
 
     @Test

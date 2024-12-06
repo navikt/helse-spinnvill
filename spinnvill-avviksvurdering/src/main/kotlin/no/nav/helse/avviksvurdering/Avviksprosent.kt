@@ -2,36 +2,31 @@ package no.nav.helse.avviksvurdering
 
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
-import kotlin.math.roundToLong
 
-internal class Avviksprosent private constructor(private val prosent: Double): Comparable<Avviksprosent> {
+internal class Avviksprosent (prosent: Double): Comparable<Avviksprosent> {
 
-    internal fun harAkseptabeltAvvik(): Boolean = this <= MAKSIMALT_TILLATT_AVVIK
+    internal val avrundetTilFireDesimaler = (prosent * PRESISJON).roundToInt() / PRESISJON
 
-    internal fun avrundetTilFireDesimaler(): Double = (prosent * PRESISJON).roundToInt() / PRESISJON
-
-    internal companion object {
-        private const val PRESISJON = 10000.0
-        private const val EPSILON = 1 / PRESISJON
-        internal val MAKSIMALT_TILLATT_AVVIK = Avviksprosent(25.0)
-
-        internal fun avvik(beregningsgrunnlag: Double, sammenligningsgrunnlag: Double): Avviksprosent {
-            val avviksprosent =
-                if (sammenligningsgrunnlag == 0.0) 100.0
-                else ((beregningsgrunnlag - sammenligningsgrunnlag).absoluteValue / sammenligningsgrunnlag) * 100
-            return Avviksprosent(avviksprosent)
-        }
-
-        internal val INGEN = Avviksprosent(-1.0)
-    }
-
-    override fun toString(): String = "$prosent"
+    override fun toString(): String = "$avrundetTilFireDesimaler %"
 
     override fun compareTo(other: Avviksprosent) =
         if (this == other) 0
-        else this.avrundetTilFireDesimaler().compareTo(other.avrundetTilFireDesimaler())
+        else this.avrundetTilFireDesimaler.compareTo(other.avrundetTilFireDesimaler)
 
-    override fun equals(other: Any?) = other is Avviksprosent && (this.prosent - other.prosent).absoluteValue < EPSILON
+    override fun equals(other: Any?) =
+        other is Avviksprosent && (this.avrundetTilFireDesimaler == other.avrundetTilFireDesimaler)
 
-    override fun hashCode() = (prosent / EPSILON).roundToLong().hashCode()
+    override fun hashCode() = avrundetTilFireDesimaler.hashCode()
+
+    internal companion object {
+        private const val PRESISJON = 10000.0
+        internal val INGEN = Avviksprosent(-1.0)
+
+        internal fun avvik(beregningsgrunnlag: Double, sammenligningsgrunnlag: Double) =
+            if (sammenligningsgrunnlag == 0.0) {
+                Avviksprosent(100.0)
+            } else {
+                Avviksprosent(((beregningsgrunnlag - sammenligningsgrunnlag).absoluteValue / sammenligningsgrunnlag) * 100)
+            }
+    }
 }

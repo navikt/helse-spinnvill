@@ -23,6 +23,7 @@ class Avviksvurdering(
     private val kilde: Kilde,
 ) {
     private var avviksprosent: Avviksprosent = Avviksprosent.INGEN
+    private val MAKSIMALT_TILLATT_AVVIK = Avviksprosent(25.0)
 
     private val observers = mutableListOf<KriterieObserver>()
 
@@ -37,11 +38,11 @@ class Avviksvurdering(
         observers.forEach {
             it.avvikVurdert(
                 id = id,
-                harAkseptabeltAvvik = avviksprosent.harAkseptabeltAvvik(),
-                avviksprosent = avviksprosent.avrundetTilFireDesimaler(),
+                harAkseptabeltAvvik = avviksprosent <= MAKSIMALT_TILLATT_AVVIK,
+                avviksprosent = avviksprosent.avrundetTilFireDesimaler,
                 beregningsgrunnlag = beregningsgrunnlag,
                 sammenligningsgrunnlag = sammenligningsgrunnlag,
-                maksimaltTillattAvvik = Avviksprosent.MAKSIMALT_TILLATT_AVVIK.avrundetTilFireDesimaler()
+                maksimaltTillattAvvik = MAKSIMALT_TILLATT_AVVIK.avrundetTilFireDesimaler
             )
         }
     }
