@@ -15,9 +15,9 @@ internal class AvviksvurderingTest {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.0))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.0))
         observer.clear()
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.0))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.0))
         assertEquals(0, observer.avviksvurderinger.size)
     }
 
@@ -26,7 +26,7 @@ internal class AvviksvurderingTest {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
-        avviksvurdering.håndter(beregningsgrunnlag("a" to 750000.6))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a" to 750000.6))
         assertEquals(25.0001, observer.avviksvurderinger.first().second)
     }
 
@@ -34,7 +34,7 @@ internal class AvviksvurderingTest {
     fun `gjør ny avviksvurdering når vi sammenligner beregningsgrunnlag med beløo 0 mot INGEN`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 0.0))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 0.0))
 
         assertEquals(1, observer.avviksvurderinger.size)
     }
@@ -44,12 +44,12 @@ internal class AvviksvurderingTest {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.0))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.0))
         observer.clear()
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.1))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.1))
         assertEquals(0, observer.avviksvurderinger.size)
 
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 599999.88888884))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 599999.88888884))
         assertEquals(0, observer.avviksvurderinger.size)
     }
 
@@ -58,10 +58,10 @@ internal class AvviksvurderingTest {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 599999.88888884))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 599999.88888884))
         observer.clear()
 
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.99999994))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.99999994))
         assertEquals(1, observer.avviksvurderinger.size)
     }
 
@@ -69,13 +69,13 @@ internal class AvviksvurderingTest {
     fun `gjør ny avviksvurdering når vi allerede har avviksvurdert og beregningsgrunnlag er rett over bare litt forskjellig`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.0))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.0))
         observer.clear()
 
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.9999999994))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.9999999994))
         assertEquals(0, observer.avviksvurderinger.size)
 
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600001.0))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600001.0))
         assertEquals(1, observer.avviksvurderinger.size)
     }
 
@@ -84,7 +84,7 @@ internal class AvviksvurderingTest {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 600000.0))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.0))
         assertEquals(1, observer.avviksvurderinger.size)
         val (harAkseptabeltAvvik, avviksprosent) = observer.avviksvurderinger.single()
         assertEquals(true, harAkseptabeltAvvik)
@@ -96,7 +96,7 @@ internal class AvviksvurderingTest {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 449999.4))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 449999.4))
         assertEquals(1, observer.avviksvurderinger.size)
         val (harAkseptabeltAvvik, avviksprosent) = observer.avviksvurderinger.single()
         assertEquals(25.0001, avviksprosent)
@@ -108,7 +108,7 @@ internal class AvviksvurderingTest {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
         avviksvurdering.register(observer)
 
-        avviksvurdering.håndter(beregningsgrunnlag("a1" to 449999.7))
+        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 449999.7))
         assertEquals(1, observer.avviksvurderinger.size)
         val (harAkseptabeltAvvik, avviksprosent) = observer.avviksvurderinger.single()
         assertEquals(25.0, avviksprosent)

@@ -31,7 +31,7 @@ class Avviksvurdering(
         this.observers.addAll(observers)
     }
 
-    fun håndter(beregningsgrunnlag: Beregningsgrunnlag) {
+    fun vurderAvvik(beregningsgrunnlag: Beregningsgrunnlag) {
         if (kilde == Kilde.INFOTRYGD || this.beregningsgrunnlag.erLikt(beregningsgrunnlag)) return
         this.beregningsgrunnlag = beregningsgrunnlag
         avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
@@ -107,7 +107,7 @@ class Avviksvurdering(
         }
     }
 
-    fun nyAvviksvurdering(): Avviksvurdering {
+    fun lagNyAvviksvurdering(): Avviksvurdering {
         return nyAvviksvurdering(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag)
     }
 

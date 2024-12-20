@@ -31,25 +31,23 @@ class Avviksvurderinger(
     }
 
     fun håndterNytt(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurdering? {
-        val siste = siste ?: run {
+        val sisteAvviksvurdering = siste ?: run {
             behovForSammenligningsgrunnlag()
             return null
         }
-        val gjeldende = siste.run {
-            if (trengerNyVurdering(beregningsgrunnlag)) nyAvviksvurdering() else this
-        }
-        if (siste != gjeldende) nyAvviksvurdering(gjeldende)
-        gjeldende.håndter(beregningsgrunnlag)
-        return gjeldende
+        val gjeldendeAvviksvurdering = if (sisteAvviksvurdering.trengerNyVurdering(beregningsgrunnlag)) sisteAvviksvurdering.lagNyAvviksvurdering() else sisteAvviksvurdering
+        if (sisteAvviksvurdering != gjeldendeAvviksvurdering) nySisteAvviksvurdering(gjeldendeAvviksvurdering)
+        gjeldendeAvviksvurdering.vurderAvvik(beregningsgrunnlag)
+        return gjeldendeAvviksvurdering
     }
 
     fun håndterNytt(sammenligningsgrunnlag: Sammenligningsgrunnlag) {
         check(avviksvurderinger.isEmpty()) { "Forventer ikke å hente inn nytt sammenligningsgrunnlag hvis det tidligere er gjort en avviksvurdering" }
         val ny = Avviksvurdering.nyAvviksvurdering(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag)
-        nyAvviksvurdering(ny)
+        nySisteAvviksvurdering(ny)
     }
 
-    private fun nyAvviksvurdering(avviksvurdering: Avviksvurdering) {
+    private fun nySisteAvviksvurdering(avviksvurdering: Avviksvurdering) {
         kriterieObservers.forEach { observer ->
             avviksvurdering.register(observer)
         }
