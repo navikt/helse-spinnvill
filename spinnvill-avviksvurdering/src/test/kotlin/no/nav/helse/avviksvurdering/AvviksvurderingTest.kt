@@ -25,7 +25,7 @@ internal class AvviksvurderingTest {
 
         val resultat = avviksvurdering.vurderAvvik(beregningsgrunnlag("a" to 750000.6))
         assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
-        assertEquals(25.0001, resultat.avviksprosent)
+        assertEquals(25.0001, resultat.vurdering.avviksprosent)
     }
 
     @Test
@@ -75,7 +75,7 @@ internal class AvviksvurderingTest {
 
         val resultat = avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.0))
         assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
-        val (_, _, harAkseptabeltAvvik, avviksprosent) = resultat
+        val (_, harAkseptabeltAvvik, avviksprosent) = resultat.vurdering
         assertEquals(true, harAkseptabeltAvvik)
         assertEquals(0.0, avviksprosent)
     }
@@ -86,7 +86,7 @@ internal class AvviksvurderingTest {
 
         val resultat = avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 449999.4))
         assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
-        val (_, _, harAkseptabeltAvvik, avviksprosent) = resultat
+        val (_, harAkseptabeltAvvik, avviksprosent) = resultat.vurdering
         assertEquals(25.0001, avviksprosent)
         assertFalse(harAkseptabeltAvvik) {"Forventet at $avviksprosent er et uakseptabelt avvik"}
     }
@@ -97,7 +97,7 @@ internal class AvviksvurderingTest {
 
         val resultat = avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 449999.7))
         assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
-        val (_, _, harAkseptabeltAvvik, avviksprosent) = resultat
+        val (_, harAkseptabeltAvvik, avviksprosent) = resultat.vurdering
         assertEquals(25.0, avviksprosent)
         assertTrue(harAkseptabeltAvvik) {"Forventet at $avviksprosent er et akseptabelt avvik"}
     }

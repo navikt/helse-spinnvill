@@ -6,6 +6,7 @@ import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
+import no.nav.helse.avviksvurdering.Vurdering
 import no.nav.helse.helpers.beregningsgrunnlag
 import no.nav.helse.helpers.januar
 import no.nav.helse.helpers.toJson
@@ -24,12 +25,14 @@ class AvvikVurdertProducerTest {
     @Test
     fun `produser avviksvurdering for akseptebelt avvik`() {
         avvikVurdertProducer.avvikVurdert(
-            id = UUID.randomUUID(),
-            harAkseptabeltAvvik = true,
-            avviksprosent = 24.9,
-            beregningsgrunnlag = beregningsgrunnlag("a1" to 500000.0),
-            sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
-            maksimaltTillattAvvik = 25.0
+            Vurdering(
+                id = UUID.randomUUID(),
+                harAkseptabeltAvvik = true,
+                avviksprosent = 24.9,
+                beregningsgrunnlag = beregningsgrunnlag("a1" to 500000.0),
+                sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
+                maksimaltTillattAvvik = 25.0
+            )
         )
 
         assertEquals(1, avvikVurdertProducer.ferdigstill().size)
@@ -38,12 +41,14 @@ class AvvikVurdertProducerTest {
     @Test
     fun `produser avviksvurdering for uakseptebelt avvik`() {
         avvikVurdertProducer.avvikVurdert(
-            id = UUID.randomUUID(),
-            harAkseptabeltAvvik = false,
-            avviksprosent = 25.0,
-            beregningsgrunnlag = beregningsgrunnlag("a1" to 500000.0),
-            sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
-            maksimaltTillattAvvik = 25.0
+            Vurdering(
+                id = UUID.randomUUID(),
+                harAkseptabeltAvvik = false,
+                avviksprosent = 25.0,
+                beregningsgrunnlag = beregningsgrunnlag("a1" to 500000.0),
+                sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
+                maksimaltTillattAvvik = 25.0
+            )
         )
 
         assertEquals(1, avvikVurdertProducer.ferdigstill().size)
@@ -52,12 +57,14 @@ class AvvikVurdertProducerTest {
     @Test
     fun `avviksvurdering kø tømmes etter hver finalize`() {
         avvikVurdertProducer.avvikVurdert(
-            id = UUID.randomUUID(),
-            harAkseptabeltAvvik = true,
-            avviksprosent = 24.9,
-            beregningsgrunnlag = beregningsgrunnlag("a1" to 500000.0),
-            sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
-            maksimaltTillattAvvik = 25.0
+            Vurdering(
+                id = UUID.randomUUID(),
+                harAkseptabeltAvvik = true,
+                avviksprosent = 24.9,
+                beregningsgrunnlag = beregningsgrunnlag("a1" to 500000.0),
+                sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
+                maksimaltTillattAvvik = 25.0
+            )
         )
         val meldinger = avvikVurdertProducer.ferdigstill()
         val meldingerEtterClear = avvikVurdertProducer.ferdigstill()
@@ -68,33 +75,35 @@ class AvvikVurdertProducerTest {
     @Test
     fun `produserer riktig format på avviksvurderingmelding`() {
         avvikVurdertProducer.avvikVurdert(
-            id = UUID.randomUUID(),
-            harAkseptabeltAvvik = true,
-            avviksprosent = 24.9,
-            beregningsgrunnlag = Beregningsgrunnlag.opprett(
-                mapOf(
-                    "987654321".somArbeidsgiverref() to OmregnetÅrsinntekt(
-                        400000.0
+            Vurdering(
+                id = UUID.randomUUID(),
+                harAkseptabeltAvvik = true,
+                avviksprosent = 24.9,
+                beregningsgrunnlag = Beregningsgrunnlag.opprett(
+                    mapOf(
+                        "987654321".somArbeidsgiverref() to OmregnetÅrsinntekt(
+                            400000.0
+                        )
                     )
-                )
-            ),
-            sammenligningsgrunnlag = Sammenligningsgrunnlag(
-                listOf(
-                    ArbeidsgiverInntekt(
-                        arbeidsgiverreferanse = "987654321".somArbeidsgiverref(),
-                        inntekter = listOf(
-                            ArbeidsgiverInntekt.MånedligInntekt(
-                                inntekt = InntektPerMåned(30000.0),
-                                måned = YearMonth.from(1.januar),
-                                fordel = null,
-                                beskrivelse = null,
-                                inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                ),
+                sammenligningsgrunnlag = Sammenligningsgrunnlag(
+                    listOf(
+                        ArbeidsgiverInntekt(
+                            arbeidsgiverreferanse = "987654321".somArbeidsgiverref(),
+                            inntekter = listOf(
+                                ArbeidsgiverInntekt.MånedligInntekt(
+                                    inntekt = InntektPerMåned(30000.0),
+                                    måned = YearMonth.from(1.januar),
+                                    fordel = null,
+                                    beskrivelse = null,
+                                    inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                                )
                             )
                         )
                     )
-                )
-            ),
-            maksimaltTillattAvvik = 25.0
+                ),
+                maksimaltTillattAvvik = 25.0
+            )
         )
         val messages = avvikVurdertProducer.ferdigstill()
         assertEquals(1, messages.size)
@@ -146,44 +155,46 @@ class AvvikVurdertProducerTest {
 
         val avviksprosent = 24.9
         avvikVurdertProducer.avvikVurdert(
-            id = UUID.randomUUID(),
-            harAkseptabeltAvvik = true,
-            avviksprosent = avviksprosent,
-            beregningsgrunnlag = Beregningsgrunnlag.opprett(
-                mapOf(
-                    arbeidsgiver1 to omregnetÅrsinntekt1,
-                    arbeidsgiver2 to omregnetÅrsinntekt2
-                )
-            ),
-            sammenligningsgrunnlag = Sammenligningsgrunnlag(
-                listOf(
-                    ArbeidsgiverInntekt(
-                        arbeidsgiverreferanse = arbeidsgiver1,
-                        inntekter = listOf(
-                            ArbeidsgiverInntekt.MånedligInntekt(
-                                inntekt = InntektPerMåned(30000.0),
-                                måned = YearMonth.from(1.januar),
-                                fordel = null,
-                                beskrivelse = null,
-                                inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+            Vurdering(
+                id = UUID.randomUUID(),
+                harAkseptabeltAvvik = true,
+                avviksprosent = avviksprosent,
+                beregningsgrunnlag = Beregningsgrunnlag.opprett(
+                    mapOf(
+                        arbeidsgiver1 to omregnetÅrsinntekt1,
+                        arbeidsgiver2 to omregnetÅrsinntekt2
+                    )
+                ),
+                sammenligningsgrunnlag = Sammenligningsgrunnlag(
+                    listOf(
+                        ArbeidsgiverInntekt(
+                            arbeidsgiverreferanse = arbeidsgiver1,
+                            inntekter = listOf(
+                                ArbeidsgiverInntekt.MånedligInntekt(
+                                    inntekt = InntektPerMåned(30000.0),
+                                    måned = YearMonth.from(1.januar),
+                                    fordel = null,
+                                    beskrivelse = null,
+                                    inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                                )
                             )
-                        )
-                    ),
-                    ArbeidsgiverInntekt(
-                        arbeidsgiverreferanse = arbeidsgiver2,
-                        inntekter = listOf(
-                            ArbeidsgiverInntekt.MånedligInntekt(
-                                inntekt = InntektPerMåned(30000.0),
-                                måned = YearMonth.from(1.januar),
-                                fordel = null,
-                                beskrivelse = null,
-                                inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                        ),
+                        ArbeidsgiverInntekt(
+                            arbeidsgiverreferanse = arbeidsgiver2,
+                            inntekter = listOf(
+                                ArbeidsgiverInntekt.MånedligInntekt(
+                                    inntekt = InntektPerMåned(30000.0),
+                                    måned = YearMonth.from(1.januar),
+                                    fordel = null,
+                                    beskrivelse = null,
+                                    inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                                )
                             )
                         )
                     )
-                )
-            ),
-            maksimaltTillattAvvik = 25.0
+                ),
+                maksimaltTillattAvvik = 25.0
+            )
         )
 
         val message = avvikVurdertProducer.ferdigstill()[0].innhold.toJson()

@@ -33,12 +33,14 @@ class Avviksvurdering(
         val avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
         return AvvikVurdert(
             avviksvurdering = this,
-            id = this.id,
-            harAkseptabeltAvvik = avviksprosent <= MAKSIMALT_TILLATT_AVVIK,
-            avviksprosent = avviksprosent.avrundetTilFireDesimaler,
-            beregningsgrunnlag = beregningsgrunnlag,
-            sammenligningsgrunnlag = sammenligningsgrunnlag,
-            maksimaltTillattAvvik = MAKSIMALT_TILLATT_AVVIK.avrundetTilFireDesimaler
+            vurdering = Vurdering(
+                id = this.id,
+                harAkseptabeltAvvik = avviksprosent <= MAKSIMALT_TILLATT_AVVIK,
+                avviksprosent = avviksprosent.avrundetTilFireDesimaler,
+                beregningsgrunnlag = beregningsgrunnlag,
+                sammenligningsgrunnlag = sammenligningsgrunnlag,
+                maksimaltTillattAvvik = MAKSIMALT_TILLATT_AVVIK.avrundetTilFireDesimaler
+            ),
         )
     }
 

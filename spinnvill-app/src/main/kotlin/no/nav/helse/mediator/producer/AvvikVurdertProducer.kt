@@ -2,32 +2,23 @@ package no.nav.helse.mediator.producer
 
 import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.InntektPerMåned
-import no.nav.helse.KriterieObserver
 import no.nav.helse.OmregnetÅrsinntekt
-import no.nav.helse.avviksvurdering.Beregningsgrunnlag
-import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
+import no.nav.helse.avviksvurdering.Vurdering
 import java.time.LocalDateTime
 import java.time.YearMonth
-import java.util.UUID
+import java.util.*
 
-class AvvikVurdertProducer(private val vilkårsgrunnlagId: UUID) : KriterieObserver, Producer {
+class AvvikVurdertProducer(private val vilkårsgrunnlagId: UUID) : Producer {
     private val avviksvurderingKø = mutableListOf<AvviksvurderingDto>()
-    override fun avvikVurdert(
-        id: UUID,
-        harAkseptabeltAvvik: Boolean,
-        avviksprosent: Double,
-        beregningsgrunnlag: Beregningsgrunnlag,
-        sammenligningsgrunnlag: Sammenligningsgrunnlag,
-        maksimaltTillattAvvik: Double
-    ) {
+    fun avvikVurdert(vurdering: Vurdering) {
         avviksvurderingKø.add(
             AvviksvurderingSubsumsjonBuilder(
-                id = id,
-                harAkseptabeltAvvik = harAkseptabeltAvvik,
-                avviksprosent = avviksprosent,
-                maksimaltTillattAvvik = maksimaltTillattAvvik,
-                beregningsgrunnlag = beregningsgrunnlag,
-                sammenligningsgrunnlag = sammenligningsgrunnlag
+                id = vurdering.id,
+                harAkseptabeltAvvik = vurdering.harAkseptabeltAvvik,
+                avviksprosent = vurdering.avviksprosent,
+                maksimaltTillattAvvik = vurdering.maksimaltTillattAvvik,
+                beregningsgrunnlag = vurdering.beregningsgrunnlag,
+                sammenligningsgrunnlag = vurdering.sammenligningsgrunnlag
             ).buildAvvikVurdert()
         )
     }

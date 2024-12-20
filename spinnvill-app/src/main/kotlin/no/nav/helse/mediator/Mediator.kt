@@ -44,18 +44,11 @@ class Mediator(
         when (val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag)) {
             is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> behovProducer.sammenligningsgrunnlag(resultat.behovForSammenligningsgrunnlag)
             is Avviksvurderingsresultat.AvvikVurdert -> {
+                val vurdertAvvik = resultat.vurdering
                 godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.avviksvurdering)
-                listOf(avvikVurdertProducer, subsumsjonProducer).forEach {
-                    it.avvikVurdert(
-                        id = resultat.id,
-                        harAkseptabeltAvvik = resultat.harAkseptabeltAvvik,
-                        avviksprosent = resultat.avviksprosent,
-                        beregningsgrunnlag = resultat.beregningsgrunnlag,
-                        sammenligningsgrunnlag = resultat.sammenligningsgrunnlag,
-                        maksimaltTillattAvvik = resultat.maksimaltTillattAvvik
-                    )
-                }
-                varselProducer.avvikVurdert(resultat.harAkseptabeltAvvik, resultat.avviksprosent)
+                subsumsjonProducer.avvikVurdert(vurdertAvvik)
+                avvikVurdertProducer.avvikVurdert(vurdertAvvik)
+                varselProducer.avvikVurdert(vurdertAvvik.harAkseptabeltAvvik, vurdertAvvik.avviksprosent)
             }
             is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> {
                 godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.gjeldendeAvviksvurdering)
