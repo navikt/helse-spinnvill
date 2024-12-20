@@ -8,14 +8,16 @@ import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
+import java.util.*
 
 class GodkjenningsbehovMessageTest {
 
     private val testRapid = TestRapid()
     private val messageHandler = object : MessageHandler {
-        val messages = mutableListOf<GodkjenningsbehovMessage>()
-        override fun håndter(message: GodkjenningsbehovMessage) {
+        val messages = mutableListOf<FastsattISpleis>()
+        override fun håndter(message: FastsattISpleis) {
             messages.add(message)
         }
 
@@ -37,9 +39,27 @@ class GodkjenningsbehovMessageTest {
         )
 
         val melding = messageHandler.messages.first()
+        melding.leggTilAvviksvurderingId(UUID.randomUUID())
 
         assertNull(melding.toJson()["behandletAvSpinnvill"])
         assertEquals(true, melding.utgående()["behandletAvSpinnvill"])
+    }
+
+    @Test
+    fun `exception dersom avviksvurderingId ikke er satt når vi prøver å konvertere til utgående melding`() {
+        testRapid.sendTestMessage(
+            utkastTilVedtakJson(
+                "12345678910",
+                "987654321",
+                1.januar
+            )
+        )
+
+        val melding = messageHandler.messages.first()
+
+        assertThrows<UninitializedPropertyAccessException> {
+            melding.utgående()
+        }
     }
 
     private fun utkastTilVedtakJson(

@@ -35,9 +35,8 @@ class Avviksvurderinger(
             behovForSammenligningsgrunnlag()
             return null
         }
-        val gjeldende = siste.run {
-            if (trengerNyVurdering(beregningsgrunnlag)) nyAvviksvurdering() else this
-        }
+        val gjeldende = if (siste.trengerNyVurdering(beregningsgrunnlag)) siste.nyAvviksvurdering() else siste
+
         if (siste != gjeldende) nyAvviksvurdering(gjeldende)
         gjeldende.håndter(beregningsgrunnlag)
         return gjeldende

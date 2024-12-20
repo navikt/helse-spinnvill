@@ -12,6 +12,7 @@ internal class GodkjenningsbehovRiver(rapidsConnection: RapidsConnection, privat
         River(rapidsConnection).apply {
             validate {
                 it.demandAll("@behov", listOf("Godkjenning"))
+                it.forbidValues("Godkjenning.sykepengegrunnlagsfakta.fastsatt", listOf("IInfotrygd"))
                 it.rejectKey("@løsning")
                 it.rejectKey("behandletAvSpinnvill")
                 it.requireKey("fødselsnummer", "organisasjonsnummer", "vedtaksperiodeId")
@@ -28,7 +29,7 @@ internal class GodkjenningsbehovRiver(rapidsConnection: RapidsConnection, privat
             "Leser godkjenningsbehov {}",
             kv("Fødselsnummer", packet["fødselsnummer"].asText())
         )
-        messageHandler.håndter(GodkjenningsbehovMessage(packet))
+        messageHandler.håndter(FastsattISpleis(packet))
     }
 
     private companion object {

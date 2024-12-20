@@ -4,16 +4,16 @@ import no.nav.helse.Fødselsnummer
 import no.nav.helse.avviksvurdering.Avviksvurdering
 import no.nav.helse.avviksvurdering.Kilde
 import no.nav.helse.avviksvurdering.Visitor
-import no.nav.helse.kafka.GodkjenningsbehovMessage
+import no.nav.helse.kafka.FastsattISpleis
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
 internal class GodkjenningsbehovProducer(
-    private val godkjenningsbehovMessage: GodkjenningsbehovMessage,
+    private val godkjenningsbehovMessage: FastsattISpleis,
 ) : Producer {
 
-    private val godkjenningsbehov = mutableListOf<GodkjenningsbehovMessage>()
+    private val godkjenningsbehov = mutableListOf<FastsattISpleis>()
 
     internal fun registrerGodkjenningsbehovForUtsending(avviksvurdering: Avviksvurdering) {
         avviksvurdering.accept(Sammensyer(godkjenningsbehovMessage))
@@ -23,7 +23,7 @@ internal class GodkjenningsbehovProducer(
     override fun ferdigstill(): List<Message> =
         godkjenningsbehov.map { Message.Behov(setOf("Godkjenning"), it.utgående()) }
 
-    private class Sammensyer(private val godkjenningsbehovMessage: GodkjenningsbehovMessage) : Visitor {
+    private class Sammensyer(private val godkjenningsbehovMessage: FastsattISpleis) : Visitor {
         override fun visitAvviksvurdering(
             id: UUID,
             fødselsnummer: Fødselsnummer,
@@ -31,7 +31,6 @@ internal class GodkjenningsbehovProducer(
             kilde: Kilde,
             opprettet: LocalDateTime,
         ) {
-            if (kilde == Kilde.INFOTRYGD) return
             godkjenningsbehovMessage.leggTilAvviksvurderingId(id)
         }
     }

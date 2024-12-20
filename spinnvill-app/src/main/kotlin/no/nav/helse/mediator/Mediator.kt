@@ -21,10 +21,11 @@ class Mediator(
 
     init {
         GodkjenningsbehovRiver(rapidsConnection, this)
+        FastsattIInfotrygdRiver(rapidsConnection)
         SammenligningsgrunnlagRiver(rapidsConnection, this)
     }
 
-    override fun håndter(message: GodkjenningsbehovMessage) {
+    override fun håndter(message: FastsattISpleis) {
         val meldingProducer = nyMeldingProducer(message)
 
         logg.info("Behandler utkast_til_vedtak for {}", kv("vedtaksperiodeId", message.vedtaksperiodeId))
@@ -84,7 +85,7 @@ class Mediator(
         return Avviksvurderinger(fødselsnummer, skjæringstidspunkt, avviksvurderinger)
     }
 
-    private fun nyMeldingProducer(godkjenningsbehovMessage: GodkjenningsbehovMessage) = MeldingProducer(
+    private fun nyMeldingProducer(godkjenningsbehovMessage: FastsattISpleis) = MeldingProducer(
         fødselsnummer = godkjenningsbehovMessage.fødselsnummer.somFnr(),
         organisasjonsnummer = godkjenningsbehovMessage.organisasjonsnummer.somArbeidsgiverref(),
         skjæringstidspunkt = godkjenningsbehovMessage.skjæringstidspunkt,
@@ -92,7 +93,7 @@ class Mediator(
         rapidsConnection = rapidsConnection
     )
 
-    private fun nySubsumsjonProducer(godkjenningsbehovMessage: GodkjenningsbehovMessage): SubsumsjonProducer {
+    private fun nySubsumsjonProducer(godkjenningsbehovMessage: FastsattISpleis): SubsumsjonProducer {
         return SubsumsjonProducer(
             fødselsnummer = godkjenningsbehovMessage.fødselsnummer.somFnr(),
             vedtaksperiodeId = godkjenningsbehovMessage.vedtaksperiodeId,
@@ -102,7 +103,7 @@ class Mediator(
         )
     }
 
-    private fun nyttBeregningsgrunnlag(godkjenningsbehovMessage: GodkjenningsbehovMessage): Beregningsgrunnlag {
+    private fun nyttBeregningsgrunnlag(godkjenningsbehovMessage: FastsattISpleis): Beregningsgrunnlag {
         return Beregningsgrunnlag.opprett(
             godkjenningsbehovMessage.beregningsgrunnlag.entries.associate {
                 Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value)

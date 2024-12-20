@@ -32,7 +32,7 @@ class Avviksvurdering(
     }
 
     fun håndter(beregningsgrunnlag: Beregningsgrunnlag) {
-        if (kilde == Kilde.INFOTRYGD || this.beregningsgrunnlag.erLikt(beregningsgrunnlag)) return
+        if (this.beregningsgrunnlag.erLikt(beregningsgrunnlag)) return
         this.beregningsgrunnlag = beregningsgrunnlag
         avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
         observers.forEach {
@@ -55,7 +55,6 @@ class Avviksvurdering(
 
     fun trengerNyVurdering(beregningsgrunnlag: Beregningsgrunnlag): Boolean {
         return when {
-            this.kilde == Kilde.INFOTRYGD -> false
             this.beregningsgrunnlag is Ingen -> false
             this.beregningsgrunnlag.erLikt(beregningsgrunnlag) -> {
                 loggGjenbrukAvAvviksvurdering(beregningsgrunnlag)

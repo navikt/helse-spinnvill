@@ -15,8 +15,8 @@ class GodkjenningsbehovRiverTest {
     private val testRapid = TestRapid()
 
     private val messageHandler = object: MessageHandler {
-        val messages = mutableListOf<GodkjenningsbehovMessage>()
-        override fun håndter(message: GodkjenningsbehovMessage) {
+        val messages = mutableListOf<FastsattISpleis>()
+        override fun håndter(message: FastsattISpleis) {
             messages.add(message)
         }
 
@@ -50,6 +50,12 @@ class GodkjenningsbehovRiverTest {
     }
 
     @Test
+    fun `leser ikke inn godkjenningsbehov med fastsatt = IInfotrygd`() {
+        testRapid.sendTestMessage(utkastTilVedtakJson(FØDSELSNUMMER, ORGANISASJONSNUMMER, skjæringstidspunkt, "IInfotrygd"))
+        assertEquals(0, messageHandler.messages.size)
+    }
+
+    @Test
     fun `leser ikke inn godkjenningsbehov markert med behandletAvSpinnvill`() {
         testRapid.sendTestMessage(utkastTilVedtakJsonMedBehandletAvSpinnvill(
             FØDSELSNUMMER,
@@ -62,7 +68,8 @@ class GodkjenningsbehovRiverTest {
     private fun utkastTilVedtakJson(
         fødselsnummer: String,
         organisasjonsnummer: String,
-        skjæringstidspunkt: LocalDate
+        skjæringstidspunkt: LocalDate,
+        fastsatt: String = "EtterHovedregel"
     ): String {
         @Language("JSON")
         val json = """
@@ -102,7 +109,12 @@ class GodkjenningsbehovRiverTest {
                     "organisasjonsnummer": "000000000",
                     "beløp": 200000.20
                   }
-                ]
+                ],
+                "sykepengegrunnlagsfakta": {
+                  "omregnetÅrsinntektTotalt": 50000.0,
+                  "sykepengegrunnlag": 50000.0,
+                  "fastsatt": "$fastsatt"
+                }
               },
               "@id": "ba376523-62b1-49d7-8647-f902c739b634",
               "@opprettet": "2018-01-01T00:00:00.000"

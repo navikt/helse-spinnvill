@@ -8,23 +8,23 @@ import no.nav.helse.rapids_rivers.asLocalDate
 import java.time.LocalDate
 import java.util.*
 
-class GodkjenningsbehovMessage(packet: JsonMessage) {
+class FastsattIInfotrygd(packet: JsonMessage) : GodkjenningsbehovMessage(packet) {
 
-    // Litt usikker på om vi trenger denne, det føltes bare litt feil å fikle på det objektet vi får inn i konstruktøren
-    private val result = objectMapper.readTree(packet.toJson()) as ObjectNode
+}
+
+class FastsattISpleis(packet: JsonMessage) : GodkjenningsbehovMessage(packet) {
     private lateinit var avviksvurderingId: UUID
-
-    fun toJson(): JsonNode = result.deepCopy()
-
     fun leggTilAvviksvurderingId(id: UUID) {
         avviksvurderingId = id
     }
 
-    fun utgående(): Map<String, Any> =
-        objectMapper.convertValue(result.apply {
-            if (::avviksvurderingId.isInitialized) put("avviksvurderingId", avviksvurderingId.toString())
-            put("behandletAvSpinnvill", true)
-        })
+    override fun felterForUtgåendeMelding(): Map<String, Any> {
+        return mapOf(
+            "avviksvurderingId" to avviksvurderingId
+        )
+    }
+
+    fun toJson(): JsonNode = result.deepCopy()
 
     val vilkårsgrunnlagId: UUID = packet["Godkjenning.vilkårsgrunnlagId"].asUUID()
     val skjæringstidspunkt: LocalDate = packet["Godkjenning.skjæringstidspunkt"].asLocalDate()
@@ -34,4 +34,17 @@ class GodkjenningsbehovMessage(packet: JsonMessage) {
     val beregningsgrunnlag = packet["Godkjenning.omregnedeÅrsinntekter"].associate {
         it["organisasjonsnummer"].asText() to it["beløp"].asDouble()
     }
+}
+
+abstract class GodkjenningsbehovMessage(packet: JsonMessage) {
+
+    // Litt usikker på om vi trenger denne, det føltes bare litt feil å fikle på det objektet vi får inn i konstruktøren
+    protected val result = objectMapper.readTree(packet.toJson()) as ObjectNode
+
+
+    fun utgående(): Map<String, Any> =
+        objectMapper.convertValue<Map<String, Any>>(result) + felterForUtgåendeMelding() + mapOf("behandletAvSpinnvill" to  true)
+
+    open fun felterForUtgåendeMelding(): Map<String, Any> = emptyMap()
+
 }
