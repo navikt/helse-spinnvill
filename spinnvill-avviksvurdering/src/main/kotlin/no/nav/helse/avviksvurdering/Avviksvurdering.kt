@@ -2,8 +2,9 @@ package no.nav.helse.avviksvurdering
 
 import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
-import no.nav.helse.KriterieObserver
 import no.nav.helse.OmregnetÅrsinntekt
+import no.nav.helse.avviksvurdering.Avviksvurderingsresultat.AvvikVurdert
+import no.nav.helse.avviksvurdering.Avviksvurderingsresultat.TrengerIkkeNyVurdering
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -22,29 +23,23 @@ class Avviksvurdering(
     private val opprettet: LocalDateTime,
     private val kilde: Kilde,
 ) {
-    private var avviksprosent: Avviksprosent = Avviksprosent.INGEN
     private val MAKSIMALT_TILLATT_AVVIK = Avviksprosent(25.0)
 
-    private val observers = mutableListOf<KriterieObserver>()
+    fun vurderAvvik(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsresultat {
+        if (kilde == Kilde.INFOTRYGD || this.beregningsgrunnlag.erLikt(beregningsgrunnlag))
+            return TrengerIkkeNyVurdering(this)
 
-    fun register(vararg observers: KriterieObserver) {
-        this.observers.addAll(observers)
-    }
-
-    fun vurderAvvik(beregningsgrunnlag: Beregningsgrunnlag) {
-        if (kilde == Kilde.INFOTRYGD || this.beregningsgrunnlag.erLikt(beregningsgrunnlag)) return
         this.beregningsgrunnlag = beregningsgrunnlag
-        avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
-        observers.forEach {
-            it.avvikVurdert(
-                id = id,
-                harAkseptabeltAvvik = avviksprosent <= MAKSIMALT_TILLATT_AVVIK,
-                avviksprosent = avviksprosent.avrundetTilFireDesimaler,
-                beregningsgrunnlag = beregningsgrunnlag,
-                sammenligningsgrunnlag = sammenligningsgrunnlag,
-                maksimaltTillattAvvik = MAKSIMALT_TILLATT_AVVIK.avrundetTilFireDesimaler
-            )
-        }
+        val avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
+        return AvvikVurdert(
+            avviksvurdering = this,
+            id = this.id,
+            harAkseptabeltAvvik = avviksprosent <= MAKSIMALT_TILLATT_AVVIK,
+            avviksprosent = avviksprosent.avrundetTilFireDesimaler,
+            beregningsgrunnlag = beregningsgrunnlag,
+            sammenligningsgrunnlag = sammenligningsgrunnlag,
+            maksimaltTillattAvvik = MAKSIMALT_TILLATT_AVVIK.avrundetTilFireDesimaler
+        )
     }
 
     fun accept(visitor: Visitor) {

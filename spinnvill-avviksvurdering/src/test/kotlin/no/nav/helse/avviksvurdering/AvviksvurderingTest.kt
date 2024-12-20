@@ -6,87 +6,76 @@ import no.nav.helse.helpers.januar
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.YearMonth
-import java.util.*
+import kotlin.test.assertIs
 
 internal class AvviksvurderingTest {
 
     @Test
     fun `har gjort avviksvurdering før`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
-        avviksvurdering.register(observer)
 
         avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.0))
-        observer.clear()
-        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.0))
-        assertEquals(0, observer.avviksvurderinger.size)
+        val resultat = avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.0))
+        assertIs<Avviksvurderingsresultat.TrengerIkkeNyVurdering>(resultat)
     }
 
     @Test
     fun `har fire desimalers oppløsning på avviksprosent`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
-        avviksvurdering.register(observer)
 
-        avviksvurdering.vurderAvvik(beregningsgrunnlag("a" to 750000.6))
-        assertEquals(25.0001, observer.avviksvurderinger.first().second)
+        val resultat = avviksvurdering.vurderAvvik(beregningsgrunnlag("a" to 750000.6))
+        assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
+        assertEquals(25.0001, resultat.avviksprosent)
     }
 
     @Test
     fun `gjør ny avviksvurdering når vi sammenligner beregningsgrunnlag med beløo 0 mot INGEN`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
-        avviksvurdering.register(observer)
-        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 0.0))
-
-        assertEquals(1, observer.avviksvurderinger.size)
+        val resultat = avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 0.0))
+        assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
     }
 
     @Test
     fun `gjør ikke ny avviksvurdering når vi allerede har avviksvurdert og beregningsgrunnlag bare er litt forskjellig`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
-        avviksvurdering.register(observer)
 
         avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.0))
-        observer.clear()
-        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.1))
-        assertEquals(0, observer.avviksvurderinger.size)
+        val resultat1 = avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.1))
+        assertIs<Avviksvurderingsresultat.TrengerIkkeNyVurdering>(resultat1)
 
-        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 599999.88888884))
-        assertEquals(0, observer.avviksvurderinger.size)
+        val resultat2 = avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 599999.88888884))
+        assertIs<Avviksvurderingsresultat.TrengerIkkeNyVurdering>(resultat2)
     }
 
     @Test
     fun `gjør ny avviksvurdering når vi allerede har avviksvurdert og beregningsgrunnlag er akkurat bare litt forskjellig`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
-        avviksvurdering.register(observer)
 
         avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 599999.88888884))
-        observer.clear()
 
-        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.99999994))
-        assertEquals(1, observer.avviksvurderinger.size)
+        val resultat = avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.99999994))
+        assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
     }
 
     @Test
     fun `gjør ny avviksvurdering når vi allerede har avviksvurdert og beregningsgrunnlag er rett over bare litt forskjellig`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
-        avviksvurdering.register(observer)
         avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.0))
-        observer.clear()
 
-        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.9999999994))
-        assertEquals(0, observer.avviksvurderinger.size)
+        val resultat1 = avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.9999999994))
+        assertIs<Avviksvurderingsresultat.TrengerIkkeNyVurdering>(resultat1)
 
-        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600001.0))
-        assertEquals(1, observer.avviksvurderinger.size)
+        val resultat2 = avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600001.0))
+        assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat2)
     }
 
     @Test
     fun `har ikke gjort avviksvurdering før og avvik innenfor akseptabelt avvik`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
-        avviksvurdering.register(observer)
 
-        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.0))
-        assertEquals(1, observer.avviksvurderinger.size)
-        val (harAkseptabeltAvvik, avviksprosent) = observer.avviksvurderinger.single()
+        val resultat = avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 600000.0))
+        assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
+        val (_, _, harAkseptabeltAvvik, avviksprosent) = resultat
         assertEquals(true, harAkseptabeltAvvik)
         assertEquals(0.0, avviksprosent)
     }
@@ -94,11 +83,10 @@ internal class AvviksvurderingTest {
     @Test
     fun `har ikke gjort avviksvurdering før og avvik akkurat utenfor akseptabelt avvik`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
-        avviksvurdering.register(observer)
 
-        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 449999.4))
-        assertEquals(1, observer.avviksvurderinger.size)
-        val (harAkseptabeltAvvik, avviksprosent) = observer.avviksvurderinger.single()
+        val resultat = avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 449999.4))
+        assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
+        val (_, _, harAkseptabeltAvvik, avviksprosent) = resultat
         assertEquals(25.0001, avviksprosent)
         assertFalse(harAkseptabeltAvvik) {"Forventet at $avviksprosent er et uakseptabelt avvik"}
     }
@@ -106,11 +94,10 @@ internal class AvviksvurderingTest {
     @Test
     fun `har ikke gjort avviksvurdering før og avvik akkurat innenfor akseptabelt avvik`() {
         val avviksvurdering = Avviksvurdering.nyAvviksvurdering("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))
-        avviksvurdering.register(observer)
 
-        avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 449999.7))
-        assertEquals(1, observer.avviksvurderinger.size)
-        val (harAkseptabeltAvvik, avviksprosent) = observer.avviksvurderinger.single()
+        val resultat = avviksvurdering.vurderAvvik(beregningsgrunnlag("a1" to 449999.7))
+        assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
+        val (_, _, harAkseptabeltAvvik, avviksprosent) = resultat
         assertEquals(25.0, avviksprosent)
         assertTrue(harAkseptabeltAvvik) {"Forventet at $avviksprosent er et akseptabelt avvik"}
     }
@@ -139,25 +126,5 @@ internal class AvviksvurderingTest {
 
     private fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) =
         Beregningsgrunnlag.opprett(arbeidsgivere.toMap().entries.associate { Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value) })
-
-    private val observer = object : KriterieObserver {
-
-        val avviksvurderinger = mutableListOf<Pair<Boolean, Double>>()
-
-        fun clear() {
-            avviksvurderinger.clear()
-        }
-
-        override fun avvikVurdert(
-            id: UUID,
-            harAkseptabeltAvvik: Boolean,
-            avviksprosent: Double,
-            beregningsgrunnlag: Beregningsgrunnlag,
-            sammenligningsgrunnlag: Sammenligningsgrunnlag,
-            maksimaltTillattAvvik: Double
-        ) {
-            avviksvurderinger.add(harAkseptabeltAvvik to avviksprosent)
-        }
-    }
 }
 

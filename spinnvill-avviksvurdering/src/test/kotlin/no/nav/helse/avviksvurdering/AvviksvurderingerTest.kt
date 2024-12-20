@@ -5,7 +5,6 @@ import no.nav.helse.helpers.januar
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.YearMonth
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
@@ -18,7 +17,6 @@ class AvviksvurderingerTest {
     fun `be om sammenligningsgrunnlag hvis det ikke er gjort noen avviksvurderinger enda`() {
         val avviksvurderinger = avviksvurderinger()
         val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-        assertEquals(0, kriterieObserver.avvikVurdert.size)
         assertIs<Avviksvurderingsresultat.TrengerSammenligningsgrunnlag>(resultat)
         assertEquals(1.januar, resultat.behovForSammenligningsgrunnlag.skjæringstidspunkt)
         assertEquals(YearMonth.of(2017, 1), resultat.behovForSammenligningsgrunnlag.beregningsperiodeFom)
@@ -29,8 +27,8 @@ class AvviksvurderingerTest {
     fun `gjør avviksvurdering når vi kun har sammenligningsgrunnlag`() {
         val avviksvurderinger = avviksvurderinger()
         avviksvurderinger.håndterNytt(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0))
-        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-        assertEquals(1, kriterieObserver.avvikVurdert.size)
+        val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
+        assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
     }
 
     @Test
@@ -38,9 +36,8 @@ class AvviksvurderingerTest {
         val avviksvurderinger = avviksvurderinger()
         avviksvurderinger.håndterNytt(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0))
         avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-        kriterieObserver.reset()
-        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-        assertEquals(0, kriterieObserver.avvikVurdert.size)
+        val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
+        assertIs<Avviksvurderingsresultat.TrengerIkkeNyVurdering>(resultat)
     }
 
     @Test
@@ -48,9 +45,8 @@ class AvviksvurderingerTest {
         val avviksvurderinger = avviksvurderinger()
         avviksvurderinger.håndterNytt(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0))
         avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-        kriterieObserver.reset()
-        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 0.0))
-        assertEquals(1, kriterieObserver.avvikVurdert.size)
+        val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 0.0))
+        assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
     }
 
     @Test
@@ -58,9 +54,8 @@ class AvviksvurderingerTest {
         val avviksvurderinger = avviksvurderinger()
         avviksvurderinger.håndterNytt(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0))
         avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-        kriterieObserver.reset()
-        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 500000.0))
-        assertEquals(1, kriterieObserver.avvikVurdert.size)
+        val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 500000.0))
+        assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
     }
 
     @Test
@@ -68,37 +63,19 @@ class AvviksvurderingerTest {
         val avviksvurderinger = avviksvurderinger()
         avviksvurderinger.håndterNytt(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0))
         avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-        kriterieObserver.reset()
 
-        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.1))
-        assertEquals(0, kriterieObserver.avvikVurdert.size)
+        val resultat1 = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.1))
+        assertIs<Avviksvurderingsresultat.TrengerIkkeNyVurdering>(resultat1)
 
-        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 599999.999999994))
-        assertEquals(0, kriterieObserver.avvikVurdert.size)
-    }
-
-    private val kriterieObserver = object : KriterieObserver {
-        fun reset() = avvikVurdert.clear()
-        val avvikVurdert = mutableListOf<UUID>()
-        override fun avvikVurdert(
-            id: UUID,
-            harAkseptabeltAvvik: Boolean,
-            avviksprosent: Double,
-            beregningsgrunnlag: Beregningsgrunnlag,
-            sammenligningsgrunnlag: Sammenligningsgrunnlag,
-            maksimaltTillattAvvik: Double
-        ) {
-            avvikVurdert.add(id)
-        }
+        val resultat2 = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 599999.999999994))
+        assertIs<Avviksvurderingsresultat.TrengerIkkeNyVurdering>(resultat2)
     }
 
     private fun avviksvurderinger() = Avviksvurderinger(
         fødselsnummer,
         skjæringstidspunkt,
         emptyList()
-    ).also {
-        it.registrer(kriterieObserver)
-    }
+    )
 
     private fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) =
         Beregningsgrunnlag.opprett(arbeidsgivere.toMap().entries.associate { Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value) })

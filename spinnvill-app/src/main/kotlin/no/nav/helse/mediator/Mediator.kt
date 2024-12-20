@@ -41,11 +41,24 @@ class Mediator(
         val beregningsgrunnlag = nyttBeregningsgrunnlag(message)
         val avviksvurderinger = hentAvviksvurderinger(Fødselsnummer(message.fødselsnummer), message.skjæringstidspunkt)
 
-        avviksvurderinger.registrer(varselProducer, subsumsjonProducer, avvikVurdertProducer)
-
         when (val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag)) {
-            is Avviksvurderingsresultat.GjeldendeAvviksvurdering -> godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.avviksvurdering)
             is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> behovProducer.sammenligningsgrunnlag(resultat.behovForSammenligningsgrunnlag)
+            is Avviksvurderingsresultat.AvvikVurdert -> {
+                godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.avviksvurdering)
+                listOf(avvikVurdertProducer, varselProducer, subsumsjonProducer).forEach {
+                    it.avvikVurdert(
+                        id = resultat.id,
+                        harAkseptabeltAvvik = resultat.harAkseptabeltAvvik,
+                        avviksprosent = resultat.avviksprosent,
+                        beregningsgrunnlag = resultat.beregningsgrunnlag,
+                        sammenligningsgrunnlag = resultat.sammenligningsgrunnlag,
+                        maksimaltTillattAvvik = resultat.maksimaltTillattAvvik
+                    )
+                }
+            }
+            is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> {
+                godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.gjeldendeAvviksvurdering)
+            }
         }
         avviksvurderinger.lagre()
         meldingProducer.publiserMeldinger()

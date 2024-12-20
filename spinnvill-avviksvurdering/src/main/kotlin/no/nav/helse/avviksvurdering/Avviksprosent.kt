@@ -3,7 +3,7 @@ package no.nav.helse.avviksvurdering
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
-internal class Avviksprosent (prosent: Double): Comparable<Avviksprosent> {
+class Avviksprosent internal constructor(prosent: Double): Comparable<Avviksprosent> {
 
     internal val avrundetTilFireDesimaler = (prosent * PRESISJON).roundToInt() / PRESISJON
 

@@ -1,15 +1,9 @@
 package no.nav.helse.avviksvurdering
 
 import no.nav.helse.Fødselsnummer
-import no.nav.helse.KriterieObserver
 import no.nav.helse.avviksvurdering.Avviksvurdering.Companion.siste
 import java.time.LocalDate
 import java.time.YearMonth
-
-sealed interface Avviksvurderingsresultat {
-    data class TrengerSammenligningsgrunnlag(val behovForSammenligningsgrunnlag: BehovForSammenligningsgrunnlag) : Avviksvurderingsresultat
-    data class GjeldendeAvviksvurdering(val avviksvurdering: Avviksvurdering): Avviksvurderingsresultat
-}
 
 class Avviksvurderinger(
     private val fødselsnummer: Fødselsnummer,
@@ -18,13 +12,6 @@ class Avviksvurderinger(
 ) {
     private val avviksvurderinger = avviksvurderinger.toMutableList()
     private val siste get() = avviksvurderinger.siste()
-
-    private val kriterieObservers = mutableListOf<KriterieObserver>()
-
-    fun registrer(vararg observers: KriterieObserver) {
-        kriterieObservers.addAll(observers)
-        avviksvurderinger.forEach { it.register(*observers) }
-    }
 
     fun accept(visitor: Visitor) {
         avviksvurderinger.forEach { it.accept(visitor) }
@@ -39,9 +26,7 @@ class Avviksvurderinger(
             else sisteAvviksvurdering
 
         if (sisteAvviksvurdering != gjeldendeAvviksvurdering) nySisteAvviksvurdering(gjeldendeAvviksvurdering)
-
-        gjeldendeAvviksvurdering.vurderAvvik(beregningsgrunnlag)
-        return Avviksvurderingsresultat.GjeldendeAvviksvurdering(gjeldendeAvviksvurdering)
+        return gjeldendeAvviksvurdering.vurderAvvik(beregningsgrunnlag)
     }
 
     fun håndterNytt(sammenligningsgrunnlag: Sammenligningsgrunnlag) {
@@ -51,9 +36,6 @@ class Avviksvurderinger(
     }
 
     private fun nySisteAvviksvurdering(avviksvurdering: Avviksvurdering) {
-        kriterieObservers.forEach { observer ->
-            avviksvurdering.register(observer)
-        }
         avviksvurderinger.addLast(avviksvurdering)
     }
 
