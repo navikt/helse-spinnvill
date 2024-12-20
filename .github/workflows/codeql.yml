@@ -38,8 +38,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Gradle build
-        with:
-          arguments: build --no-build-cache
+        run: ./gadlew build --no-build-cache
         env:
           ORG_GRADLE_PROJECT_githubUser: x-access-token
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
