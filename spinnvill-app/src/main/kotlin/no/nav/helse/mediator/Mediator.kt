@@ -45,7 +45,7 @@ class Mediator(
             is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> behovProducer.sammenligningsgrunnlag(resultat.behovForSammenligningsgrunnlag)
             is Avviksvurderingsresultat.AvvikVurdert -> {
                 godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.avviksvurdering)
-                listOf(avvikVurdertProducer, varselProducer, subsumsjonProducer).forEach {
+                listOf(avvikVurdertProducer, subsumsjonProducer).forEach {
                     it.avvikVurdert(
                         id = resultat.id,
                         harAkseptabeltAvvik = resultat.harAkseptabeltAvvik,
@@ -55,6 +55,7 @@ class Mediator(
                         maksimaltTillattAvvik = resultat.maksimaltTillattAvvik
                     )
                 }
+                varselProducer.avvikVurdert(resultat.harAkseptabeltAvvik, resultat.avviksprosent)
             }
             is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> {
                 godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.gjeldendeAvviksvurdering)

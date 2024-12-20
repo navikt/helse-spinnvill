@@ -1,8 +1,6 @@
 package no.nav.helse.mediator.producer
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.nav.helse.helpers.dummyBeregningsgrunnlag
-import no.nav.helse.helpers.dummySammenligningsgrunnlag
 import no.nav.helse.helpers.toJson
 import no.nav.helse.rapids_rivers.isMissingOrNull
 import org.junit.jupiter.api.Assertions.*
@@ -15,21 +13,21 @@ class VarselProducerTest {
 
     @Test
     fun `ikke produser varsel hvis avviket er akseptabelt`() {
-        varselProducer.avvikVurdert(UUID.randomUUID(), true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
+        varselProducer.avvikVurdert(true, 20.0)
         varselProducer.ferdigstill()
         assertEquals(0, varselProducer.ferdigstill().size)
     }
 
     @Test
     fun `varselkø tømmes etter hver finalize`() {
-        varselProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
+        varselProducer.avvikVurdert(false, 26.0)
         assertEquals(1, varselProducer.ferdigstill().size)
         assertEquals(0, varselProducer.ferdigstill().size)
     }
 
     @Test
     fun `produser riktig format på varsel`() {
-        varselProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
+        varselProducer.avvikVurdert(false, 26.0)
         val messages = varselProducer.ferdigstill()
         assertEquals(1, messages.size)
         val message = messages[0]
@@ -52,7 +50,7 @@ class VarselProducerTest {
 
     @Test
     fun `produser varsel hvis avviket ikke er akseptabelt`() {
-        varselProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
+        varselProducer.avvikVurdert(false, 26.0)
         val messages = varselProducer.ferdigstill()
         val json = messages[0].innhold.toJson()
         val varsel = json["aktiviteter"][0]

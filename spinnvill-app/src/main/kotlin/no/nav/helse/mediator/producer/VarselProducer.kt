@@ -1,24 +1,14 @@
 package no.nav.helse.mediator.producer
 
-import no.nav.helse.KriterieObserver
-import no.nav.helse.avviksvurdering.Beregningsgrunnlag
-import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import java.time.LocalDateTime
 import java.util.*
 
 internal class VarselProducer(
     private val vedtaksperiodeId: UUID
-): KriterieObserver, Producer {
+): Producer {
     private val varselkø = mutableListOf<VarselDto>()
 
-    override fun avvikVurdert(
-        id: UUID,
-        harAkseptabeltAvvik: Boolean,
-        avviksprosent: Double,
-        beregningsgrunnlag: Beregningsgrunnlag,
-        sammenligningsgrunnlag: Sammenligningsgrunnlag,
-        maksimaltTillattAvvik: Double
-    ) {
+    fun avvikVurdert(harAkseptabeltAvvik: Boolean, avviksprosent: Double) {
         if (harAkseptabeltAvvik) return
         varselkø.add(VarselDto(
             melding = "Utenfor akseptabelt avvik. Avviket er $avviksprosent %.",
