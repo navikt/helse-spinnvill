@@ -6,6 +6,11 @@ import no.nav.helse.avviksvurdering.Avviksvurdering.Companion.siste
 import java.time.LocalDate
 import java.time.YearMonth
 
+sealed interface Avviksvurderingsresultat {
+    data class TrengerSammenligningsgrunnlag(val behovForSammenligningsgrunnlag: BehovForSammenligningsgrunnlag) : Avviksvurderingsresultat
+    data class GjeldendeAvviksvurdering(val avviksvurdering: Avviksvurdering): Avviksvurderingsresultat
+}
+
 class Avviksvurderinger(
     private val fødselsnummer: Fødselsnummer,
     private val skjæringstidspunkt: LocalDate,
@@ -14,12 +19,7 @@ class Avviksvurderinger(
     private val avviksvurderinger = avviksvurderinger.toMutableList()
     private val siste get() = avviksvurderinger.siste()
 
-    private val behovObservers = mutableListOf<BehovObserver>()
     private val kriterieObservers = mutableListOf<KriterieObserver>()
-
-    fun registrer(observer: BehovObserver) {
-        behovObservers.add(observer)
-    }
 
     fun registrer(vararg observers: KriterieObserver) {
         kriterieObservers.addAll(observers)
@@ -30,15 +30,18 @@ class Avviksvurderinger(
         avviksvurderinger.forEach { it.accept(visitor) }
     }
 
-    fun håndterNytt(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurdering? {
-        val sisteAvviksvurdering = siste ?: run {
-            behovForSammenligningsgrunnlag()
-            return null
-        }
-        val gjeldendeAvviksvurdering = if (sisteAvviksvurdering.trengerNyVurdering(beregningsgrunnlag)) sisteAvviksvurdering.lagNyAvviksvurdering() else sisteAvviksvurdering
+    fun håndterNytt(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsresultat {
+        val sisteAvviksvurdering =
+            siste
+            ?: return Avviksvurderingsresultat.TrengerSammenligningsgrunnlag(behovForSammenligningsgrunnlag())
+        val gjeldendeAvviksvurdering =
+            if (sisteAvviksvurdering.trengerNyVurdering(beregningsgrunnlag)) sisteAvviksvurdering.lagNyAvviksvurdering()
+            else sisteAvviksvurdering
+
         if (sisteAvviksvurdering != gjeldendeAvviksvurdering) nySisteAvviksvurdering(gjeldendeAvviksvurdering)
+
         gjeldendeAvviksvurdering.vurderAvvik(beregningsgrunnlag)
-        return gjeldendeAvviksvurdering
+        return Avviksvurderingsresultat.GjeldendeAvviksvurdering(gjeldendeAvviksvurdering)
     }
 
     fun håndterNytt(sammenligningsgrunnlag: Sammenligningsgrunnlag) {
@@ -54,17 +57,14 @@ class Avviksvurderinger(
         avviksvurderinger.addLast(avviksvurdering)
     }
 
-    private fun behovForSammenligningsgrunnlag() {
-        behovObservers.forEach {
-            val tom = YearMonth.from(skjæringstidspunkt).minusMonths(1)
-            val fom = tom.minusMonths(11)
-            it.sammenligningsgrunnlag(
-                BehovForSammenligningsgrunnlag(
-                    skjæringstidspunkt = skjæringstidspunkt,
-                    beregningsperiodeFom = fom,
-                    beregningsperiodeTom = tom
-                )
-            )
-        }
+    private fun behovForSammenligningsgrunnlag(): BehovForSammenligningsgrunnlag {
+        val tom = YearMonth.from(skjæringstidspunkt).minusMonths(1)
+        val fom = tom.minusMonths(11)
+        val behov = BehovForSammenligningsgrunnlag(
+            skjæringstidspunkt = skjæringstidspunkt,
+            beregningsperiodeFom = fom,
+            beregningsperiodeTom = tom
+        )
+        return behov
     }
 }

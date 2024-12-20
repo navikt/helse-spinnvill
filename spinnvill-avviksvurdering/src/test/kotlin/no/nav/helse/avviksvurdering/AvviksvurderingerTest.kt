@@ -7,6 +7,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.util.*
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 class AvviksvurderingerTest {
     private val fødselsnummer = Fødselsnummer("12345678910")
@@ -16,13 +17,12 @@ class AvviksvurderingerTest {
     @Test
     fun `be om sammenligningsgrunnlag hvis det ikke er gjort noen avviksvurderinger enda`() {
         val avviksvurderinger = avviksvurderinger()
-        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-        val behov = behovObserver.behov.firstOrNull()
+        val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
         assertEquals(0, kriterieObserver.avvikVurdert.size)
-        assertEquals(1, behovObserver.behov.size)
-        assertEquals(1.januar, behov?.skjæringstidspunkt)
-        assertEquals(YearMonth.of(2017, 1), behov?.beregningsperiodeFom)
-        assertEquals(YearMonth.of(2017, 12), behov?.beregningsperiodeTom)
+        assertIs<Avviksvurderingsresultat.TrengerSammenligningsgrunnlag>(resultat)
+        assertEquals(1.januar, resultat.behovForSammenligningsgrunnlag.skjæringstidspunkt)
+        assertEquals(YearMonth.of(2017, 1), resultat.behovForSammenligningsgrunnlag.beregningsperiodeFom)
+        assertEquals(YearMonth.of(2017, 12), resultat.behovForSammenligningsgrunnlag.beregningsperiodeTom)
     }
 
     @Test
@@ -61,7 +61,6 @@ class AvviksvurderingerTest {
         kriterieObserver.reset()
         avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 500000.0))
         assertEquals(1, kriterieObserver.avvikVurdert.size)
-        assertEquals(0, behovObserver.behov.size)
     }
 
     @Test
@@ -73,18 +72,9 @@ class AvviksvurderingerTest {
 
         avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.1))
         assertEquals(0, kriterieObserver.avvikVurdert.size)
-        assertEquals(0, behovObserver.behov.size)
 
         avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 599999.999999994))
         assertEquals(0, kriterieObserver.avvikVurdert.size)
-        assertEquals(0, behovObserver.behov.size)
-    }
-
-    private val behovObserver = object : BehovObserver {
-        val behov = mutableListOf<BehovForSammenligningsgrunnlag>()
-        override fun sammenligningsgrunnlag(behov: BehovForSammenligningsgrunnlag) {
-            this.behov.add(behov)
-        }
     }
 
     private val kriterieObserver = object : KriterieObserver {
@@ -107,7 +97,6 @@ class AvviksvurderingerTest {
         skjæringstidspunkt,
         emptyList()
     ).also {
-        it.registrer(behovObserver)
         it.registrer(kriterieObserver)
     }
 

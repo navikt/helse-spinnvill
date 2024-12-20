@@ -2,11 +2,10 @@ package no.nav.helse.mediator.producer
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.nav.helse.avviksvurdering.BehovForSammenligningsgrunnlag
-import no.nav.helse.avviksvurdering.BehovObserver
 
 internal class BehovProducer(
     private val utkastTilVedtakJson: JsonNode,
-): Producer, BehovObserver {
+): Producer {
     private val behovskø = mutableMapOf<String, Map<String, Any>>()
 
     override fun ferdigstill(): List<Message> {
@@ -23,7 +22,7 @@ internal class BehovProducer(
         return listOf(compositeBehov)
     }
 
-    override fun sammenligningsgrunnlag(behov: BehovForSammenligningsgrunnlag) {
+    fun sammenligningsgrunnlag(behov: BehovForSammenligningsgrunnlag) {
         behovskø["InntekterForSammenligningsgrunnlag"] = behov.toMap()
     }
 
