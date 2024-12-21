@@ -18,9 +18,9 @@ class GrunnlagshistorikkTest {
         val avviksvurderinger = avviksvurderinger()
         val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
         assertIs<Avviksvurderingsresultat.TrengerSammenligningsgrunnlag>(resultat)
-        assertEquals(1.januar, resultat.behovForSammenligningsgrunnlag.skjæringstidspunkt)
-        assertEquals(YearMonth.of(2017, 1), resultat.behovForSammenligningsgrunnlag.beregningsperiodeFom)
-        assertEquals(YearMonth.of(2017, 12), resultat.behovForSammenligningsgrunnlag.beregningsperiodeTom)
+        assertEquals(1.januar, resultat.behov.skjæringstidspunkt)
+        assertEquals(YearMonth.of(2017, 1), resultat.behov.beregningsperiodeFom)
+        assertEquals(YearMonth.of(2017, 12), resultat.behov.beregningsperiodeTom)
     }
 
     @Test

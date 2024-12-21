@@ -3,7 +3,7 @@ package no.nav.helse.mediator.producer
 import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.VersjonAvKode
-import no.nav.helse.avviksvurdering.Vurdering
+import no.nav.helse.avviksvurdering.Avviksvurdering
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -18,7 +18,7 @@ internal class SubsumsjonProducer(
 
     private val subsumsjonskø = mutableListOf<SubsumsjonsmeldingDto>()
 
-    fun avvikVurdert(vurdering: Vurdering) {
+    fun avvikVurdert(vurdering: Avviksvurdering) {
         val builder = AvviksvurderingSubsumsjonBuilder(
             id = vurdering.id,
             harAkseptabeltAvvik = vurdering.harAkseptabeltAvvik,

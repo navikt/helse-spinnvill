@@ -2,7 +2,7 @@ package no.nav.helse.avviksvurdering
 
 import java.util.*
 
-data class Vurdering(
+data class Avviksvurdering(
     val id: UUID,
     val harAkseptabeltAvvik: Boolean,
     val avviksprosent: Double,
@@ -12,12 +12,12 @@ data class Vurdering(
 )
 
 sealed interface Avviksvurderingsresultat {
-    data class TrengerSammenligningsgrunnlag(val behovForSammenligningsgrunnlag: BehovForSammenligningsgrunnlag) :
+    data class TrengerSammenligningsgrunnlag(val behov: BehovForSammenligningsgrunnlag) :
         Avviksvurderingsresultat
     data class AvvikVurdert(
-        val avviksvurderingsgrunnlag: Avviksvurderingsgrunnlag,
-        val vurdering: Vurdering,
+        val grunnlag: Avviksvurderingsgrunnlag,
+        val vurdering: Avviksvurdering,
     ): Avviksvurderingsresultat
 
-    data class TrengerIkkeNyVurdering(val gjeldendeAvviksvurderingsgrunnlag: Avviksvurderingsgrunnlag) : Avviksvurderingsresultat
+    data class TrengerIkkeNyVurdering(val gjeldendeGrunnlag: Avviksvurderingsgrunnlag) : Avviksvurderingsresultat
 }

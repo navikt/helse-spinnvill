@@ -6,7 +6,7 @@ import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
-import no.nav.helse.avviksvurdering.Vurdering
+import no.nav.helse.avviksvurdering.Avviksvurdering
 import no.nav.helse.helpers.beregningsgrunnlag
 import no.nav.helse.helpers.januar
 import no.nav.helse.helpers.toJson
@@ -25,7 +25,7 @@ class AvvikVurdertProducerTest {
     @Test
     fun `produser avviksvurdering for akseptebelt avvik`() {
         avvikVurdertProducer.avvikVurdert(
-            Vurdering(
+            Avviksvurdering(
                 id = UUID.randomUUID(),
                 harAkseptabeltAvvik = true,
                 avviksprosent = 24.9,
@@ -41,7 +41,7 @@ class AvvikVurdertProducerTest {
     @Test
     fun `produser avviksvurdering for uakseptebelt avvik`() {
         avvikVurdertProducer.avvikVurdert(
-            Vurdering(
+            Avviksvurdering(
                 id = UUID.randomUUID(),
                 harAkseptabeltAvvik = false,
                 avviksprosent = 25.0,
@@ -57,7 +57,7 @@ class AvvikVurdertProducerTest {
     @Test
     fun `avviksvurdering kø tømmes etter hver finalize`() {
         avvikVurdertProducer.avvikVurdert(
-            Vurdering(
+            Avviksvurdering(
                 id = UUID.randomUUID(),
                 harAkseptabeltAvvik = true,
                 avviksprosent = 24.9,
@@ -75,7 +75,7 @@ class AvvikVurdertProducerTest {
     @Test
     fun `produserer riktig format på avviksvurderingmelding`() {
         avvikVurdertProducer.avvikVurdert(
-            Vurdering(
+            Avviksvurdering(
                 id = UUID.randomUUID(),
                 harAkseptabeltAvvik = true,
                 avviksprosent = 24.9,
@@ -155,7 +155,7 @@ class AvvikVurdertProducerTest {
 
         val avviksprosent = 24.9
         avvikVurdertProducer.avvikVurdert(
-            Vurdering(
+            Avviksvurdering(
                 id = UUID.randomUUID(),
                 harAkseptabeltAvvik = true,
                 avviksprosent = avviksprosent,

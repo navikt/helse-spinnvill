@@ -42,16 +42,16 @@ class Mediator(
         val avviksvurderinger = hentGrunnlagshistorikk(Fødselsnummer(message.fødselsnummer), message.skjæringstidspunkt)
 
         when (val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag)) {
-            is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> behovProducer.sammenligningsgrunnlag(resultat.behovForSammenligningsgrunnlag)
+            is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> behovProducer.sammenligningsgrunnlag(resultat.behov)
             is Avviksvurderingsresultat.AvvikVurdert -> {
                 val vurdertAvvik = resultat.vurdering
-                godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.avviksvurderingsgrunnlag)
+                godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.grunnlag)
                 subsumsjonProducer.avvikVurdert(vurdertAvvik)
                 avvikVurdertProducer.avvikVurdert(vurdertAvvik)
                 varselProducer.avvikVurdert(vurdertAvvik.harAkseptabeltAvvik, vurdertAvvik.avviksprosent)
             }
             is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> {
-                godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.gjeldendeAvviksvurderingsgrunnlag)
+                godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.gjeldendeGrunnlag)
             }
         }
         avviksvurderinger.lagre()

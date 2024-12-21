@@ -32,8 +32,8 @@ class Avviksvurderingsgrunnlag(
         this.beregningsgrunnlag = beregningsgrunnlag
         val avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
         return AvvikVurdert(
-            avviksvurderingsgrunnlag = this,
-            vurdering = Vurdering(
+            grunnlag = this,
+            vurdering = Avviksvurdering(
                 id = this.id,
                 harAkseptabeltAvvik = avviksprosent <= MAKSIMALT_TILLATT_AVVIK,
                 avviksprosent = avviksprosent.avrundetTilFireDesimaler,

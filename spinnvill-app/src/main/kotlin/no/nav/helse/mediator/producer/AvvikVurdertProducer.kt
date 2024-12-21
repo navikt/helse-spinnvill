@@ -3,14 +3,14 @@ package no.nav.helse.mediator.producer
 import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.InntektPerMåned
 import no.nav.helse.OmregnetÅrsinntekt
-import no.nav.helse.avviksvurdering.Vurdering
+import no.nav.helse.avviksvurdering.Avviksvurdering
 import java.time.LocalDateTime
 import java.time.YearMonth
 import java.util.*
 
 class AvvikVurdertProducer(private val vilkårsgrunnlagId: UUID) : Producer {
     private val avviksvurderingKø = mutableListOf<AvviksvurderingDto>()
-    fun avvikVurdert(vurdering: Vurdering) {
+    fun avvikVurdert(vurdering: Avviksvurdering) {
         avviksvurderingKø.add(
             AvviksvurderingSubsumsjonBuilder(
                 id = vurdering.id,
