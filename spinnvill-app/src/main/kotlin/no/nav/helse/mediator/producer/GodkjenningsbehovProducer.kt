@@ -1,7 +1,7 @@
 package no.nav.helse.mediator.producer
 
 import no.nav.helse.Fødselsnummer
-import no.nav.helse.avviksvurdering.Avviksvurdering
+import no.nav.helse.avviksvurdering.Avviksvurderingsgrunnlag
 import no.nav.helse.avviksvurdering.Kilde
 import no.nav.helse.avviksvurdering.Visitor
 import no.nav.helse.kafka.GodkjenningsbehovMessage
@@ -15,8 +15,8 @@ internal class GodkjenningsbehovProducer(
 
     private val godkjenningsbehov = mutableListOf<GodkjenningsbehovMessage>()
 
-    internal fun registrerGodkjenningsbehovForUtsending(avviksvurdering: Avviksvurdering) {
-        avviksvurdering.accept(Sammensyer(godkjenningsbehovMessage))
+    internal fun registrerGodkjenningsbehovForUtsending(avviksvurderingsgrunnlag: Avviksvurderingsgrunnlag) {
+        avviksvurderingsgrunnlag.accept(Sammensyer(godkjenningsbehovMessage))
         godkjenningsbehov.add(godkjenningsbehovMessage)
     }
 
@@ -24,7 +24,7 @@ internal class GodkjenningsbehovProducer(
         godkjenningsbehov.map { Message.Behov(setOf("Godkjenning"), it.utgående()) }
 
     private class Sammensyer(private val godkjenningsbehovMessage: GodkjenningsbehovMessage) : Visitor {
-        override fun visitAvviksvurdering(
+        override fun visitAvviksvurderingsgrunnlag(
             id: UUID,
             fødselsnummer: Fødselsnummer,
             skjæringstidspunkt: LocalDate,

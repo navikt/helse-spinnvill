@@ -82,7 +82,7 @@ internal class MediatorTest {
         mottaUtkastTilVedtak()
         mottaSammenligningsgrunnlag()
 
-        val avviksvurderingId = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)!!.id
+        val avviksvurderingId = database.finnSisteAvviksvurderingsgrunnlag(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)!!.id
         testRapid.inspektør.assertGodkjenningsbehovHarAvviksvurderingId(avviksvurderingId)
     }
 
@@ -96,7 +96,7 @@ internal class MediatorTest {
 
         mottaUtkastTilVedtak()
 
-        val avviksvurderingId = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)!!.id
+        val avviksvurderingId = database.finnSisteAvviksvurderingsgrunnlag(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)!!.id
         testRapid.inspektør.assertGodkjenningsbehovHarAvviksvurderingId(avviksvurderingId)
     }
 
@@ -121,7 +121,7 @@ internal class MediatorTest {
         mottaUtkastTilVedtak()
         mottaSammenligningsgrunnlag()
 
-        assertNotNull(database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT))
+        assertNotNull(database.finnSisteAvviksvurderingsgrunnlag(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT))
     }
 
     @Test
@@ -129,7 +129,7 @@ internal class MediatorTest {
         mottaUtkastTilVedtak()
         mottaSammenligningsgrunnlag()
 
-        val fullstendigAvviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
+        val fullstendigAvviksvurdering = database.finnSisteAvviksvurderingsgrunnlag(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
 
         assertNotNull(fullstendigAvviksvurdering)
         assertNotNull(fullstendigAvviksvurdering.beregningsgrunnlag)
@@ -147,7 +147,7 @@ internal class MediatorTest {
         mottaUtkastTilVedtak()
         mottaSammenligningsgrunnlag(årsinntekt = 90000.0)
 
-        val fullstendigAvviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
+        val fullstendigAvviksvurdering = database.finnSisteAvviksvurderingsgrunnlag(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
 
         assertNotNull(fullstendigAvviksvurdering)
         assertNotNull(fullstendigAvviksvurdering.beregningsgrunnlag)
@@ -167,11 +167,11 @@ internal class MediatorTest {
 
         testRapid.reset()
 
-        val avviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
+        val avviksvurdering = database.finnSisteAvviksvurderingsgrunnlag(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
 
         mottaUtkastTilVedtak()
 
-        val sisteAvviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
+        val sisteAvviksvurdering = database.finnSisteAvviksvurderingsgrunnlag(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
 
         assertEquals(avviksvurdering, sisteAvviksvurdering)
         assertEquals(1, testRapid.inspektør.size)
@@ -185,7 +185,7 @@ internal class MediatorTest {
         mottaSammenligningsgrunnlag()
 
         testRapid.reset()
-        val avviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
+        val avviksvurdering = database.finnSisteAvviksvurderingsgrunnlag(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
 
         mottaUtkastTilVedtak(
             beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
@@ -193,7 +193,7 @@ internal class MediatorTest {
             )
         )
 
-        val sisteAvviksvurdering = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
+        val sisteAvviksvurdering = database.finnSisteAvviksvurderingsgrunnlag(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
 
         assertNotNull(avviksvurdering)
         assertNotNull(sisteAvviksvurdering)
@@ -209,10 +209,10 @@ internal class MediatorTest {
         mottaUtkastTilVedtak()
 
         mottaSammenligningsgrunnlag()
-        val avviksvurdering1 = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
+        val avviksvurdering1 = database.finnSisteAvviksvurderingsgrunnlag(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
 
         mottaSammenligningsgrunnlag()
-        val avviksvurdering2 = database.finnSisteAvviksvurdering(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
+        val avviksvurdering2 = database.finnSisteAvviksvurderingsgrunnlag(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
 
         assertEquals(avviksvurdering1, avviksvurdering2)
     }

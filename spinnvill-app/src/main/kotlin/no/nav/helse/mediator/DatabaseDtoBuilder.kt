@@ -16,7 +16,7 @@ class DatabaseDtoBuilder : Visitor {
     private val avviksvurderinger = mutableListOf<AvviksvurderingDto>()
     private val gjeldende get() = avviksvurderinger.last()
 
-    override fun visitAvviksvurdering(
+    override fun visitAvviksvurderingsgrunnlag(
         id: UUID,
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,

@@ -8,7 +8,7 @@ import java.time.YearMonth
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
-class AvviksvurderingerTest {
+class GrunnlagshistorikkTest {
     private val fødselsnummer = Fødselsnummer("12345678910")
     private val arbeidsgiver = "987654321"
     private val skjæringstidspunkt = 1.januar
@@ -71,7 +71,7 @@ class AvviksvurderingerTest {
         assertIs<Avviksvurderingsresultat.TrengerIkkeNyVurdering>(resultat2)
     }
 
-    private fun avviksvurderinger() = Avviksvurderinger(
+    private fun avviksvurderinger() = Grunnlagshistorikk(
         fødselsnummer,
         skjæringstidspunkt,
         emptyList()

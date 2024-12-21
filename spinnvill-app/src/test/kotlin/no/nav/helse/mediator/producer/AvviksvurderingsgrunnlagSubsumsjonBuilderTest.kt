@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 import java.time.YearMonth
 import java.util.*
 
-class AvviksvurderingSubsumsjonBuilderTest {
+class AvviksvurderingsgrunnlagSubsumsjonBuilderTest {
 
     @Test
     fun `bygg subsumsjonsmelding for avviksvurdering`() {

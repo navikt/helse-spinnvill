@@ -39,19 +39,19 @@ class Mediator(
         meldingProducer.nyProducer(behovProducer, varselProducer, subsumsjonProducer, avvikVurdertProducer, godkjenningsbehovProducer)
 
         val beregningsgrunnlag = nyttBeregningsgrunnlag(message)
-        val avviksvurderinger = hentAvviksvurderinger(Fødselsnummer(message.fødselsnummer), message.skjæringstidspunkt)
+        val avviksvurderinger = hentGrunnlagshistorikk(Fødselsnummer(message.fødselsnummer), message.skjæringstidspunkt)
 
         when (val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag)) {
             is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> behovProducer.sammenligningsgrunnlag(resultat.behovForSammenligningsgrunnlag)
             is Avviksvurderingsresultat.AvvikVurdert -> {
                 val vurdertAvvik = resultat.vurdering
-                godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.avviksvurdering)
+                godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.avviksvurderingsgrunnlag)
                 subsumsjonProducer.avvikVurdert(vurdertAvvik)
                 avvikVurdertProducer.avvikVurdert(vurdertAvvik)
                 varselProducer.avvikVurdert(vurdertAvvik.harAkseptabeltAvvik, vurdertAvvik.avviksprosent)
             }
             is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> {
-                godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.gjeldendeAvviksvurdering)
+                godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.gjeldendeAvviksvurderingsgrunnlag)
             }
         }
         avviksvurderinger.lagre()
@@ -62,13 +62,13 @@ class Mediator(
         val fødselsnummer = Fødselsnummer(sammenligningsgrunnlagMessage.fødselsnummer)
         val skjæringstidspunkt = sammenligningsgrunnlagMessage.skjæringstidspunkt
 
-        if (finnAvviksvurdering(fødselsnummer, skjæringstidspunkt) != null) {
+        if (finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt) != null) {
             logg.warn("Ignorerer duplikat sammenligningsgrunnlag for eksisterende avviksvurdering")
             sikkerlogg.warn("Ignorerer duplikat sammenligningsgrunnlag for {} {}", kv("fødselsnummer", fødselsnummer.value), kv("skjæringstidspunkt", skjæringstidspunkt))
             return
         }
 
-        val avviksvurderinger = hentAvviksvurderinger(fødselsnummer, skjæringstidspunkt)
+        val avviksvurderinger = hentGrunnlagshistorikk(fødselsnummer, skjæringstidspunkt)
         val sammenligningsgrunnlag = nyttSammenligningsgrunnlag(sammenligningsgrunnlagMessage)
         avviksvurderinger.håndterNytt(sammenligningsgrunnlag)
         avviksvurderinger.lagre()
@@ -76,19 +76,19 @@ class Mediator(
         rapidsConnection.queueReplayMessage(fødselsnummer.value, sammenligningsgrunnlagMessage.utkastTilVedtakJson)
     }
 
-    private fun Avviksvurderinger.lagre() {
+    private fun Grunnlagshistorikk.lagre() {
         val builder = DatabaseDtoBuilder()
         this.accept(builder)
-        database.lagreAvviksvurderinger(builder.buildAll())
+        database.lagreGrunnlagshistorikk(builder.buildAll())
     }
 
-    private fun finnAvviksvurdering(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurdering? {
-        return database.finnSisteAvviksvurdering(fødselsnummer, skjæringstidspunkt)?.tilDomene()
+    private fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurderingsgrunnlag? {
+        return database.finnSisteAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt)?.tilDomene()
     }
 
-    private fun hentAvviksvurderinger(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurderinger {
-        val avviksvurderinger = database.finnAvviksvurderinger(fødselsnummer, skjæringstidspunkt).map { it.tilDomene() }
-        return Avviksvurderinger(fødselsnummer, skjæringstidspunkt, avviksvurderinger)
+    private fun hentGrunnlagshistorikk(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Grunnlagshistorikk {
+        val grunnlag = database.finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt).map { it.tilDomene() }
+        return Grunnlagshistorikk(fødselsnummer, skjæringstidspunkt, grunnlag)
     }
 
     private fun nyMeldingProducer(godkjenningsbehovMessage: GodkjenningsbehovMessage) = MeldingProducer(
@@ -138,12 +138,12 @@ class Mediator(
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
 
 
-        internal fun AvviksvurderingDto.tilDomene(): Avviksvurdering {
+        internal fun AvviksvurderingDto.tilDomene(): Avviksvurderingsgrunnlag {
             val beregningsgrunnlag = beregningsgrunnlag?.let {
                 Beregningsgrunnlag.opprett(it.omregnedeÅrsinntekter)
             } ?: Ingen
 
-            return Avviksvurdering(
+            return Avviksvurderingsgrunnlag(
                 id = id,
                 fødselsnummer = fødselsnummer,
                 skjæringstidspunkt = skjæringstidspunkt,

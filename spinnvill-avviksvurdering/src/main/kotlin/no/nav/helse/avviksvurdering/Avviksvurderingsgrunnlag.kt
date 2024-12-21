@@ -14,7 +14,7 @@ enum class Kilde {
     SPLEIS, SPINNVILL, INFOTRYGD
 }
 
-class Avviksvurdering(
+class Avviksvurderingsgrunnlag(
     private val id: UUID,
     private val fødselsnummer: Fødselsnummer,
     private val skjæringstidspunkt: LocalDate,
@@ -25,14 +25,14 @@ class Avviksvurdering(
 ) {
     private val MAKSIMALT_TILLATT_AVVIK = Avviksprosent(25.0)
 
-    fun vurderAvvik(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsresultat {
+    internal fun vurderAvvik(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsresultat {
         if (kilde == Kilde.INFOTRYGD || this.beregningsgrunnlag.erLikt(beregningsgrunnlag))
             return TrengerIkkeNyVurdering(this)
 
         this.beregningsgrunnlag = beregningsgrunnlag
         val avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
         return AvvikVurdert(
-            avviksvurdering = this,
+            avviksvurderingsgrunnlag = this,
             vurdering = Vurdering(
                 id = this.id,
                 harAkseptabeltAvvik = avviksprosent <= MAKSIMALT_TILLATT_AVVIK,
@@ -45,17 +45,17 @@ class Avviksvurdering(
     }
 
     fun accept(visitor: Visitor) {
-        visitor.visitAvviksvurdering(id, fødselsnummer, skjæringstidspunkt, kilde, opprettet)
+        visitor.visitAvviksvurderingsgrunnlag(id, fødselsnummer, skjæringstidspunkt, kilde, opprettet)
         beregningsgrunnlag.accept(visitor)
         sammenligningsgrunnlag.accept(visitor)
     }
 
-    fun trengerNyVurdering(beregningsgrunnlag: Beregningsgrunnlag): Boolean {
+    internal fun trengerNyVurdering(beregningsgrunnlag: Beregningsgrunnlag): Boolean {
         return when {
             this.kilde == Kilde.INFOTRYGD -> false
             this.beregningsgrunnlag is Ingen -> false
             this.beregningsgrunnlag.erLikt(beregningsgrunnlag) -> {
-                loggGjenbrukAvAvviksvurdering(beregningsgrunnlag)
+                loggGjenbrukAvAvviksvurderingsgrunnlag(beregningsgrunnlag)
                 false
             }
 
@@ -63,7 +63,7 @@ class Avviksvurdering(
         }
     }
 
-    private fun loggGjenbrukAvAvviksvurdering(beregningsgrunnlag: Beregningsgrunnlag) {
+    private fun loggGjenbrukAvAvviksvurderingsgrunnlag(beregningsgrunnlag: Beregningsgrunnlag) {
         val forrigeGrunnlag = this.beregningsgrunnlag
         val nyttGrunnlag = beregningsgrunnlag
         val forrigeÅrsbeløp = finnTotaltOmregnetÅrsinntekt(forrigeGrunnlag)
@@ -104,16 +104,16 @@ class Avviksvurdering(
         }
     }
 
-    fun lagNyAvviksvurdering(): Avviksvurdering {
-        return nyAvviksvurdering(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag)
+    internal fun lagNyttGrunnlag(): Avviksvurderingsgrunnlag {
+        return nyttGrunnlag(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag)
     }
 
     internal companion object {
-        internal fun nyAvviksvurdering(
+        internal fun nyttGrunnlag(
             fødselsnummer: Fødselsnummer,
             skjæringstidspunkt: LocalDate,
             sammenligningsgrunnlag: Sammenligningsgrunnlag,
-        ) = Avviksvurdering(
+        ) = Avviksvurderingsgrunnlag(
             id = UUID.randomUUID(),
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = skjæringstidspunkt,
@@ -123,7 +123,7 @@ class Avviksvurdering(
             kilde = Kilde.SPINNVILL
         )
 
-        internal fun Collection<Avviksvurdering>.siste() = maxByOrNull { it.opprettet }
+        internal fun Collection<Avviksvurderingsgrunnlag>.siste() = maxByOrNull { it.opprettet }
 
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
     }
