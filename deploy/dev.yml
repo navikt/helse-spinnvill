@@ -29,6 +29,11 @@ spec:
       - type: POSTGRES_15
         diskAutoresize: true
         tier: db-f1-micro
+        flags:
+          - name: cloudsql.enable_pgaudit
+            value: "true"
+          - name: pgaudit.log
+            value: "write"
         databases:
           - name: spinnvill
             envVarPrefix: DATABASE
