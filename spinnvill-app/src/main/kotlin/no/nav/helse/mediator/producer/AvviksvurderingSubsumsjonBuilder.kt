@@ -9,7 +9,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 import java.util.*
-import kotlin.properties.Delegates
 
 internal class AvviksvurderingSubsumsjonBuilder(
     private val id: UUID,
@@ -121,43 +120,14 @@ internal class AvviksvurderingSubsumsjonBuilder(
         val inntektstype: String
     )
 
-    private data class ArbeidsgiverligInntekt(
-        val måned: YearMonth,
-        val inntekt: InntektPerMåned,
-        val fordel: Fordel?,
-        val beskrivelse: Beskrivelse?,
-        val inntektstype: String
-    )
-
     private class SammenligningsgrunnlagBuilder(private val sammenligningsgrunnlag: Sammenligningsgrunnlag) : Visitor {
-        private var totalbeløp by Delegates.notNull<Double>()
-        private val arbeidsgiverInntekter = mutableMapOf<Arbeidsgiverreferanse, MutableList<ArbeidsgiverligInntekt>>()
-
-        override fun visitSammenligningsgrunnlag(sammenligningsgrunnlag: Double) {
-            totalbeløp = sammenligningsgrunnlag
-        }
-
-        override fun visitArbeidsgiverInntekt(
-            arbeidsgiverreferanse: Arbeidsgiverreferanse,
-            inntekter: List<ArbeidsgiverInntekt.MånedligInntekt>
-        ) {
-            arbeidsgiverInntekter.getOrPut(arbeidsgiverreferanse) { mutableListOf() }.addAll(inntekter.map {
-                ArbeidsgiverligInntekt(
-                    måned = it.måned,
-                    inntekt = it.inntekt,
-                    fordel = it.fordel,
-                    beskrivelse = it.beskrivelse,
-                    inntektstype = it.inntektstype.toSubsumsjonString()
-                )
-            })
-        }
+        private var totalbeløp  = sammenligningsgrunnlag.totaltInnrapportertÅrsinntekt
+        private val arbeidsgiverInntekter = sammenligningsgrunnlag.inntekter
 
         fun buildForSubsumsjon(): SammenligningsgrunnlagSubsumsjonDto {
-            sammenligningsgrunnlag.accept(this)
-
             return SammenligningsgrunnlagSubsumsjonDto(
                 totalbeløp = totalbeløp,
-                månedligeInntekter = arbeidsgiverInntekter
+                månedligeInntekter = sammenligningsgrunnlag.inntekter
                     .flatMap { (arbeidsgiverreferanse, inntekter) ->
                         inntekter.map { inntekt ->
                             inntekt.måned to MånedligInntekt(
@@ -165,7 +135,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
                                 inntekt = inntekt.inntekt,
                                 fordel = inntekt.fordel,
                                 beskrivelse = inntekt.beskrivelse,
-                                inntektstype = inntekt.inntektstype
+                                inntektstype = inntekt.inntektstype.toSubsumsjonString()
                             )
                         }
                     }
@@ -174,8 +144,6 @@ internal class AvviksvurderingSubsumsjonBuilder(
         }
 
         fun buildForAvviksvurdering(): SammenligningsgrunnlagAvviksvurderingDto {
-            sammenligningsgrunnlag.accept(this)
-
             return SammenligningsgrunnlagAvviksvurderingDto(
                 totalbeløp = totalbeløp,
                 arbeidsgiverligeInntekter = arbeidsgiverInntekter.map { (arbeidsgiverreferanse, inntekter) ->

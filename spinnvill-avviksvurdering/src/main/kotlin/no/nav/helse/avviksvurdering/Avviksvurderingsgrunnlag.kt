@@ -43,8 +43,7 @@ class Avviksvurderingsgrunnlag(
     }
 
     fun accept(visitor: Visitor) {
-        visitor.visitAvviksvurderingsgrunnlag(id, fødselsnummer, skjæringstidspunkt, kilde, opprettet, beregningsgrunnlag)
-        sammenligningsgrunnlag.accept(visitor)
+        visitor.visitAvviksvurderingsgrunnlag(id, fødselsnummer, skjæringstidspunkt, kilde, opprettet, beregningsgrunnlag, sammenligningsgrunnlag)
     }
 
     internal fun trengerNyVurdering(beregningsgrunnlag: Beregningsgrunnlag): Boolean {

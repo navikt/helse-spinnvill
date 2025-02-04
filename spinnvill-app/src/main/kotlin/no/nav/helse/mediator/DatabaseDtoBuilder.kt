@@ -1,6 +1,5 @@
 package no.nav.helse.mediator
 
-import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.avviksvurdering.*
 import no.nav.helse.dto.AvviksvurderingDto
@@ -11,7 +10,6 @@ import java.util.*
 class DatabaseDtoBuilder : Visitor {
 
     private val avviksvurderinger = mutableListOf<AvviksvurderingDto>()
-    private val gjeldende get() = avviksvurderinger.last()
 
     override fun visitAvviksvurderingsgrunnlag(
         id: UUID,
@@ -19,8 +17,10 @@ class DatabaseDtoBuilder : Visitor {
         skjæringstidspunkt: LocalDate,
         kilde: Kilde,
         opprettet: LocalDateTime,
-        beregningsgrunnlag: IBeregningsgrunnlag
+        beregningsgrunnlag: IBeregningsgrunnlag,
+        sammenligningsgrunnlag: Sammenligningsgrunnlag
     ) {
+        val innrapporterteInntekter = sammenligningsgrunnlag.inntekter.associate { it.arbeidsgiverreferanse to it.inntekter.toDto() }
         avviksvurderinger.add(
             AvviksvurderingDto(
                 id = id,
@@ -28,7 +28,7 @@ class DatabaseDtoBuilder : Visitor {
                 skjæringstidspunkt = skjæringstidspunkt,
                 opprettet = opprettet,
                 kilde = kilde.tilDto(),
-                sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()),
+                sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(innrapporterteInntekter),
                 beregningsgrunnlag =
                     if (beregningsgrunnlag is Beregningsgrunnlag) AvviksvurderingDto.BeregningsgrunnlagDto(beregningsgrunnlag.omregnedeÅrsinntekter)
                     else null
@@ -36,9 +36,8 @@ class DatabaseDtoBuilder : Visitor {
         )
     }
 
-    override fun visitArbeidsgiverInntekt(arbeidsgiverreferanse: Arbeidsgiverreferanse, inntekter: List<ArbeidsgiverInntekt.MånedligInntekt>) {
-        val innrapporterteInntekterCopy = gjeldende.sammenligningsgrunnlag.innrapporterteInntekter.toMutableMap()
-        innrapporterteInntekterCopy[arbeidsgiverreferanse] = inntekter.map { månedligInntekt ->
+    private fun List<ArbeidsgiverInntekt.MånedligInntekt>.toDto(): List<AvviksvurderingDto.MånedligInntektDto> {
+        return map { månedligInntekt ->
             AvviksvurderingDto.MånedligInntektDto(
                 inntekt = månedligInntekt.inntekt,
                 måned = månedligInntekt.måned,
@@ -47,15 +46,6 @@ class DatabaseDtoBuilder : Visitor {
                 inntektstype = månedligInntekt.inntektstype.tilDto()
             )
         }
-        val nyGjeldende = gjeldende.copy(
-            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(innrapporterteInntekterCopy.toMap())
-        )
-        erstattGjeldendeMed(nyGjeldende)
-    }
-
-    private fun erstattGjeldendeMed(nyGjeldende: AvviksvurderingDto) {
-        val index = avviksvurderinger.indexOf(gjeldende)
-        avviksvurderinger[index] = nyGjeldende
     }
 
     private fun ArbeidsgiverInntekt.Inntektstype.tilDto(): AvviksvurderingDto.InntektstypeDto {

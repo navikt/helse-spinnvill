@@ -6,9 +6,9 @@ import no.nav.helse.Fordel
 import no.nav.helse.InntektPerMåned
 import java.time.YearMonth
 
-class ArbeidsgiverInntekt(
-    private val arbeidsgiverreferanse: Arbeidsgiverreferanse,
-    private val inntekter: List<MånedligInntekt>
+data class ArbeidsgiverInntekt(
+    val arbeidsgiverreferanse: Arbeidsgiverreferanse,
+    val inntekter: List<MånedligInntekt>
 ) {
     operator fun plus(other: Double) = other + inntekter.sumOf { it.inntekt.value }
 
@@ -34,9 +34,4 @@ class ArbeidsgiverInntekt(
         PENSJON_ELLER_TRYGD,
         YTELSE_FRA_OFFENTLIGE,
     }
-
-    internal fun accept(visitor: Visitor) {
-        visitor.visitArbeidsgiverInntekt(arbeidsgiverreferanse, inntekter)
-    }
-
 }

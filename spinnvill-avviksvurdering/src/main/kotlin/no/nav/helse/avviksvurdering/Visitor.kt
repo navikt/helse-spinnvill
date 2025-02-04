@@ -1,6 +1,5 @@
 package no.nav.helse.avviksvurdering
 
-import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -13,9 +12,7 @@ interface Visitor {
         skjæringstidspunkt: LocalDate,
         kilde: Kilde,
         opprettet: LocalDateTime,
-        beregningsgrunnlag: IBeregningsgrunnlag
+        beregningsgrunnlag: IBeregningsgrunnlag,
+        sammenligningsgrunnlag: Sammenligningsgrunnlag
     ) {}
-
-    fun visitArbeidsgiverInntekt(arbeidsgiverreferanse: Arbeidsgiverreferanse, inntekter: List<ArbeidsgiverInntekt.MånedligInntekt>) {}
-    fun visitSammenligningsgrunnlag(sammenligningsgrunnlag: Double) {}
 }
