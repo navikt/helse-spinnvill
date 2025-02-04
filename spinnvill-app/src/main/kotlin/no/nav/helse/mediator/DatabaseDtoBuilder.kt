@@ -1,38 +1,29 @@
 package no.nav.helse.mediator
 
-import no.nav.helse.Fødselsnummer
-import no.nav.helse.avviksvurdering.*
+import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
+import no.nav.helse.avviksvurdering.Avviksvurderingsgrunnlag
+import no.nav.helse.avviksvurdering.Beregningsgrunnlag
+import no.nav.helse.avviksvurdering.Kilde
 import no.nav.helse.dto.AvviksvurderingDto
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.*
 
-class DatabaseDtoBuilder : Visitor {
+class DatabaseDtoBuilder {
 
-    private val avviksvurderinger = mutableListOf<AvviksvurderingDto>()
+    internal fun buildAll(grunnlagene: List<Avviksvurderingsgrunnlag>): List<AvviksvurderingDto> = grunnlagene.toDto()
 
-    override fun visitAvviksvurderingsgrunnlag(
-        id: UUID,
-        fødselsnummer: Fødselsnummer,
-        skjæringstidspunkt: LocalDate,
-        kilde: Kilde,
-        opprettet: LocalDateTime,
-        beregningsgrunnlag: IBeregningsgrunnlag,
-        sammenligningsgrunnlag: Sammenligningsgrunnlag
-    ) {
-        val innrapporterteInntekter = sammenligningsgrunnlag.inntekter.associate { it.arbeidsgiverreferanse to it.inntekter.toDto() }
-        avviksvurderinger.add(
-            AvviksvurderingDto(
-                id = id,
-                fødselsnummer = fødselsnummer,
-                skjæringstidspunkt = skjæringstidspunkt,
-                opprettet = opprettet,
-                kilde = kilde.tilDto(),
-                sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(innrapporterteInntekter),
-                beregningsgrunnlag =
-                    if (beregningsgrunnlag is Beregningsgrunnlag) AvviksvurderingDto.BeregningsgrunnlagDto(beregningsgrunnlag.omregnedeÅrsinntekter)
-                    else null
-            )
+    private fun Collection<Avviksvurderingsgrunnlag>.toDto() = map { grunnlag ->
+        val innrapporterteInntekter = grunnlag.sammenligningsgrunnlag.inntekter.associate { it.arbeidsgiverreferanse to it.inntekter.toDto() }
+
+        val beregningsgrunnlag = grunnlag.beregningsgrunnlag
+        AvviksvurderingDto(
+            id = grunnlag.id,
+            fødselsnummer = grunnlag.fødselsnummer,
+            skjæringstidspunkt = grunnlag.skjæringstidspunkt,
+            opprettet = grunnlag.opprettet,
+            kilde = grunnlag.kilde.tilDto(),
+            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(innrapporterteInntekter),
+            beregningsgrunnlag =
+                if (beregningsgrunnlag is Beregningsgrunnlag) AvviksvurderingDto.BeregningsgrunnlagDto(beregningsgrunnlag.omregnedeÅrsinntekter)
+                else null
         )
     }
 
@@ -62,8 +53,4 @@ class DatabaseDtoBuilder : Visitor {
         Kilde.SPINNVILL -> AvviksvurderingDto.KildeDto.SPINNVILL
         Kilde.INFOTRYGD -> AvviksvurderingDto.KildeDto.INFOTRYGD
     }
-
-    internal fun build(): AvviksvurderingDto = avviksvurderinger.single()
-
-    internal fun buildAll(): List<AvviksvurderingDto> = avviksvurderinger
 }

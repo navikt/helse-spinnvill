@@ -78,8 +78,7 @@ class Mediator(
 
     private fun Grunnlagshistorikk.lagre() {
         val builder = DatabaseDtoBuilder()
-        this.accept(builder)
-        database.lagreGrunnlagshistorikk(builder.buildAll())
+        database.lagreGrunnlagshistorikk(builder.buildAll(grunnlagene()))
     }
 
     private fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurderingsgrunnlag? {

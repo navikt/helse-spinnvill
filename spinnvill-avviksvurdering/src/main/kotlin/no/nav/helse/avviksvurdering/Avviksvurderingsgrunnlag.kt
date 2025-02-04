@@ -13,14 +13,16 @@ enum class Kilde {
 }
 
 class Avviksvurderingsgrunnlag(
-    private val id: UUID,
-    private val fødselsnummer: Fødselsnummer,
-    private val skjæringstidspunkt: LocalDate,
-    private var beregningsgrunnlag: IBeregningsgrunnlag,
-    private val sammenligningsgrunnlag: Sammenligningsgrunnlag,
-    private val opprettet: LocalDateTime,
-    private val kilde: Kilde,
+    val id: UUID,
+    val fødselsnummer: Fødselsnummer,
+    val skjæringstidspunkt: LocalDate,
+    beregningsgrunnlag: IBeregningsgrunnlag,
+    val sammenligningsgrunnlag: Sammenligningsgrunnlag,
+    val opprettet: LocalDateTime,
+    val kilde: Kilde,
 ) {
+    var beregningsgrunnlag: IBeregningsgrunnlag = beregningsgrunnlag
+        private set
     private val MAKSIMALT_TILLATT_AVVIK = Avviksprosent(25.0)
 
     internal fun vurderAvvik(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsresultat {
@@ -40,10 +42,6 @@ class Avviksvurderingsgrunnlag(
                 maksimaltTillattAvvik = MAKSIMALT_TILLATT_AVVIK.avrundetTilFireDesimaler
             ),
         )
-    }
-
-    fun accept(visitor: Visitor) {
-        visitor.visitAvviksvurderingsgrunnlag(id, fødselsnummer, skjæringstidspunkt, kilde, opprettet, beregningsgrunnlag, sammenligningsgrunnlag)
     }
 
     internal fun trengerNyVurdering(beregningsgrunnlag: Beregningsgrunnlag): Boolean {

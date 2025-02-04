@@ -1,10 +1,12 @@
 package no.nav.helse.mediator.producer
 
-import no.nav.helse.*
+import no.nav.helse.Arbeidsgiverreferanse
+import no.nav.helse.Beskrivelse
+import no.nav.helse.Fordel
+import no.nav.helse.InntektPerMåned
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
-import no.nav.helse.avviksvurdering.Visitor
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -120,7 +122,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
         val inntektstype: String
     )
 
-    private class SammenligningsgrunnlagBuilder(private val sammenligningsgrunnlag: Sammenligningsgrunnlag) : Visitor {
+    private class SammenligningsgrunnlagBuilder(private val sammenligningsgrunnlag: Sammenligningsgrunnlag) {
         private var totalbeløp  = sammenligningsgrunnlag.totaltInnrapportertÅrsinntekt
         private val arbeidsgiverInntekter = sammenligningsgrunnlag.inntekter
 

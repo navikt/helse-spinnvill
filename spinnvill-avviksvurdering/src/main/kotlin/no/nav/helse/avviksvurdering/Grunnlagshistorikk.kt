@@ -13,9 +13,7 @@ class Grunnlagshistorikk(
     private val grunnlagene = grunnlagene.toMutableList()
     private val siste get() = grunnlagene.siste()
 
-    fun accept(visitor: Visitor) {
-        grunnlagene.forEach { it.accept(visitor) }
-    }
+    fun grunnlagene(): List<Avviksvurderingsgrunnlag> = grunnlagene.toList()
 
     fun håndterNytt(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsresultat {
         val sisteGrunnlag =
