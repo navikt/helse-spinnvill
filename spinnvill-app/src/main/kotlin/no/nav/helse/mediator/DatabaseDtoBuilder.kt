@@ -2,10 +2,7 @@ package no.nav.helse.mediator
 
 import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
-import no.nav.helse.OmregnetÅrsinntekt
-import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
-import no.nav.helse.avviksvurdering.Kilde
-import no.nav.helse.avviksvurdering.Visitor
+import no.nav.helse.avviksvurdering.*
 import no.nav.helse.dto.AvviksvurderingDto
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -21,7 +18,8 @@ class DatabaseDtoBuilder : Visitor {
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
         kilde: Kilde,
-        opprettet: LocalDateTime
+        opprettet: LocalDateTime,
+        beregningsgrunnlag: IBeregningsgrunnlag
     ) {
         avviksvurderinger.add(
             AvviksvurderingDto(
@@ -31,20 +29,11 @@ class DatabaseDtoBuilder : Visitor {
                 opprettet = opprettet,
                 kilde = kilde.tilDto(),
                 sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()),
-                beregningsgrunnlag = null
+                beregningsgrunnlag =
+                    if (beregningsgrunnlag is Beregningsgrunnlag) AvviksvurderingDto.BeregningsgrunnlagDto(beregningsgrunnlag.omregnedeÅrsinntekter)
+                    else null
             )
         )
-    }
-
-    override fun visitBeregningsgrunnlag(
-        totaltOmregnetÅrsinntekt: Double,
-        omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
-    ) {
-        erstattGjeldendeMed(gjeldende.copy(beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(omregnedeÅrsinntekter)))
-    }
-
-    override fun visitBeregningsgrunnlagIngen() {
-        erstattGjeldendeMed(gjeldende.copy(beregningsgrunnlag = null))
     }
 
     override fun visitArbeidsgiverInntekt(arbeidsgiverreferanse: Arbeidsgiverreferanse, inntekter: List<ArbeidsgiverInntekt.MånedligInntekt>) {

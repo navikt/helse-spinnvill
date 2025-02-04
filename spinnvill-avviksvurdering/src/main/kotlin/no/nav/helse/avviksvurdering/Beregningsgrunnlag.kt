@@ -6,21 +6,16 @@ import kotlin.math.absoluteValue
 
 interface IBeregningsgrunnlag{
     fun erLikt(other: IBeregningsgrunnlag): Boolean
-    fun accept(visitor: Visitor)
 }
 
 object Ingen: IBeregningsgrunnlag {
     override fun erLikt(other: IBeregningsgrunnlag): Boolean {
         return other == this
     }
-
-    override fun accept(visitor: Visitor) {
-        visitor.visitBeregningsgrunnlagIngen()
-    }
 }
-class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>): IBeregningsgrunnlag {
+class Beregningsgrunnlag private constructor(val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>): IBeregningsgrunnlag {
 
-    private val totalOmregnetÅrsinntekt = omregnedeÅrsinntekter.values.sumOf { it.value }
+    val totalOmregnetÅrsinntekt = omregnedeÅrsinntekter.values.sumOf { it.value }
     private val GRENSE_FOR_NY_AVVIKSVURDERING = 1.0
     internal fun beregnAvvik(sammenligningsgrunnlag: Double): Avviksprosent {
         return Avviksprosent.avvik(
@@ -48,10 +43,6 @@ class Beregningsgrunnlag private constructor(private val omregnedeÅrsinntekter:
 
     override fun hashCode(): Int {
         return omregnedeÅrsinntekter.hashCode()
-    }
-
-    override fun accept(visitor: Visitor) {
-        visitor.visitBeregningsgrunnlag(totalOmregnetÅrsinntekt, omregnedeÅrsinntekter)
     }
 
     companion object {

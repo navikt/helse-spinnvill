@@ -1,8 +1,6 @@
 package no.nav.helse.avviksvurdering
 
-import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
-import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.avviksvurdering.Avviksvurderingsresultat.AvvikVurdert
 import no.nav.helse.avviksvurdering.Avviksvurderingsresultat.TrengerIkkeNyVurdering
 import org.slf4j.LoggerFactory
@@ -45,8 +43,7 @@ class Avviksvurderingsgrunnlag(
     }
 
     fun accept(visitor: Visitor) {
-        visitor.visitAvviksvurderingsgrunnlag(id, fødselsnummer, skjæringstidspunkt, kilde, opprettet)
-        beregningsgrunnlag.accept(visitor)
+        visitor.visitAvviksvurderingsgrunnlag(id, fødselsnummer, skjæringstidspunkt, kilde, opprettet, beregningsgrunnlag)
         sammenligningsgrunnlag.accept(visitor)
     }
 
@@ -88,15 +85,7 @@ class Avviksvurderingsgrunnlag(
         det siden dette kun er kode for logging.
      */
     private fun finnTotaltOmregnetÅrsinntekt(beregningsgrunnlag: IBeregningsgrunnlag): Double {
-        var beløp: Double? = null
-        beregningsgrunnlag.accept(object : Visitor {
-            override fun visitBeregningsgrunnlag(
-                totaltOmregnetÅrsinntekt: Double,
-                omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>,
-            ) {
-                beløp = totaltOmregnetÅrsinntekt
-            }
-        })
+        val beløp: Double? = if (beregningsgrunnlag is Beregningsgrunnlag) beregningsgrunnlag.totalOmregnetÅrsinntekt else null
 
         return beløp ?: run {
             sikkerlogg.warn("Forventet å finne totalOmregnetÅrsinntekt for $beregningsgrunnlag - bruker tulleverdi")

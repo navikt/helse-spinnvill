@@ -13,7 +13,6 @@ class BeregningsgrunnlagTest {
         val beregningsgrunnlag = beregningsgrunnlag("a1" to 400000.0)
         val annetBeregningsgrunnlag = object : IBeregningsgrunnlag {
             override fun erLikt(other: IBeregningsgrunnlag): Boolean = TODO("Not yet implemented")
-            override fun accept(visitor: Visitor) = TODO("Not yet implemented")
         }
 
         assertFalse(beregningsgrunnlag.erLikt(annetBeregningsgrunnlag))

@@ -2,6 +2,7 @@ package no.nav.helse.mediator.producer
 
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.avviksvurdering.Avviksvurderingsgrunnlag
+import no.nav.helse.avviksvurdering.IBeregningsgrunnlag
 import no.nav.helse.avviksvurdering.Kilde
 import no.nav.helse.avviksvurdering.Visitor
 import no.nav.helse.kafka.GodkjenningsbehovMessage
@@ -30,6 +31,7 @@ internal class GodkjenningsbehovProducer(
             skjæringstidspunkt: LocalDate,
             kilde: Kilde,
             opprettet: LocalDateTime,
+            beregningsgrunnlag: IBeregningsgrunnlag,
         ) {
             if (kilde == Kilde.INFOTRYGD) return
             godkjenningsbehovMessage.leggTilAvviksvurderingId(id)
