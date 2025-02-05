@@ -10,11 +10,13 @@ on:
       - 'deploy/dev-opprydding.yml'
     branches:
       - main
+
+permissions:
+  contents: "read"
+  id-token: "write"
+
 jobs:
   build:
-    permissions:
-      contents: "read"
-      id-token: "write"
     name: Bygg, test og lag docker image
     runs-on: ubuntu-latest
     steps:
