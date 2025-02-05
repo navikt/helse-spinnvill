@@ -9,7 +9,6 @@ import java.util.*
 import kotlin.test.assertEquals
 
 class MeldingProducerTest {
-    private val aktørId = AktørId("1234567891011")
     private val fødselsnummer = Fødselsnummer("12345678910")
     private val organisasjonsnummer = Arbeidsgiverreferanse("987654321")
     private val vedtaksperiodeId = UUID.randomUUID()
@@ -17,7 +16,6 @@ class MeldingProducerTest {
 
     private val testRapid = TestRapid()
     private val meldingProducer = MeldingProducer(
-        aktørId = aktørId,
         fødselsnummer = fødselsnummer,
         organisasjonsnummer = organisasjonsnummer,
         skjæringstidspunkt = skjæringstidspunkt,
@@ -36,7 +34,6 @@ class MeldingProducerTest {
         meldingProducer.publiserMeldinger()
         val json = testRapid.inspektør.message(0)
         assertEquals("behov", json["@event_name"].asText())
-        assertEquals(aktørId, json["aktørId"].asText().somAktørId())
         assertEquals(fødselsnummer, json["fødselsnummer"].asText().somFnr())
         assertEquals(organisasjonsnummer, json["organisasjonsnummer"].asText().somArbeidsgiverref())
         assertEquals(vedtaksperiodeId.toString(), json["vedtaksperiodeId"].asText())
@@ -50,7 +47,6 @@ class MeldingProducerTest {
         meldingProducer.publiserMeldinger()
         val json = testRapid.inspektør.message(0)
         assertEquals("hendelse", json["@event_name"].asText())
-        assertEquals(aktørId, json["aktørId"].asText().somAktørId())
         assertEquals(fødselsnummer, json["fødselsnummer"].asText().somFnr())
         assertEquals(organisasjonsnummer, json["organisasjonsnummer"].asText().somArbeidsgiverref())
         assertEquals(vedtaksperiodeId.toString(), json["vedtaksperiodeId"].asText())

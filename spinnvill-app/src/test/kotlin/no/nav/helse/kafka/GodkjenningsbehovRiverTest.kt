@@ -24,7 +24,6 @@ class GodkjenningsbehovRiverTest {
     }
 
     private companion object {
-        private const val AKTØRID = "1234567891011"
         private const val FØDSELSNUMMER = "12345678910"
         private const val ORGANISASJONSNUMMER = "987654321"
         private val skjæringstidspunkt = 1.januar
@@ -36,7 +35,7 @@ class GodkjenningsbehovRiverTest {
 
     @Test
     fun `les inn godkjenningsbehov`() {
-        testRapid.sendTestMessage(utkastTilVedtakJson(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, skjæringstidspunkt))
+        testRapid.sendTestMessage(utkastTilVedtakJson(FØDSELSNUMMER, ORGANISASJONSNUMMER, skjæringstidspunkt))
         val message = messageHandler.messages.single()
 
         assertEquals(FØDSELSNUMMER, message.fødselsnummer)
@@ -46,18 +45,21 @@ class GodkjenningsbehovRiverTest {
 
     @Test
     fun `leser ikke inn godkjenningsbehov med løsning`() {
-        testRapid.sendTestMessage(utkastTilVedtakJsonMedLøsning(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, skjæringstidspunkt))
+        testRapid.sendTestMessage(utkastTilVedtakJsonMedLøsning(FØDSELSNUMMER, ORGANISASJONSNUMMER, skjæringstidspunkt))
         assertEquals(0, messageHandler.messages.size)
     }
 
     @Test
     fun `leser ikke inn godkjenningsbehov markert med behandletAvSpinnvill`() {
-        testRapid.sendTestMessage(utkastTilVedtakJsonMedBehandletAvSpinnvill(AKTØRID, FØDSELSNUMMER, ORGANISASJONSNUMMER, skjæringstidspunkt))
+        testRapid.sendTestMessage(utkastTilVedtakJsonMedBehandletAvSpinnvill(
+            FØDSELSNUMMER,
+            ORGANISASJONSNUMMER,
+            skjæringstidspunkt
+        ))
         assertEquals(0, messageHandler.messages.size)
     }
 
     private fun utkastTilVedtakJson(
-        aktørId: String,
         fødselsnummer: String,
         organisasjonsnummer: String,
         skjæringstidspunkt: LocalDate
@@ -71,7 +73,6 @@ class GodkjenningsbehovRiverTest {
                 "Godkjenning"
               ],
               "meldingsreferanseId": "b63537e5-ffd9-4e9b-930c-45b0ab602d66",
-              "aktørId": "$aktørId",
               "fødselsnummer": "$fødselsnummer",
               "organisasjonsnummer": "$organisasjonsnummer",
               "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
@@ -111,25 +112,23 @@ class GodkjenningsbehovRiverTest {
     }
 
     private fun utkastTilVedtakJsonNode(
-        aktørId: String, fødselsnummer: String, organisasjonsnummer: String, skjæringstidspunkt: LocalDate
-    ) = utkastTilVedtakJson(aktørId, fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
+        fødselsnummer: String, organisasjonsnummer: String, skjæringstidspunkt: LocalDate
+    ) = utkastTilVedtakJson(fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
         .let(objectMapper::readTree) as ObjectNode
 
     private fun utkastTilVedtakJsonMedLøsning(
-        aktørId: String,
         fødselsnummer: String,
         organisasjonsnummer: String,
         skjæringstidspunkt: LocalDate
-    ) = utkastTilVedtakJsonNode(aktørId, fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
+    ) = utkastTilVedtakJsonNode(fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
         .med("@løsning" to "{}")
         .let(objectMapper::writeValueAsString)
 
     private fun utkastTilVedtakJsonMedBehandletAvSpinnvill(
-        aktørId: String,
         fødselsnummer: String,
         organisasjonsnummer: String,
         skjæringstidspunkt: LocalDate
-    ) = utkastTilVedtakJsonNode(aktørId, fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
+    ) = utkastTilVedtakJsonNode(fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
         .med("behandletAvSpinnvill" to "true")
         .let(objectMapper::writeValueAsString)
 }

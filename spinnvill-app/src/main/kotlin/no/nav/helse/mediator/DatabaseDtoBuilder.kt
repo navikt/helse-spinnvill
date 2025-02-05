@@ -1,55 +1,34 @@
 package no.nav.helse.mediator
 
-import no.nav.helse.Arbeidsgiverreferanse
-import no.nav.helse.Fødselsnummer
-import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
+import no.nav.helse.avviksvurdering.Avviksvurderingsgrunnlag
+import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.avviksvurdering.Kilde
-import no.nav.helse.avviksvurdering.Visitor
 import no.nav.helse.dto.AvviksvurderingDto
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.*
 
-class DatabaseDtoBuilder : Visitor {
+class DatabaseDtoBuilder {
 
-    private val avviksvurderinger = mutableListOf<AvviksvurderingDto>()
-    private val gjeldende get() = avviksvurderinger.last()
+    internal fun buildAll(grunnlagene: List<Avviksvurderingsgrunnlag>): List<AvviksvurderingDto> = grunnlagene.toDto()
 
-    override fun visitAvviksvurdering(
-        id: UUID,
-        fødselsnummer: Fødselsnummer,
-        skjæringstidspunkt: LocalDate,
-        kilde: Kilde,
-        opprettet: LocalDateTime
-    ) {
-        avviksvurderinger.add(
-            AvviksvurderingDto(
-                id = id,
-                fødselsnummer = fødselsnummer,
-                skjæringstidspunkt = skjæringstidspunkt,
-                opprettet = opprettet,
-                kilde = kilde.tilDto(),
-                sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()),
-                beregningsgrunnlag = null
-            )
+    private fun Collection<Avviksvurderingsgrunnlag>.toDto() = map { grunnlag ->
+        val innrapporterteInntekter = grunnlag.sammenligningsgrunnlag.inntekter.associate { it.arbeidsgiverreferanse to it.inntekter.toDto() }
+
+        val beregningsgrunnlag = grunnlag.beregningsgrunnlag
+        AvviksvurderingDto(
+            id = grunnlag.id,
+            fødselsnummer = grunnlag.fødselsnummer,
+            skjæringstidspunkt = grunnlag.skjæringstidspunkt,
+            opprettet = grunnlag.opprettet,
+            kilde = grunnlag.kilde.tilDto(),
+            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(innrapporterteInntekter),
+            beregningsgrunnlag =
+                if (beregningsgrunnlag is Beregningsgrunnlag) AvviksvurderingDto.BeregningsgrunnlagDto(beregningsgrunnlag.omregnedeÅrsinntekter)
+                else null
         )
     }
 
-    override fun visitBeregningsgrunnlag(
-        totaltOmregnetÅrsinntekt: Double,
-        omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
-    ) {
-        erstattGjeldendeMed(gjeldende.copy(beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(omregnedeÅrsinntekter)))
-    }
-
-    override fun visitBeregningsgrunnlagIngen() {
-        erstattGjeldendeMed(gjeldende.copy(beregningsgrunnlag = null))
-    }
-
-    override fun visitArbeidsgiverInntekt(arbeidsgiverreferanse: Arbeidsgiverreferanse, inntekter: List<ArbeidsgiverInntekt.MånedligInntekt>) {
-        val innrapporterteInntekterCopy = gjeldende.sammenligningsgrunnlag.innrapporterteInntekter.toMutableMap()
-        innrapporterteInntekterCopy[arbeidsgiverreferanse] = inntekter.map { månedligInntekt ->
+    private fun List<ArbeidsgiverInntekt.MånedligInntekt>.toDto(): List<AvviksvurderingDto.MånedligInntektDto> {
+        return map { månedligInntekt ->
             AvviksvurderingDto.MånedligInntektDto(
                 inntekt = månedligInntekt.inntekt,
                 måned = månedligInntekt.måned,
@@ -58,15 +37,6 @@ class DatabaseDtoBuilder : Visitor {
                 inntektstype = månedligInntekt.inntektstype.tilDto()
             )
         }
-        val nyGjeldende = gjeldende.copy(
-            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(innrapporterteInntekterCopy.toMap())
-        )
-        erstattGjeldendeMed(nyGjeldende)
-    }
-
-    private fun erstattGjeldendeMed(nyGjeldende: AvviksvurderingDto) {
-        val index = avviksvurderinger.indexOf(gjeldende)
-        avviksvurderinger[index] = nyGjeldende
     }
 
     private fun ArbeidsgiverInntekt.Inntektstype.tilDto(): AvviksvurderingDto.InntektstypeDto {
@@ -83,8 +53,4 @@ class DatabaseDtoBuilder : Visitor {
         Kilde.SPINNVILL -> AvviksvurderingDto.KildeDto.SPINNVILL
         Kilde.INFOTRYGD -> AvviksvurderingDto.KildeDto.INFOTRYGD
     }
-
-    internal fun build(): AvviksvurderingDto = avviksvurderinger.single()
-
-    internal fun buildAll(): List<AvviksvurderingDto> = avviksvurderinger
 }

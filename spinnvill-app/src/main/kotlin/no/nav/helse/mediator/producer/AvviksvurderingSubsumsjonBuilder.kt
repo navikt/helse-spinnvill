@@ -1,25 +1,25 @@
 package no.nav.helse.mediator.producer
 
-import no.nav.helse.*
+import no.nav.helse.Arbeidsgiverreferanse
+import no.nav.helse.Beskrivelse
+import no.nav.helse.Fordel
+import no.nav.helse.InntektPerMåned
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
-import no.nav.helse.avviksvurdering.Visitor
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 import java.util.*
-import kotlin.properties.Delegates
 
 internal class AvviksvurderingSubsumsjonBuilder(
     private val id: UUID,
     private val harAkseptabeltAvvik: Boolean,
     private val avviksprosent: Double,
     private val maksimaltTillattAvvik: Double,
-    beregningsgrunnlag: Beregningsgrunnlag,
+    private val beregningsgrunnlag: Beregningsgrunnlag,
     sammenligningsgrunnlag: Sammenligningsgrunnlag,
 ) {
-    private val beregningsgrunnlagDto = BeregningsgrunnlagBuilder().build(beregningsgrunnlag)
     private val sammenligningsgrunnlagBuilder = SammenligningsgrunnlagBuilder(sammenligningsgrunnlag)
 
     internal fun buildAvvikVurdert(): AvvikVurdertProducer.AvviksvurderingDto {
@@ -28,8 +28,8 @@ internal class AvviksvurderingSubsumsjonBuilder(
             avviksprosent = avviksprosent,
             vurderingstidspunkt = LocalDateTime.now(),
             id = id,
-            beregningsgrunnlagTotalbeløp = beregningsgrunnlagDto.totalbeløp,
-            omregnedeÅrsinntekter = beregningsgrunnlagDto.omregnedeÅrsinntekter,
+            beregningsgrunnlagTotalbeløp = beregningsgrunnlag.totalOmregnetÅrsinntekt,
+            omregnedeÅrsinntekter = beregningsgrunnlag.omregnedeÅrsinntekter,
             sammenligningsgrunnlagTotalbeløp = sammenligningsgrunnlagDto.totalbeløp,
             innrapporterteInntekter = sammenligningsgrunnlagDto.arbeidsgiverligeInntekter
         )
@@ -45,7 +45,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
             lovverksversjon = LocalDate.of(2019, 1, 1),
             utfall = SubsumsjonProducer.Utfall.VILKAR_BEREGNET,
             input = mapOf(
-                "omregnedeÅrsinntekter" to beregningsgrunnlagDto.omregnedeÅrsinntekter.map { (arbeidsgiverreferanse, omregnetÅrsinntekt) ->
+                "omregnedeÅrsinntekter" to beregningsgrunnlag.omregnedeÅrsinntekter.map { (arbeidsgiverreferanse, omregnetÅrsinntekt) ->
                     mapOf(
                         "arbeidsgiverreferanse" to arbeidsgiverreferanse.value,
                         "inntekt" to omregnetÅrsinntekt.value
@@ -53,7 +53,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
                 },
             ),
             output = mapOf(
-                "grunnlagForSykepengegrunnlag" to beregningsgrunnlagDto.totalbeløp,
+                "grunnlagForSykepengegrunnlag" to beregningsgrunnlag.totalOmregnetÅrsinntekt,
             )
         )
     }
@@ -71,8 +71,8 @@ internal class AvviksvurderingSubsumsjonBuilder(
             input = mapOf(
                 "maksimaltTillattAvvikPåÅrsinntekt" to maksimaltTillattAvvik,
                 "grunnlagForSykepengegrunnlag" to mapOf(
-                    "totalbeløp" to beregningsgrunnlagDto.totalbeløp,
-                    "omregnedeÅrsinntekter" to beregningsgrunnlagDto.omregnedeÅrsinntekter.map { (arbeidsgiverreferanse, omregnetÅrsinntekt) ->
+                    "totalbeløp" to beregningsgrunnlag.totalOmregnetÅrsinntekt,
+                    "omregnedeÅrsinntekter" to beregningsgrunnlag.omregnedeÅrsinntekter.map { (arbeidsgiverreferanse, omregnetÅrsinntekt) ->
                         mapOf(
                             "arbeidsgiverreferanse" to arbeidsgiverreferanse.value,
                             "inntekt" to omregnetÅrsinntekt.value
@@ -104,11 +104,6 @@ internal class AvviksvurderingSubsumsjonBuilder(
         )
     }
 
-    private data class BeregningsgrunnlagDto(
-        val totalbeløp: Double,
-        val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
-    )
-
     private data class SammenligningsgrunnlagSubsumsjonDto(
         val totalbeløp: Double,
         val månedligeInntekter: Map<YearMonth, List<MånedligInntekt>>
@@ -127,61 +122,14 @@ internal class AvviksvurderingSubsumsjonBuilder(
         val inntektstype: String
     )
 
-    private data class ArbeidsgiverligInntekt(
-        val måned: YearMonth,
-        val inntekt: InntektPerMåned,
-        val fordel: Fordel?,
-        val beskrivelse: Beskrivelse?,
-        val inntektstype: String
-    )
-
-    private class BeregningsgrunnlagBuilder : Visitor {
-        private lateinit var beregningsgrunnlagDto: BeregningsgrunnlagDto
-        override fun visitBeregningsgrunnlag(
-            totaltOmregnetÅrsinntekt: Double,
-            omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>
-        ) {
-            beregningsgrunnlagDto = BeregningsgrunnlagDto(
-                totalbeløp = totaltOmregnetÅrsinntekt,
-                omregnedeÅrsinntekter = omregnedeÅrsinntekter
-            )
-        }
-
-        fun build(beregningsgrunnlag: Beregningsgrunnlag): BeregningsgrunnlagDto {
-            beregningsgrunnlag.accept(this)
-            return beregningsgrunnlagDto
-        }
-    }
-
-    private class SammenligningsgrunnlagBuilder(private val sammenligningsgrunnlag: Sammenligningsgrunnlag) : Visitor {
-        private var totalbeløp by Delegates.notNull<Double>()
-        private val arbeidsgiverInntekter = mutableMapOf<Arbeidsgiverreferanse, MutableList<ArbeidsgiverligInntekt>>()
-
-        override fun visitSammenligningsgrunnlag(sammenligningsgrunnlag: Double) {
-            totalbeløp = sammenligningsgrunnlag
-        }
-
-        override fun visitArbeidsgiverInntekt(
-            arbeidsgiverreferanse: Arbeidsgiverreferanse,
-            inntekter: List<ArbeidsgiverInntekt.MånedligInntekt>
-        ) {
-            arbeidsgiverInntekter.getOrPut(arbeidsgiverreferanse) { mutableListOf() }.addAll(inntekter.map {
-                ArbeidsgiverligInntekt(
-                    måned = it.måned,
-                    inntekt = it.inntekt,
-                    fordel = it.fordel,
-                    beskrivelse = it.beskrivelse,
-                    inntektstype = it.inntektstype.toSubsumsjonString()
-                )
-            })
-        }
+    private class SammenligningsgrunnlagBuilder(private val sammenligningsgrunnlag: Sammenligningsgrunnlag) {
+        private var totalbeløp  = sammenligningsgrunnlag.totaltInnrapportertÅrsinntekt
+        private val arbeidsgiverInntekter = sammenligningsgrunnlag.inntekter
 
         fun buildForSubsumsjon(): SammenligningsgrunnlagSubsumsjonDto {
-            sammenligningsgrunnlag.accept(this)
-
             return SammenligningsgrunnlagSubsumsjonDto(
                 totalbeløp = totalbeløp,
-                månedligeInntekter = arbeidsgiverInntekter
+                månedligeInntekter = sammenligningsgrunnlag.inntekter
                     .flatMap { (arbeidsgiverreferanse, inntekter) ->
                         inntekter.map { inntekt ->
                             inntekt.måned to MånedligInntekt(
@@ -189,7 +137,7 @@ internal class AvviksvurderingSubsumsjonBuilder(
                                 inntekt = inntekt.inntekt,
                                 fordel = inntekt.fordel,
                                 beskrivelse = inntekt.beskrivelse,
-                                inntektstype = inntekt.inntektstype
+                                inntektstype = inntekt.inntektstype.toSubsumsjonString()
                             )
                         }
                     }
@@ -198,8 +146,6 @@ internal class AvviksvurderingSubsumsjonBuilder(
         }
 
         fun buildForAvviksvurdering(): SammenligningsgrunnlagAvviksvurderingDto {
-            sammenligningsgrunnlag.accept(this)
-
             return SammenligningsgrunnlagAvviksvurderingDto(
                 totalbeløp = totalbeløp,
                 arbeidsgiverligeInntekter = arbeidsgiverInntekter.map { (arbeidsgiverreferanse, inntekter) ->

@@ -41,9 +41,8 @@ class DatabaseDtoBuilderTest {
         val avviksvurdering = avviksvurderingDto.tilDomene()
 
         val builder = DatabaseDtoBuilder()
-        avviksvurdering.accept(builder)
 
-        assertEquals(avviksvurderingDto, builder.build())
+        assertEquals(avviksvurderingDto, builder.buildAll(listOf(avviksvurdering)).single())
     }
 
     @Test
@@ -73,9 +72,8 @@ class DatabaseDtoBuilderTest {
         val avviksvurdering = avviksvurderingDto.tilDomene()
 
         val builder = DatabaseDtoBuilder()
-        avviksvurdering.accept(builder)
 
-        assertEquals(avviksvurderingDto, builder.build())
+        assertEquals(avviksvurderingDto, builder.buildAll(listOf(avviksvurdering)).single())
     }
 
     @Test
@@ -171,11 +169,7 @@ class DatabaseDtoBuilderTest {
         val avviksvurdering3 = avviksvurderingDto3.tilDomene()
 
         val builder = DatabaseDtoBuilder()
-        avviksvurdering1.accept(builder)
-        avviksvurdering2.accept(builder)
-        avviksvurdering3.accept(builder)
-
-        val avviksvurderinger = builder.buildAll()
+        val avviksvurderinger = builder.buildAll(listOf(avviksvurdering1, avviksvurdering2, avviksvurdering3))
         assertContains(avviksvurderinger, avviksvurderingDto1)
         assertContains(avviksvurderinger, avviksvurderingDto2)
         assertContains(avviksvurderinger, avviksvurderingDto3)

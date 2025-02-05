@@ -1,7 +1,6 @@
 apiVersion: nais.io/v1alpha1
 kind: Application
 metadata:
-  creationTimestamp: null
   labels:
     team: tbd
   name: spinnvill
@@ -9,9 +8,6 @@ metadata:
 spec:
   image: {{image}}
   port: 8080
-  replicas:
-    min: 1
-    max: 2
   liveness:
     path: isalive
     initialDelay: 5
@@ -25,10 +21,19 @@ spec:
     pool: nav-dev
   secureLogs:
     enabled: true
+  replicas:
+    min: 1
+    max: 2
   gcp:
     sqlInstances:
       - type: POSTGRES_15
         diskAutoresize: true
+        tier: db-f1-micro
+        flags:
+          - name: cloudsql.enable_pgaudit
+            value: "true"
+          - name: pgaudit.log
+            value: "write"
         databases:
           - name: spinnvill
             envVarPrefix: DATABASE

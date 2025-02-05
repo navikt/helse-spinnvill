@@ -19,15 +19,15 @@ class Database private constructor(env: Map<String, String>) {
 
     internal fun datasource(): HikariDataSource = dataSourceBuilder.getDataSource()
 
-    fun finnSisteAvviksvurdering(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
+    fun finnSisteAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
         return avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
     }
 
-    fun finnAvviksvurderinger(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<AvviksvurderingDto> {
+    fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<AvviksvurderingDto> {
         return avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt)
     }
 
-    fun lagreAvviksvurderinger(avviksvurderinger: List<AvviksvurderingDto>) {
+    fun lagreGrunnlagshistorikk(avviksvurderinger: List<AvviksvurderingDto>) {
         avviksvurdering.upsertAll(avviksvurderinger)
     }
 

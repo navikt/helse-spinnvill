@@ -28,7 +28,6 @@ class SammenligningsgrunnlagRiverTest {
     }
 
     private companion object {
-        private const val AKTØRID = "1234567891011"
         private const val FØDSELSNUMMER = "12345678910"
         private const val ORGANISASJONSNUMMER = "987654321"
     }
@@ -41,7 +40,6 @@ class SammenligningsgrunnlagRiverTest {
     fun `Leser inn sammenligningsgrunnlag løsning`() {
         testRapid.sendTestMessage(
             sammenligningsgrunnlagJsonMed(
-                aktørId = AKTØRID,
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
@@ -57,7 +55,6 @@ class SammenligningsgrunnlagRiverTest {
     fun `Leser ikke inn sammenligningsgrunnlag uten løsning`() {
         testRapid.sendTestMessage(
             sammenligningsgrunnlagJsonUtenLøsning(
-                AKTØRID,
                 FØDSELSNUMMER,
                 ORGANISASJONSNUMMER,
                 1.januar
@@ -70,7 +67,6 @@ class SammenligningsgrunnlagRiverTest {
     fun `Leser ikke inn sammenligningsgrunnlag som mangler årMåned`() {
         testRapid.sendTestMessage(
             sammenligningsgrunnlagJsonMed(
-                AKTØRID,
                 FØDSELSNUMMER,
                 ORGANISASJONSNUMMER,
                 1.januar,
@@ -84,7 +80,6 @@ class SammenligningsgrunnlagRiverTest {
     fun `Leser ikke inn sammenligningsgrunnlag som mangler inntektsliste`() {
         testRapid.sendTestMessage(
             sammenligningsgrunnlagJsonMed(
-                aktørId = AKTØRID,
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
@@ -98,7 +93,6 @@ class SammenligningsgrunnlagRiverTest {
     fun `Leser inn sammenligningsgrunnlag uten beskrivelse`() {
         testRapid.sendTestMessage(
             sammenligningsgrunnlagJsonMed(
-                aktørId = AKTØRID,
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
@@ -114,7 +108,6 @@ class SammenligningsgrunnlagRiverTest {
     fun `Leser ikke inn sammenligningsgrunnlag uten inntektstype`() {
         testRapid.sendTestMessage(
             sammenligningsgrunnlagJsonMed(
-                aktørId = AKTØRID,
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
@@ -127,11 +120,10 @@ class SammenligningsgrunnlagRiverTest {
     }
 
     @Test
-    fun `Leser ikke inn sammenligningsgrunnlag uten orgnummer, aktørId eller fødselsnummer`() {
+    fun `Leser ikke inn sammenligningsgrunnlag uten orgnummer eller fødselsnummer`() {
         assertThrows<IllegalStateException> {
             testRapid.sendTestMessage(
                 sammenligningsgrunnlagJsonMed(
-                    aktørId = AKTØRID,
                     fødselsnummer = FØDSELSNUMMER,
                     organisasjonsnummer = ORGANISASJONSNUMMER,
                     skjæringstidspunkt = 1.januar,
@@ -148,7 +140,6 @@ class SammenligningsgrunnlagRiverTest {
     fun `Leser ikke inn sammenligningsgrunnlag uten beløp`() {
         testRapid.sendTestMessage(
             sammenligningsgrunnlagJsonMed(
-                aktørId = AKTØRID,
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
@@ -164,7 +155,6 @@ class SammenligningsgrunnlagRiverTest {
     fun `Leser ikke inn sammenligningsgrunnlag hvis inntektstype ikke er gyldig`() {
         testRapid.sendTestMessage(
             sammenligningsgrunnlagJsonMed(
-                aktørId = AKTØRID,
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
@@ -180,7 +170,6 @@ class SammenligningsgrunnlagRiverTest {
     fun `Leser ikke inn sammenligningsgrunnlag hvis det ikke er final`() {
         testRapid.sendTestMessage(
             sammenligningsgrunnlagJsonMed(
-                aktørId = AKTØRID,
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
@@ -192,7 +181,6 @@ class SammenligningsgrunnlagRiverTest {
         )
         testRapid.sendTestMessage(
             sammenligningsgrunnlagJsonMed(
-                aktørId = AKTØRID,
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
@@ -224,7 +212,6 @@ class SammenligningsgrunnlagRiverTest {
             inntektstype = inntektstype,
             orgnummer = if (arbeidsgiverMangler) null else "987654321",
             fødselsnummer = if (arbeidsgiverMangler) null else "12345678910",
-            aktørId = if (arbeidsgiverMangler) null else "1234567891011",
             beskrivelse = beskrivelse,
             fordel = fordel
         )
@@ -240,7 +227,6 @@ class SammenligningsgrunnlagRiverTest {
         val inntektstype: String?,
         val orgnummer: String?,
         val fødselsnummer: String?,
-        val aktørId: String?,
         val beskrivelse: String?,
         val fordel: String?
     )
@@ -250,7 +236,6 @@ class SammenligningsgrunnlagRiverTest {
     }
 
     private fun sammenligningsgrunnlagJsonMed(
-        aktørId: String,
         fødselsnummer: String,
         organisasjonsnummer: String,
         skjæringstidspunkt: LocalDate,
@@ -266,7 +251,6 @@ class SammenligningsgrunnlagRiverTest {
                 "InntekterForSammenligningsgrunnlag"
               ],
               "meldingsreferanseId": "ff032457-203f-43ec-8850-b72a57ad9e52",
-              "aktørId": "$aktørId",
               "fødselsnummer": "$fødselsnummer",
               "organisasjonsnummer": "$organisasjonsnummer",
               "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
@@ -288,7 +272,6 @@ class SammenligningsgrunnlagRiverTest {
     }
 
     private fun sammenligningsgrunnlagJsonUtenLøsning(
-        aktørId: String,
         fødselsnummer: String,
         organisasjonsnummer: String,
         skjæringstidspunkt: LocalDate
@@ -302,7 +285,6 @@ class SammenligningsgrunnlagRiverTest {
                 "InntekterForSammenligningsgrunnlag"
               ],
               "meldingsreferanseId": "ff032457-203f-43ec-8850-b72a57ad9e52",
-              "aktørId": "$aktørId",
               "fødselsnummer": "$fødselsnummer",
               "organisasjonsnummer": "$organisasjonsnummer",
               "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",

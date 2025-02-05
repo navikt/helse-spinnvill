@@ -30,7 +30,6 @@ class GodkjenningsbehovMessageTest {
     fun `kan konvertere seg selv til map og markere seg som final`() {
         testRapid.sendTestMessage(
             utkastTilVedtakJson(
-                "1234567891011",
                 "12345678910",
                 "987654321",
                 1.januar
@@ -44,7 +43,6 @@ class GodkjenningsbehovMessageTest {
     }
 
     private fun utkastTilVedtakJson(
-        aktørId: String,
         fødselsnummer: String,
         organisasjonsnummer: String,
         skjæringstidspunkt: LocalDate
@@ -58,7 +56,6 @@ class GodkjenningsbehovMessageTest {
                 "Godkjenning"
               ],
               "meldingsreferanseId": "b63537e5-ffd9-4e9b-930c-45b0ab602d66",
-              "aktørId": "$aktørId",
               "fødselsnummer": "$fødselsnummer",
               "organisasjonsnummer": "$organisasjonsnummer",
               "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",

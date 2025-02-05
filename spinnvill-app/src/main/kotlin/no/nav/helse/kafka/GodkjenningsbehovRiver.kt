@@ -14,7 +14,7 @@ internal class GodkjenningsbehovRiver(rapidsConnection: RapidsConnection, privat
                 it.demandAll("@behov", listOf("Godkjenning"))
                 it.rejectKey("@løsning")
                 it.rejectKey("behandletAvSpinnvill")
-                it.requireKey("fødselsnummer", "organisasjonsnummer", "aktørId", "vedtaksperiodeId")
+                it.requireKey("fødselsnummer", "organisasjonsnummer", "vedtaksperiodeId")
                 it.requireKey("Godkjenning.vilkårsgrunnlagId", "Godkjenning.skjæringstidspunkt")
                 it.requireArray("Godkjenning.omregnedeÅrsinntekter") {
                     requireKey("organisasjonsnummer", "beløp")

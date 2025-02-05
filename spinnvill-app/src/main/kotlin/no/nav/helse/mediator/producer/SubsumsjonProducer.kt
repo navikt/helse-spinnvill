@@ -2,10 +2,8 @@ package no.nav.helse.mediator.producer
 
 import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
-import no.nav.helse.KriterieObserver
 import no.nav.helse.VersjonAvKode
-import no.nav.helse.avviksvurdering.Beregningsgrunnlag
-import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
+import no.nav.helse.avviksvurdering.Avviksvurdering
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -16,29 +14,22 @@ internal class SubsumsjonProducer(
     private val vedtaksperiodeId: UUID,
     private val vilkårsgrunnlagId: UUID,
     private val versjonAvKode: VersjonAvKode,
-) : KriterieObserver, Producer {
+) : Producer {
 
     private val subsumsjonskø = mutableListOf<SubsumsjonsmeldingDto>()
 
-    override fun avvikVurdert(
-        id: UUID,
-        harAkseptabeltAvvik: Boolean,
-        avviksprosent: Double,
-        beregningsgrunnlag: Beregningsgrunnlag,
-        sammenligningsgrunnlag: Sammenligningsgrunnlag,
-        maksimaltTillattAvvik: Double,
-    ) {
+    fun avvikVurdert(vurdering: Avviksvurdering) {
         val builder = AvviksvurderingSubsumsjonBuilder(
-            id = id,
-            harAkseptabeltAvvik = harAkseptabeltAvvik,
-            avviksprosent = avviksprosent,
-            maksimaltTillattAvvik = maksimaltTillattAvvik,
-            beregningsgrunnlag = beregningsgrunnlag,
-            sammenligningsgrunnlag = sammenligningsgrunnlag
+            id = vurdering.id,
+            harAkseptabeltAvvik = vurdering.harAkseptabeltAvvik,
+            avviksprosent = vurdering.avviksprosent,
+            maksimaltTillattAvvik = vurdering.maksimaltTillattAvvik,
+            beregningsgrunnlag = vurdering.beregningsgrunnlag,
+            sammenligningsgrunnlag = vurdering.sammenligningsgrunnlag
         )
         subsumsjonskø.add(builder.`8-30 ledd 2 punktum 1`())
 
-        if (harAkseptabeltAvvik) subsumsjonskø.add(builder.`8-30 ledd 1`())
+        if (vurdering.harAkseptabeltAvvik) subsumsjonskø.add(builder.`8-30 ledd 1`())
     }
 
     override fun ferdigstill(): List<Message> {

@@ -15,7 +15,7 @@ internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, p
                     requireArray("inntektsliste") {
                         requireKey("beløp")
                         requireAny("inntektstype", listOf("LOENNSINNTEKT", "NAERINGSINNTEKT", "PENSJON_ELLER_TRYGD", "YTELSE_FRA_OFFENTLIGE"))
-                        interestedIn("orgnummer", "fødselsnummer", "aktørId", "fordel", "beskrivelse")
+                        interestedIn("orgnummer", "fødselsnummer", "fordel", "beskrivelse")
                     }
                 }
             }

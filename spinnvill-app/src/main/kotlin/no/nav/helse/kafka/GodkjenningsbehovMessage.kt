@@ -29,7 +29,6 @@ class GodkjenningsbehovMessage(packet: JsonMessage) {
     val vilkårsgrunnlagId: UUID = packet["Godkjenning.vilkårsgrunnlagId"].asUUID()
     val skjæringstidspunkt: LocalDate = packet["Godkjenning.skjæringstidspunkt"].asLocalDate()
     val fødselsnummer: String = packet["fødselsnummer"].asText()
-    val aktørId: String = packet["aktørId"].asText()
     val vedtaksperiodeId: UUID = packet["vedtaksperiodeId"].asUUID()
     val organisasjonsnummer: String = packet["organisasjonsnummer"].asText()
     val beregningsgrunnlag = packet["Godkjenning.omregnedeÅrsinntekter"].associate {

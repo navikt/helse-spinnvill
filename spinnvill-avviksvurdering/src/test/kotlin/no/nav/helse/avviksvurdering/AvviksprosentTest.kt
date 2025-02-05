@@ -5,51 +5,43 @@ import org.junit.jupiter.api.Test
 
 class AvviksprosentTest {
 
-    @Test
-    fun `har ikke akseptabelt avvik`() {
-        val avviksprosent = Avviksprosent.avvik(400000.0, 600000.0)
-        assertFalse(avviksprosent.harAkseptabeltAvvik())
-    }
-    @Test
-    fun `har akseptabelt avvik`() {
-        val avviksprosent = Avviksprosent.avvik(500000.0, 600000.0)
-        assertTrue(avviksprosent.harAkseptabeltAvvik())
-    }
-    @Test
-    fun `har akseptabelt avvik når avvik er på grensen`() {
-        val avviksprosent = Avviksprosent.avvik(300000.0, 400000.0)
-        assertTrue(avviksprosent.harAkseptabeltAvvik())
-    }
-    @Test
-    fun `kan ha avviksprosent høyere enn 100 prosent`() {
-        val avviksprosent = Avviksprosent.avvik(600000.0, 200000.0)
-        assertFalse(avviksprosent.harAkseptabeltAvvik())
-    }
-    @Test
-    fun `avrunding til to desimaler`() {
-        val avviksprosent = Avviksprosent.avvik(8.8, 7.7)
-        assertEquals(14.29, avviksprosent.avrundetTilToDesimaler())
-    }
+    private val nullAvvik = Avviksprosent(0.0)
+
     @Test
     fun INGEN() {
-        assertEquals(-1.0, Avviksprosent.INGEN.avrundetTilToDesimaler())
+        assertEquals(-1.0, Avviksprosent.INGEN.avrundetTilFireDesimaler)
     }
+
+    @Test
+    fun `beregning og avrunding gir korrekt avviksprosent`() {
+        val avviksprosent = Avviksprosent.avvik(12.50001, 10.0)
+        assertEquals(25.0001, avviksprosent.avrundetTilFireDesimaler)
+    }
+
+    @Test
+    fun `avviksprosent under grenseverdi gir ikke avvik`() {
+        val avviksprosentUnderGrenseverdi = Avviksprosent(0.000049)
+        assertEquals(avviksprosentUnderGrenseverdi, nullAvvik)
+        assertFalse(avviksprosentUnderGrenseverdi < nullAvvik)
+        assertFalse(avviksprosentUnderGrenseverdi > nullAvvik)
+    }
+
+    @Test
+    fun `avviksprosent over grenseverdi gir avvik`() {
+        assertEquals(Avviksprosent(0.0001), Avviksprosent(0.00005))
+    }
+
+    @Test
+    fun compareTo() {
+        assertEquals(0, Avviksprosent(10.00049).compareTo(Avviksprosent(10.0005)))
+        assertEquals(1, Avviksprosent(10.0006).compareTo(Avviksprosent(10.0005)))
+        assertEquals(-1, Avviksprosent(10.0005).compareTo(Avviksprosent(10.0006)))
+    }
+
     @Test
     fun equals() {
-        val avviksprosent1 = Avviksprosent.avvik(100000.0, 100000.0)
-        val avviksprosent2 = Avviksprosent.avvik(100000.0, 100000.0)
-        assertEquals(avviksprosent1, avviksprosent2)
-    }
-    @Test
-    fun `når diff er mindre enn epsilon er prosentene like`() {
-        val avviksprosent1 = Avviksprosent.avvik(1.000002, 1.000003)
-        val avviksprosent2 = Avviksprosent.avvik(1.0, 1.0)
-        assertEquals(avviksprosent1, avviksprosent2)
-    }
-    @Test
-    fun `når diff er større enn epsilon er prosentene ikke like`() {
-        val avviksprosent1 = Avviksprosent.avvik(1.00001, 1.00002)
-        val avviksprosent2 = Avviksprosent.avvik(1.0, 1.0)
-        assertNotEquals(avviksprosent1, avviksprosent2)
+        assertEquals(Avviksprosent(10.00049), Avviksprosent(10.0005))
+        assertNotEquals(Avviksprosent(10.0006), (Avviksprosent(10.0005)))
+        assertNotEquals(Avviksprosent(10.0005), (Avviksprosent(10.0006)))
     }
 }

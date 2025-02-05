@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.VersjonAvKode
+import no.nav.helse.avviksvurdering.Avviksvurdering
 import no.nav.helse.helpers.*
 import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.isMissingOrNull
@@ -28,26 +29,26 @@ internal class SubsumsjonProducerTest {
 
     @Test
     fun `produserer to subsumsjonsmeldinger hvis avviket er akseptabelt, både 8-30 ledd 2 punktum 1 og 8-30 ledd 1`() {
-        subsumsjonProducer.avvikVurdert(UUID.randomUUID(), true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
+        subsumsjonProducer.avvikVurdert(Avviksvurdering( UUID.randomUUID(), true, 20.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0))
         assertEquals(2, subsumsjonProducer.ferdigstill().size)
     }
 
     @Test
     fun `produser subsumsjonsmelding hvis avviket ikke er akseptabelt`() {
-        subsumsjonProducer.avvikVurdert(UUID.randomUUID(), false, 42.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
+        subsumsjonProducer.avvikVurdert(Avviksvurdering(UUID.randomUUID(), false, 42.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0))
         assertEquals(1, subsumsjonProducer.ferdigstill().size)
     }
 
     @Test
     fun `subsumsjonskø tømmes etter hver finalize`() {
-        subsumsjonProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
+        subsumsjonProducer.avvikVurdert(Avviksvurdering(UUID.randomUUID(), false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0))
         assertEquals(1, subsumsjonProducer.ferdigstill().size)
         assertEquals(0, subsumsjonProducer.ferdigstill().size)
     }
 
     @Test
     fun `produserer riktig format på subsumsjonsmelding`() {
-        subsumsjonProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0)
+        subsumsjonProducer.avvikVurdert(Avviksvurdering(UUID.randomUUID(), false, 26.0, dummyBeregningsgrunnlag, dummySammenligningsgrunnlag, 25.0))
         val messages = subsumsjonProducer.ferdigstill()
         assertEquals(1, messages.size)
         val message = messages[0]
@@ -82,7 +83,7 @@ internal class SubsumsjonProducerTest {
     fun `lag subsumsjonsmelding for avviksvurdering - 8-30 ledd 2 punktum 1`() {
         val beregningsgrunnlag = beregningsgrunnlag("a1" to 600000.0)
         val sammenligningsgrunnlag = sammenligningsgrunnlag("a1" to 50000.0)
-        subsumsjonProducer.avvikVurdert(UUID.randomUUID(), false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0)
+        subsumsjonProducer.avvikVurdert(Avviksvurdering(UUID.randomUUID(), false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0))
         val message = subsumsjonProducer.ferdigstill()[0]
         check(message is Message.Hendelse)
         assertEquals("subsumsjon", message.navn)
@@ -139,7 +140,7 @@ internal class SubsumsjonProducerTest {
     fun `lag subsumsjonsmelding for fastsettelse etter hovedregel - 8-30 ledd 1`() {
         val beregningsgrunnlag = beregningsgrunnlag("a1" to 600000.0)
         val sammenligningsgrunnlag = sammenligningsgrunnlag("a1" to 50000.0)
-        subsumsjonProducer.avvikVurdert(UUID.randomUUID(), true, 25.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0)
+        subsumsjonProducer.avvikVurdert(Avviksvurdering(UUID.randomUUID(), true, 25.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0))
         val message = subsumsjonProducer.ferdigstill()[1]
         check(message is Message.Hendelse)
         assertEquals("subsumsjon", message.navn)

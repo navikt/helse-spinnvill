@@ -1,7 +1,6 @@
 package no.nav.helse.mediator.producer
 
 import net.logstash.logback.argument.StructuredArguments.kv
-import no.nav.helse.AktørId
 import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.rapids_rivers.JsonMessage
@@ -30,7 +29,6 @@ sealed class Message(
 }
 
 class MeldingProducer(
-    private val aktørId: AktørId,
     private val fødselsnummer: Fødselsnummer,
     private val organisasjonsnummer: Arbeidsgiverreferanse,
     private val skjæringstidspunkt: LocalDate,
@@ -59,7 +57,6 @@ class MeldingProducer(
                 }
             }.onEach { (_, json) ->
                 json["fødselsnummer"] = fødselsnummer.value
-                json["aktørId"] = aktørId.value
                 json["organisasjonsnummer"] = organisasjonsnummer.value
                 json["skjæringstidspunkt"] = skjæringstidspunkt
                 json["vedtaksperiodeId"] = vedtaksperiodeId
@@ -74,7 +71,6 @@ class MeldingProducer(
         withMDC(
             mapOf(
                 "fødselsnummer" to fødselsnummer.value,
-                "aktørId" to aktørId.value,
                 "organisasjonsnummer" to organisasjonsnummer.value,
                 "skjæringstidspunkt" to skjæringstidspunkt.toString(),
                 "vedtaksperiodeId" to vedtaksperiodeId.toString(),

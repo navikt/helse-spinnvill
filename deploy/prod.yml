@@ -1,7 +1,6 @@
 apiVersion: nais.io/v1alpha1
 kind: Application
 metadata:
-  creationTimestamp: null
   labels:
     team: tbd
   name: spinnvill
@@ -9,9 +8,6 @@ metadata:
 spec:
   image: {{image}}
   port: 8080
-  replicas:
-    min: 3
-    max: 6
   liveness:
     path: isalive
     initialDelay: 5
@@ -25,18 +21,30 @@ spec:
     pool: nav-prod
   secureLogs:
     enabled: true
+  replicas:
+    min: 3
+    max: 24
+    scalingStrategy:
+      kafka:
+        topic: tbd.rapid.v1
+        consumerGroup: tbd-spinnvill-v1
+        threshold: 200
   gcp:
     sqlInstances:
       - type: POSTGRES_15
         diskAutoresize: true
         pointInTimeRecovery: true
-        tier: db-custom-4-8960
+        tier: db-custom-10-20480
         databases:
           - name: spinnvill
             envVarPrefix: DATABASE
         flags:
           - name: max_connections
             value: "300"
+          - name: cloudsql.enable_pgaudit
+            value: "true"
+          - name: pgaudit.log
+            value: "write"
   env:
     - name: KAFKA_RAPID_TOPIC
       value: tbd.rapid.v1
