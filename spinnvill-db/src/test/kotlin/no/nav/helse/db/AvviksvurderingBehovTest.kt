@@ -2,6 +2,7 @@ package no.nav.helse.db
 
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.dto.AvviksvurderingBehovDto
+import no.nav.helse.helpers.februar
 import no.nav.helse.helpers.januar
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -29,6 +30,55 @@ internal class AvviksvurderingBehovTest {
         assertEquals(etAvviksvurderingBehov.fødselsnummer, lagretAvviksvurderingBehov.fødselsnummer)
         assertEquals(etAvviksvurderingBehov.skjæringstidspunkt, lagretAvviksvurderingBehov.skjæringstidspunkt)
         assertEquals(etAvviksvurderingBehov.opprettet, lagretAvviksvurderingBehov.opprettet)
+    }
+
+    @Test
+    fun `Finner ikke et løst avviksvurderingBehov`() {
+        val fødselsnummer = "12345678910"
+        val skjæringstidspunkt = 1.januar
+        val etAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt, løst = LocalDateTime.now())
+        database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
+
+        val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
+
+        assertNull(funnetAvviksvurderingBehov)
+    }
+
+    @Test
+    fun `Finner kun uløst avviksvurderingBehov`() {
+        val fødselsnummer = "12345678910"
+        val skjæringstidspunkt = 1.januar
+        val id = UUID.randomUUID()
+        val etAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt, løst = LocalDateTime.now(), id = UUID.randomUUID())
+        val etTilAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt, løst = null, id = id)
+        database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
+        database.lagreAvviksvurderingBehov(etTilAvviksvurderingBehov)
+
+        val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
+
+        assertNotNull(funnetAvviksvurderingBehov)
+        assertEquals(id, funnetAvviksvurderingBehov?.id)
+    }
+
+    @Test
+    fun `Finner flere uløste avviksvurderingBehov på samme fødselsnummer men forskjellig skjæringstidspunkt`() {
+        val fødselsnummer = "12345678910"
+        val skjæringstidspunkt = 1.januar
+        val etTilSkjæringstidspunkt = 1.februar
+        val id = UUID.randomUUID()
+        val enTilId = UUID.randomUUID()
+        val etAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt, løst = null, id = id)
+        val etTilAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= etTilSkjæringstidspunkt, løst = null, id = enTilId)
+        database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
+        database.lagreAvviksvurderingBehov(etTilAvviksvurderingBehov)
+
+        val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
+        val etTilfunnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(Fødselsnummer(fødselsnummer), etTilSkjæringstidspunkt)
+
+        assertNotNull(funnetAvviksvurderingBehov)
+        assertNotNull(etTilfunnetAvviksvurderingBehov)
+        assertEquals(id, funnetAvviksvurderingBehov?.id)
+        assertEquals(enTilId, etTilfunnetAvviksvurderingBehov?.id)
     }
 
     @Test
