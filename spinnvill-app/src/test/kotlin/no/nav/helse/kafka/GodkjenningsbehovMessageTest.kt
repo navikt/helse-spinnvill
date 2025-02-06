@@ -19,6 +19,9 @@ class GodkjenningsbehovMessageTest {
             messages.add(message)
         }
 
+        override fun håndter(message: AvviksvurderingbehovMessage) {
+        }
+
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}
     }
 

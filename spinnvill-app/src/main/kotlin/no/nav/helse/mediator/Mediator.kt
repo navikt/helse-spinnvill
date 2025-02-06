@@ -22,6 +22,7 @@ class Mediator(
     init {
         GodkjenningsbehovRiver(rapidsConnection, this)
         SammenligningsgrunnlagRiver(rapidsConnection, this)
+        AvviksvurderingbehovRiver(rapidsConnection, this)
     }
 
     override fun håndter(message: GodkjenningsbehovMessage) {
@@ -57,6 +58,20 @@ class Mediator(
         avviksvurderinger.lagre()
         meldingProducer.publiserMeldinger()
     }
+
+    override fun håndter(message: AvviksvurderingbehovMessage) {
+       // sjekke om vi har et ubehandlet behov for fødselsnummer=x og skjæringstidspunkt=y
+            // hvis ja -> returner
+            // hvis nei -> lagre ned behovet for fødselsnumemr og skjæringstidspunkt
+       // deretter finn frem historikken for fødselsnummer og skjæringstidspunkt
+       // sjekk har avviksvurdert før?
+            // hvis nei -> behov for sammenligningsgrunnlag
+            // hvis ja -> har beregningsgrunnlaget endret seg?
+                // hvis ja -> ny avviksvurdering og send løsning med ny avviksvurdering
+                // hvis nei -> send løsning uten ny avviksvurdering
+       // marker behov som løst
+    }
+
 
     override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
         val fødselsnummer = Fødselsnummer(sammenligningsgrunnlagMessage.fødselsnummer)

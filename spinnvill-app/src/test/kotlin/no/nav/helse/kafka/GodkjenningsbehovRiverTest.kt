@@ -20,6 +20,9 @@ class GodkjenningsbehovRiverTest {
             messages.add(message)
         }
 
+        override fun håndter(message: AvviksvurderingbehovMessage) {
+        }
+
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}
     }
 
@@ -133,7 +136,7 @@ class GodkjenningsbehovRiverTest {
         .let(objectMapper::writeValueAsString)
 }
 
-private fun ObjectNode.med(vararg felter: Pair<String, Any>): ObjectNode {
+fun ObjectNode.med(vararg felter: Pair<String, Any>): ObjectNode {
     felter.forEach { (key, value) -> replace(key, objectMapper.valueToTree(value)) }
     return this
 }
