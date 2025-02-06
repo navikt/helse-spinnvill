@@ -2,6 +2,7 @@
 
 package no.nav.helse.kafka
 
+import no.nav.helse.avviksvurdering.AvviksvurderingBehov
 import no.nav.helse.helpers.januar
 import no.nav.helse.helpers.objectMapper
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -20,7 +21,7 @@ class SammenligningsgrunnlagRiverTest {
         val messages = mutableListOf<SammenligningsgrunnlagMessage>()
 
         override fun håndter(message: GodkjenningsbehovMessage) {}
-        override fun håndter(message: AvviksvurderingbehovMessage) {}
+        override fun håndter(avviksvurderingBehov: AvviksvurderingBehov) {}
 
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
             messages.add(sammenligningsgrunnlagMessage)

@@ -3,6 +3,7 @@
 package no.nav.helse.kafka
 
 import com.fasterxml.jackson.databind.node.ObjectNode
+import no.nav.helse.avviksvurdering.AvviksvurderingBehov
 import no.nav.helse.helpers.januar
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
@@ -20,7 +21,7 @@ class GodkjenningsbehovRiverTest {
             messages.add(message)
         }
 
-        override fun håndter(message: AvviksvurderingbehovMessage) {
+        override fun håndter(avviksvurderingBehov: AvviksvurderingBehov) {
         }
 
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}

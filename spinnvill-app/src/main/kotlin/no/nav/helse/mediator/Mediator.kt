@@ -59,8 +59,12 @@ class Mediator(
         meldingProducer.publiserMeldinger()
     }
 
-    override fun håndter(message: AvviksvurderingbehovMessage) {
-       // sjekke om vi har et ubehandlet behov for fødselsnummer=x og skjæringstidspunkt=y
+    override fun håndter(avviksvurderingBehov: AvviksvurderingBehov) {
+        //val avviksvurderingBehov = finnUbehandledeBehov(avviksvurderingBehov.fødselsnummer, avviksvurderingBehov.skjæringstidspunkt) ?: return
+       // avviksvurderingBehov.lagre()
+
+
+        // sjekke om vi har et ubehandlet behov for fødselsnummer=x og skjæringstidspunkt=y
             // hvis ja -> returner
             // hvis nei -> lagre ned behovet for fødselsnumemr og skjæringstidspunkt
        // deretter finn frem historikken for fødselsnummer og skjæringstidspunkt

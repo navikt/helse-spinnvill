@@ -1,6 +1,10 @@
 package no.nav.helse.kafka
 
 import com.fasterxml.jackson.databind.node.ObjectNode
+import no.nav.helse.Arbeidsgiverreferanse
+import no.nav.helse.OmregnetÅrsinntekt
+import no.nav.helse.avviksvurdering.AvviksvurderingBehov
+import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.helpers.januar
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
@@ -13,11 +17,11 @@ class AvviksvurderingbehovRiverTest {
     private val testRapid = TestRapid()
 
     private val messageHandler = object : MessageHandler {
-        val messages = mutableListOf<AvviksvurderingbehovMessage>()
+        val behov = mutableListOf<AvviksvurderingBehov>()
         override fun håndter(message: GodkjenningsbehovMessage) {}
 
-        override fun håndter(message: AvviksvurderingbehovMessage) {
-            messages.add(message)
+        override fun håndter(avviksvurderingBehov: AvviksvurderingBehov) {
+            behov.add(avviksvurderingBehov)
         }
 
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}
@@ -36,17 +40,25 @@ class AvviksvurderingbehovRiverTest {
     @Test
     fun `les inn behov om avviksvurdering`() {
         testRapid.sendTestMessage(AvviksvurderingBehov(skjæringstidspunkt = skjæringstidspunkt))
-        val message = messageHandler.messages.single()
+        val behov = messageHandler.behov.single()
 
-        assertEquals(FØDSELSNUMMER, message.fødselsnummer)
-        assertEquals(skjæringstidspunkt, message.skjæringstidspunkt)
-        assertEquals(mapOf(ORGANISASJONSNUMMER to 500000.0, "000000000" to 200000.20), message.beregningsgrunnlag)
+        assertEquals(FØDSELSNUMMER, behov.fødselsnummer.value)
+        assertEquals(skjæringstidspunkt, behov.skjæringstidspunkt)
+        assertEquals(
+            Beregningsgrunnlag.opprett(
+                mapOf(
+                    Arbeidsgiverreferanse(ORGANISASJONSNUMMER) to OmregnetÅrsinntekt(
+                        500000.0
+                    ), Arbeidsgiverreferanse("000000000") to OmregnetÅrsinntekt(200000.20)
+                )
+            ), behov.beregningsgrunnlag
+        )
     }
 
     @Test
     fun `leser ikke inn behov om avviksvurdering med løsning`() {
         testRapid.sendTestMessage(avviksvurderingJsonMedLøsning(FØDSELSNUMMER, ORGANISASJONSNUMMER, skjæringstidspunkt))
-        assertEquals(0, messageHandler.messages.size)
+        assertEquals(0, messageHandler.behov.size)
     }
 
     private fun AvviksvurderingBehov(
