@@ -2,14 +2,16 @@ package no.nav.helse.db
 
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.helse.Fødselsnummer
+import no.nav.helse.avviksvurdering.AvviksvurderingBehov
 import no.nav.helse.dto.AvviksvurderingBehovDto
 import no.nav.helse.dto.AvviksvurderingDto
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class Database private constructor(env: Map<String, String>) {
     private val dataSourceBuilder = DataSourceBuilder(env)
     private val avviksvurdering = Avviksvurdering()
-    private val avviksvurderingBehov = AvviksvurderingBehov()
+    private val avviksvurderingBehovDao = AvviksvurderingBehovDao()
 
     init {
         org.jetbrains.exposed.sql.Database.connect(datasource())
@@ -26,11 +28,19 @@ class Database private constructor(env: Map<String, String>) {
     }
 
     fun finnUbehandledeAvviksvurderingBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehovDto? {
-        return avviksvurderingBehov.findUløst(fødselsnummer, skjæringstidspunkt)
+        return avviksvurderingBehovDao.findUløst(fødselsnummer, skjæringstidspunkt)
     }
 
-    fun lagreAvviksvurderingBehov(avviksvurderingBehovDto: AvviksvurderingBehovDto) : AvviksvurderingBehovDto {
-        return avviksvurderingBehov.lagre(avviksvurderingBehovDto)
+    fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) {
+        val dto = AvviksvurderingBehovDto(
+            avviksvurderingBehov.behovId,
+            fødselsnummer = avviksvurderingBehov.fødselsnummer.value,
+            skjæringstidspunkt = avviksvurderingBehov.skjæringstidspunkt,
+            opprettet = LocalDateTime.now(),
+            løst = if (avviksvurderingBehov.erLøst()) LocalDateTime.now() else null,
+            json = avviksvurderingBehov.json
+        )
+        avviksvurderingBehovDao.lagre(dto)
     }
 
     fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<AvviksvurderingDto> {

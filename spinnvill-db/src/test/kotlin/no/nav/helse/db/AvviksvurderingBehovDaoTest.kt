@@ -1,7 +1,10 @@
 package no.nav.helse.db
 
+import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
-import no.nav.helse.dto.AvviksvurderingBehovDto
+import no.nav.helse.OmregnetÅrsinntekt
+import no.nav.helse.avviksvurdering.AvviksvurderingBehov
+import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.helpers.februar
 import no.nav.helse.helpers.januar
 import org.junit.jupiter.api.Assertions.*
@@ -11,7 +14,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-internal class AvviksvurderingBehovTest {
+internal class AvviksvurderingBehovDaoTest {
 
     private val database = TestDatabase.database()
 
@@ -23,13 +26,14 @@ internal class AvviksvurderingBehovTest {
     @Test
     fun `Kan lagre et avviksvurderingBehov`() {
         val etAvviksvurderingBehov = etAvviksvurderingBehov()
-        val lagretAvviksvurderingBehov = database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
+        database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
 
-        assertNotNull(lagretAvviksvurderingBehov.id)
-        assertEquals(etAvviksvurderingBehov.id, lagretAvviksvurderingBehov.id)
-        assertEquals(etAvviksvurderingBehov.fødselsnummer, lagretAvviksvurderingBehov.fødselsnummer)
-        assertEquals(etAvviksvurderingBehov.skjæringstidspunkt, lagretAvviksvurderingBehov.skjæringstidspunkt)
-        assertEquals(etAvviksvurderingBehov.opprettet, lagretAvviksvurderingBehov.opprettet)
+        val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(etAvviksvurderingBehov.fødselsnummer, etAvviksvurderingBehov.skjæringstidspunkt)
+
+        assertNotNull(funnetAvviksvurderingBehov)
+        assertEquals(etAvviksvurderingBehov.behovId, funnetAvviksvurderingBehov?.id)
+        assertEquals(etAvviksvurderingBehov.fødselsnummer.value, funnetAvviksvurderingBehov?.fødselsnummer)
+        assertEquals(etAvviksvurderingBehov.skjæringstidspunkt, funnetAvviksvurderingBehov?.skjæringstidspunkt)
     }
 
     @Test
@@ -91,10 +95,9 @@ internal class AvviksvurderingBehovTest {
         val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
 
         assertNotNull(funnetAvviksvurderingBehov)
-        assertEquals(etAvviksvurderingBehov.id, funnetAvviksvurderingBehov?.id)
-        assertEquals(etAvviksvurderingBehov.fødselsnummer, funnetAvviksvurderingBehov?.fødselsnummer)
+        assertEquals(etAvviksvurderingBehov.behovId, funnetAvviksvurderingBehov?.id)
+        assertEquals(etAvviksvurderingBehov.fødselsnummer.value, funnetAvviksvurderingBehov?.fødselsnummer)
         assertEquals(etAvviksvurderingBehov.skjæringstidspunkt, funnetAvviksvurderingBehov?.skjæringstidspunkt)
-        assertEquals(etAvviksvurderingBehov.opprettet, funnetAvviksvurderingBehov?.opprettet)
     }
 
     private fun etAvviksvurderingBehov(
@@ -102,14 +105,18 @@ internal class AvviksvurderingBehovTest {
         skjæringstidspunkt: LocalDate = 1.januar,
         id: UUID = UUID.randomUUID(),
         løst: LocalDateTime? = null
-    ): AvviksvurderingBehovDto {
-        return AvviksvurderingBehovDto(
-            id = id,
-            fødselsnummer = fødselsnummer,
+    ): AvviksvurderingBehov {
+        return AvviksvurderingBehov.nyttBehov(
+            behovId = id,
+            fødselsnummer = Fødselsnummer(fødselsnummer),
             skjæringstidspunkt = skjæringstidspunkt,
-            opprettet = LocalDateTime.now(),
-            løst = løst,
-            json = emptyMap()
-        )
+            vilkårsgrunnlagId = UUID.randomUUID(),
+            vedtaksperiodeId = UUID.randomUUID(),
+            organisasjonsnummer = "00000000",
+            beregningsgrunnlag = Beregningsgrunnlag.opprett(mapOf(Arbeidsgiverreferanse("00000000") to OmregnetÅrsinntekt(200000.0))),
+            json = emptyMap(),
+        ).also {
+            if (løst != null) it.løs()
+        }
     }
 }

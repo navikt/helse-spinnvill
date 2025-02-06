@@ -10,5 +10,5 @@ data class AvviksvurderingBehovDto(
     val skjæringstidspunkt: LocalDate,
     val opprettet: LocalDateTime,
     val løst: LocalDateTime?,
-    val json:  Map<String, Any?>
+    val json: Map<String, Any?>
 )

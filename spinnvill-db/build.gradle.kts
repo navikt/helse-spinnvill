@@ -15,6 +15,7 @@ plugins {
 
 dependencies {
     implementation(project(":spinnvill-felles"))
+    implementation(project(":spinnvill-avviksvurdering"))
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")

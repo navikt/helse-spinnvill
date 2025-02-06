@@ -19,7 +19,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-internal class AvviksvurderingBehov {
+internal class AvviksvurderingBehovDao {
     internal companion object {
     val mapper = jacksonObjectMapper()
         private object AvviksvurderingBehov : IdTable<UUID>(name = "avviksvurdering_behov") {
