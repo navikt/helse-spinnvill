@@ -10,6 +10,7 @@ internal class GodkjenningsbehovProducer(
     private val godkjenningsbehov = mutableListOf<GodkjenningsbehovMessage>()
 
     internal fun registrerGodkjenningsbehovForUtsending(avviksvurderingsgrunnlag: Avviksvurderingsgrunnlag) {
+        if (avviksvurderingsgrunnlag.kilde == Kilde.INFOTRYGD) return
         godkjenningsbehovMessage.leggTilAvviksvurderingId(avviksvurderingsgrunnlag.id)
         godkjenningsbehov.add(godkjenningsbehovMessage)
     }
