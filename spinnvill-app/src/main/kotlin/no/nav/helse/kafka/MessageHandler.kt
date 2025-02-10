@@ -5,7 +5,7 @@ import no.nav.helse.avviksvurdering.AvviksvurderingBehov
 interface MessageHandler {
     fun håndter(message: GodkjenningsbehovMessage)
 
-    fun håndter(avviksvurderingBehov: AvviksvurderingBehov)
+    fun håndter(behov: AvviksvurderingBehov)
 
     fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage)
 

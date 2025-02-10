@@ -21,7 +21,7 @@ class SammenligningsgrunnlagRiverTest {
         val messages = mutableListOf<SammenligningsgrunnlagMessage>()
 
         override fun håndter(message: GodkjenningsbehovMessage) {}
-        override fun håndter(avviksvurderingBehov: AvviksvurderingBehov) {}
+        override fun håndter(behov: AvviksvurderingBehov) {}
 
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
             messages.add(sammenligningsgrunnlagMessage)

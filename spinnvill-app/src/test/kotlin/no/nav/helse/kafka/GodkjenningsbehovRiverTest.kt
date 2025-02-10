@@ -21,7 +21,7 @@ class GodkjenningsbehovRiverTest {
             messages.add(message)
         }
 
-        override fun håndter(avviksvurderingBehov: AvviksvurderingBehov) {
+        override fun håndter(behov: AvviksvurderingBehov) {
         }
 
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}

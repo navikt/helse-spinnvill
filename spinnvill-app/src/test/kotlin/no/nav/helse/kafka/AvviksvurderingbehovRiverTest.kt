@@ -20,8 +20,8 @@ class AvviksvurderingbehovRiverTest {
         val behov = mutableListOf<AvviksvurderingBehov>()
         override fun håndter(message: GodkjenningsbehovMessage) {}
 
-        override fun håndter(avviksvurderingBehov: AvviksvurderingBehov) {
-            behov.add(avviksvurderingBehov)
+        override fun håndter(behov: AvviksvurderingBehov) {
+            this.behov.add(behov)
         }
 
         override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}
