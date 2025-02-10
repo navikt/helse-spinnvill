@@ -2,6 +2,7 @@ package no.nav.helse.avviksvurdering
 
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.avviksvurdering.Avviksvurderingsgrunnlag.Companion.siste
+import no.nav.helse.avviksvurdering.Avviksvurderingsresultat.*
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -11,20 +12,40 @@ class Grunnlagshistorikk(
     grunnlagene: List<Avviksvurderingsgrunnlag>
 ) {
     private val grunnlagene = grunnlagene.toMutableList()
-    private val siste get() = grunnlagene.siste()
+    private val sisteGrunnlag get() = grunnlagene.siste()
 
     fun grunnlagene(): List<Avviksvurderingsgrunnlag> = grunnlagene.toList()
 
     fun håndterNytt(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsresultat {
         val sisteGrunnlag =
-            siste
-            ?: return Avviksvurderingsresultat.TrengerSammenligningsgrunnlag(behovForSammenligningsgrunnlag())
+            sisteGrunnlag
+            ?: return TrengerSammenligningsgrunnlag(behovForSammenligningsgrunnlag())
         val gjeldendeGrunnlag =
-            if (sisteGrunnlag.trengerNyVurdering(beregningsgrunnlag)) sisteGrunnlag.lagNyttGrunnlag()
+            if (sisteGrunnlag.trengerNyVurdering(beregningsgrunnlag)) sisteGrunnlag.gjenbrukSammenligningsgrunnlag()
             else sisteGrunnlag
 
         if (sisteGrunnlag != gjeldendeGrunnlag) nyttSisteGrunnlag(gjeldendeGrunnlag)
         return gjeldendeGrunnlag.vurderAvvik(beregningsgrunnlag)
+    }
+
+    fun nyttBeregningsgrunnlag(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsresultat {
+        val sisteAvviksvurderingsgrunnlag = sisteGrunnlag ?: return TrengerSammenligningsgrunnlag(behovForSammenligningsgrunnlag())
+        if (sisteAvviksvurderingsgrunnlag.harLiktBeregningsgrunnlagSom(beregningsgrunnlag)) return TrengerIkkeNyVurdering(sisteAvviksvurderingsgrunnlag)
+
+        val nyttGrunnlag = sisteAvviksvurderingsgrunnlag.gjenbrukSammenligningsgrunnlag(beregningsgrunnlag)
+        return nyttGrunnlag.vurderAvvik()
+    }
+
+    fun nyttSammenligningsgrunnlag(sammenligningsgrunnlag: Sammenligningsgrunnlag, beregningsgrunnlag: Beregningsgrunnlag): AvvikVurdert {
+        check(grunnlagene.isEmpty()) { "Forventer ikke å hente inn nytt sammenligningsgrunnlag hvis det tidligere er gjort en avviksvurdering" }
+        val ny = Avviksvurderingsgrunnlag.nyttGrunnlag(
+            fødselsnummer = fødselsnummer,
+            skjæringstidspunkt = skjæringstidspunkt,
+            sammenligningsgrunnlag = sammenligningsgrunnlag,
+            beregningsgrunnlag = beregningsgrunnlag
+        )
+        nyttSisteGrunnlag(ny)
+        return ny.vurderAvvik()
     }
 
     fun håndterNytt(sammenligningsgrunnlag: Sammenligningsgrunnlag) {

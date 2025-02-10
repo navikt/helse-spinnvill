@@ -44,6 +44,23 @@ class Avviksvurderingsgrunnlag(
         )
     }
 
+    internal fun vurderAvvik(): AvvikVurdert {
+        val beregningsgrunnlag = this.beregningsgrunnlag
+        check(beregningsgrunnlag is Beregningsgrunnlag)
+        val avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
+        return AvvikVurdert(
+            grunnlag = this,
+            vurdering = Avviksvurdering(
+                id = this.id,
+                harAkseptabeltAvvik = avviksprosent <= MAKSIMALT_TILLATT_AVVIK,
+                avviksprosent = avviksprosent.avrundetTilFireDesimaler,
+                beregningsgrunnlag = beregningsgrunnlag,
+                sammenligningsgrunnlag = sammenligningsgrunnlag,
+                maksimaltTillattAvvik = MAKSIMALT_TILLATT_AVVIK.avrundetTilFireDesimaler
+            ),
+        )
+    }
+
     internal fun trengerNyVurdering(beregningsgrunnlag: Beregningsgrunnlag): Boolean {
         return when {
             this.kilde == Kilde.INFOTRYGD -> false
@@ -55,6 +72,10 @@ class Avviksvurderingsgrunnlag(
 
             else -> true
         }
+    }
+
+    internal fun harLiktBeregningsgrunnlagSom(beregningsgrunnlag: Beregningsgrunnlag): Boolean {
+        return this.beregningsgrunnlag.erLikt(beregningsgrunnlag)
     }
 
     private fun loggGjenbrukAvAvviksvurderingsgrunnlag(beregningsgrunnlag: Beregningsgrunnlag) {
@@ -90,8 +111,17 @@ class Avviksvurderingsgrunnlag(
         }
     }
 
-    internal fun lagNyttGrunnlag(): Avviksvurderingsgrunnlag {
+    internal fun gjenbrukSammenligningsgrunnlag(): Avviksvurderingsgrunnlag {
         return nyttGrunnlag(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag)
+    }
+
+    internal fun gjenbrukSammenligningsgrunnlag(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsgrunnlag {
+        return nyttGrunnlag(
+            fødselsnummer = fødselsnummer,
+            skjæringstidspunkt = skjæringstidspunkt,
+            sammenligningsgrunnlag = sammenligningsgrunnlag,
+            beregningsgrunnlag = beregningsgrunnlag
+        )
     }
 
     internal companion object {
@@ -99,11 +129,12 @@ class Avviksvurderingsgrunnlag(
             fødselsnummer: Fødselsnummer,
             skjæringstidspunkt: LocalDate,
             sammenligningsgrunnlag: Sammenligningsgrunnlag,
+            beregningsgrunnlag: IBeregningsgrunnlag = Ingen
         ) = Avviksvurderingsgrunnlag(
             id = UUID.randomUUID(),
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = skjæringstidspunkt,
-            beregningsgrunnlag = Ingen,
+            beregningsgrunnlag = beregningsgrunnlag,
             sammenligningsgrunnlag = sammenligningsgrunnlag,
             opprettet = LocalDateTime.now(),
             kilde = Kilde.SPINNVILL

@@ -110,6 +110,22 @@ internal class AvviksvurderingsgrunnlagTest {
         assertEquals(grunnlag2, grunnlagene.siste())
     }
 
+    @Test
+    fun `sammenlign beregningsgrunnlaget i avviksvurderingsgrunnlag med et beregningsgrunnlag når de er like`() {
+        val avviksvurderingsgrunnlag = Avviksvurderingsgrunnlag.nyttGrunnlag("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0), beregningsgrunnlag("a1" to 600000.0))
+        val beregningsgrunnlag = beregningsgrunnlag("a1" to 600000.0)
+
+        assertTrue(avviksvurderingsgrunnlag.harLiktBeregningsgrunnlagSom(beregningsgrunnlag))
+    }
+
+    @Test
+    fun `sammenlign beregningsgrunnlaget i avviksvurderingsgrunnlag med et beregningsgrunnlag når de er forskjellige`() {
+        val avviksvurderingsgrunnlag = Avviksvurderingsgrunnlag.nyttGrunnlag("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0), beregningsgrunnlag("a1" to 600000.0))
+        val beregningsgrunnlag = beregningsgrunnlag("a1" to 600001.0)
+
+        assertFalse(avviksvurderingsgrunnlag.harLiktBeregningsgrunnlagSom(beregningsgrunnlag))
+    }
+
     private fun sammenligningsgrunnlag(inntekt: Double) = Sammenligningsgrunnlag(
         listOf(
             ArbeidsgiverInntekt(Arbeidsgiverreferanse("a1"), List(12) {

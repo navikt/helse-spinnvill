@@ -10,7 +10,7 @@ interface IBeregningsgrunnlag{
 
 object Ingen: IBeregningsgrunnlag {
     override fun erLikt(other: IBeregningsgrunnlag): Boolean {
-        return other == this
+        return other is Ingen
     }
 }
 class Beregningsgrunnlag private constructor(val omregnedeÅrsinntekter: Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>): IBeregningsgrunnlag {
