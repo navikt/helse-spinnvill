@@ -39,7 +39,7 @@ class AvviksvurderingbehovRiverTest {
 
     @Test
     fun `les inn behov om avviksvurdering`() {
-        testRapid.sendTestMessage(AvviksvurderingBehov(skjæringstidspunkt = skjæringstidspunkt))
+        testRapid.sendTestMessage(avviksvurderingBehov(skjæringstidspunkt = skjæringstidspunkt))
         val behov = messageHandler.behov.single()
 
         assertEquals(FØDSELSNUMMER, behov.fødselsnummer.value)
@@ -61,7 +61,7 @@ class AvviksvurderingbehovRiverTest {
         assertEquals(0, messageHandler.behov.size)
     }
 
-    private fun AvviksvurderingBehov(
+    private fun avviksvurderingBehov(
         fødselsnummer: String = FØDSELSNUMMER,
         organisasjonsnummer: String = ORGANISASJONSNUMMER,
         skjæringstidspunkt: LocalDate
@@ -105,7 +105,7 @@ class AvviksvurderingbehovRiverTest {
 
     private fun avviksvurderingJsonNode(
         fødselsnummer: String, organisasjonsnummer: String, skjæringstidspunkt: LocalDate
-    ) = AvviksvurderingBehov(fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
+    ) = avviksvurderingBehov(fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
         .let(objectMapper::readTree) as ObjectNode
 
     private fun avviksvurderingJsonMedLøsning(
