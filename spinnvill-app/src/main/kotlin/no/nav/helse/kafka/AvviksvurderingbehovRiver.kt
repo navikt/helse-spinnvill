@@ -24,8 +24,8 @@ internal class AvviksvurderingbehovRiver(rapidsConnection: RapidsConnection, pri
                 it.demandAll("@behov", listOf("Avviksvurdering"))
                 it.rejectKey("@løsning")
                 it.requireKey("fødselsnummer", "organisasjonsnummer", "vedtaksperiodeId", "@behovId")
-                it.requireKey("vilkårsgrunnlagId", "skjæringstidspunkt")
-                it.requireArray("omregnedeÅrsinntekter") {
+                it.requireKey("Avviksvurdering.vilkårsgrunnlagId", "Avviksvurdering.skjæringstidspunkt")
+                it.requireArray("Avviksvurdering.omregnedeÅrsinntekter") {
                     requireKey("organisasjonsnummer", "beløp")
                 }
             }
@@ -39,13 +39,13 @@ internal class AvviksvurderingbehovRiver(rapidsConnection: RapidsConnection, pri
         )
         messageHandler.håndter(
             AvviksvurderingBehov.nyttBehov(
-                vilkårsgrunnlagId = packet["vilkårsgrunnlagId"].asUUID(),
+                vilkårsgrunnlagId = packet["Avviksvurdering.vilkårsgrunnlagId"].asUUID(),
                 behovId = packet["@behovId"].asUUID(),
-                skjæringstidspunkt = packet["skjæringstidspunkt"].asLocalDate(),
+                skjæringstidspunkt = packet["Avviksvurdering.skjæringstidspunkt"].asLocalDate(),
                 fødselsnummer = Fødselsnummer(packet["fødselsnummer"].asText()),
                 vedtaksperiodeId = packet["vedtaksperiodeId"].asUUID(),
                 organisasjonsnummer = packet["organisasjonsnummer"].asText(),
-                beregningsgrunnlag = Beregningsgrunnlag.opprett(packet["omregnedeÅrsinntekter"].associate {
+                beregningsgrunnlag = Beregningsgrunnlag.opprett(packet["Avviksvurdering.omregnedeÅrsinntekter"].associate {
                     Arbeidsgiverreferanse(it["organisasjonsnummer"].asText()) to OmregnetÅrsinntekt(it["beløp"].asDouble())
                 }),
                 json = mapper.readValue(packet.toJson())

@@ -397,28 +397,23 @@ internal class MediatorTest {
                 "@behov": [
                     "Avviksvurdering"
                 ],
-                "meldingsreferanseId": "b63537e5-ffd9-4e9b-930c-45b0ab602d66",
                 "fødselsnummer": "$fødselsnummer",
                 "organisasjonsnummer": "$organisasjonsnummer",
                 "vedtaksperiodeId": "$vedtaksperiodeId",
-                "skjæringstidspunkt": "$skjæringstidspunkt",
-                "vilkårsgrunnlagId": "87b9339d-a67d-49b0-af36-c93d6f9249ae",
-                "inntektskilde": "EN_ARBEIDSGIVER",
-                "orgnummereMedRelevanteArbeidsforhold": [],
-                "tags": [
-                    "EN_ARBEIDSGIVER",
-                    "ARBEIDSGIVERUTBETALING"
-                ],
-                "omregnedeÅrsinntekter": [
-                    {
-                        "organisasjonsnummer": "$organisasjonsnummer",
-                        "beløp": 500000.0
-                    },
-                    {
-                        "organisasjonsnummer": "000000000",
-                        "beløp": 200000.20
-                    }
-                ],
+                "Avviksvurdering": {
+                  "skjæringstidspunkt": "$skjæringstidspunkt",
+                    "vilkårsgrunnlagId": "87b9339d-a67d-49b0-af36-c93d6f9249ae",
+                    "omregnedeÅrsinntekter": [
+                        {
+                            "organisasjonsnummer": "$organisasjonsnummer",
+                            "beløp": 500000.0
+                        },
+                        {
+                            "organisasjonsnummer": "000000000",
+                            "beløp": 200000.20
+                        }
+                    ]
+                },
                 "@id": "ba376523-62b1-49d7-8647-f902c739b634",
                 "@opprettet": "2018-01-01T00:00:00.000"
             }
