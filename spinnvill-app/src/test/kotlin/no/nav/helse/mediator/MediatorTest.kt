@@ -47,7 +47,7 @@ internal class MediatorTest {
     }
 
     @Test
-    fun `sender behov for sammenligningsgrunnlag`() {
+    fun `sender behov for sammenligningsgrunnlag - old`() {
         mottaUtkastTilVedtak()
 
         val beregningsperiodeTom = YearMonth.from(SKJÆRINGSTIDSPUNKT.minusMonths(1))
@@ -68,6 +68,45 @@ internal class MediatorTest {
             testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("skjæringstidspunkt").asLocalDate()
         )
     }
+
+    @Test
+    fun `sender behov for sammenligningsgrunnlag`() {
+        mottaAvviksvurderingBehov()
+
+        val beregningsperiodeTom = YearMonth.from(SKJÆRINGSTIDSPUNKT.minusMonths(1))
+        val beregningsperiodeFom = beregningsperiodeTom.minusMonths(11)
+
+        assertEquals(1, testRapid.inspektør.size)
+        assertEquals("behov", testRapid.inspektør.field(0, "@event_name").asText())
+        assertEquals(
+            beregningsperiodeFom,
+            testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("beregningStart").asYearMonth()
+        )
+        assertEquals(
+            beregningsperiodeTom,
+            testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("beregningSlutt").asYearMonth()
+        )
+        assertEquals(
+            SKJÆRINGSTIDSPUNKT,
+            testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("skjæringstidspunkt").asLocalDate()
+        )
+    }
+
+    @Test
+    fun `felter blir lagt på behov for sammenligningsgrunnlag`() {
+        val vedtaksperiodeId = UUID.randomUUID()
+        mottaAvviksvurderingBehov(vedtaksperiodeId)
+
+        assertEquals(1, testRapid.inspektør.size)
+        assertEquals(1, testRapid.inspektør.behov("InntekterForSammenligningsgrunnlag").size)
+        testRapid.inspektør.behov("InntekterForSammenligningsgrunnlag").map {
+            assertEquals(FØDSELSNUMMER, it.path("fødselsnummer").asText())
+            assertEquals(ORGANISASJONSNUMMER, it.path("organisasjonsnummer").asText())
+            assertEquals(SKJÆRINGSTIDSPUNKT, it.path("skjæringstidspunkt").asLocalDate())
+            assertEquals(vedtaksperiodeId, it.path("vedtaksperiodeId").asUUID())
+        }
+    }
+
 
     @Test
     fun `ikke send utkast til vedtak ved behov for sammenligningsgrunnlag`() {
@@ -241,6 +280,17 @@ internal class MediatorTest {
         )
     }
 
+    private fun mottaAvviksvurderingBehov(vedtaksperiodeId: UUID = UUID.randomUUID()) {
+        testRapid.sendTestMessage(
+            avviksvurderingBehov(
+                FØDSELSNUMMER,
+                ORGANISASJONSNUMMER,
+                SKJÆRINGSTIDSPUNKT,
+                vedtaksperiodeId
+            )
+        )
+    }
+
     private fun mottaSammenligningsgrunnlag(årsinntekt: Double = 600000.0, antallMåneder: Int = 12) {
         val behov = testRapid.inspektør.sisteBehovAvType("InntekterForSammenligningsgrunnlag") as? ObjectNode
         assertNotNull(behov)
@@ -328,6 +378,49 @@ internal class MediatorTest {
               },
               "@id": "ba376523-62b1-49d7-8647-f902c739b634",
               "@opprettet": "2018-01-01T00:00:00.000"
+            }
+        """.trimIndent()
+        return json
+    }
+
+    private fun avviksvurderingBehov(
+        fødselsnummer: String,
+        organisasjonsnummer: String,
+        skjæringstidspunkt: LocalDate,
+        vedtaksperiodeId: UUID
+    ): String {
+        @Language("JSON")
+        val json = """
+            {
+                "@event_name": "behov",
+                "@behovId": "c64a73be-7337-4f25-8923-94f355c23d76",
+                "@behov": [
+                    "Avviksvurdering"
+                ],
+                "meldingsreferanseId": "b63537e5-ffd9-4e9b-930c-45b0ab602d66",
+                "fødselsnummer": "$fødselsnummer",
+                "organisasjonsnummer": "$organisasjonsnummer",
+                "vedtaksperiodeId": "$vedtaksperiodeId",
+                "skjæringstidspunkt": "$skjæringstidspunkt",
+                "vilkårsgrunnlagId": "87b9339d-a67d-49b0-af36-c93d6f9249ae",
+                "inntektskilde": "EN_ARBEIDSGIVER",
+                "orgnummereMedRelevanteArbeidsforhold": [],
+                "tags": [
+                    "EN_ARBEIDSGIVER",
+                    "ARBEIDSGIVERUTBETALING"
+                ],
+                "omregnedeÅrsinntekter": [
+                    {
+                        "organisasjonsnummer": "$organisasjonsnummer",
+                        "beløp": 500000.0
+                    },
+                    {
+                        "organisasjonsnummer": "000000000",
+                        "beløp": 200000.20
+                    }
+                ],
+                "@id": "ba376523-62b1-49d7-8647-f902c739b634",
+                "@opprettet": "2018-01-01T00:00:00.000"
             }
         """.trimIndent()
         return json

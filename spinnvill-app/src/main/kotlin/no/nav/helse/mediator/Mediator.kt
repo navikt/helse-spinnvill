@@ -60,6 +60,7 @@ class Mediator(
     }
 
     override fun håndter(behov: AvviksvurderingBehov) {
+        val meldingPubliserer = MeldingPubliserer(rapidsConnection, behov)
         // sjekke om vi har et ubehandlet behov for fødselsnummer=x og skjæringstidspunkt=y
             // hvis ja -> returner
         if (harUbehandletBehov(behov.fødselsnummer, behov.skjæringstidspunkt)) return
@@ -69,6 +70,16 @@ class Mediator(
        // deretter finn frem historikken for fødselsnummer og skjæringstidspunkt
         val avviksvurderinger = hentGrunnlagshistorikk(behov.fødselsnummer, behov.skjæringstidspunkt)
 
+        when (val resultat = avviksvurderinger.nyttBeregningsgrunnlag(beregningsgrunnlag = behov.beregningsgrunnlag)) {
+            is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> meldingPubliserer.behovForSammenligningsgrunnlag(resultat.behov)
+            is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> meldingPubliserer.avviksvurderingBehovLøsning()
+            is Avviksvurderingsresultat.AvvikVurdert -> {
+                meldingPubliserer.avviksvurderingBehovLøsning()
+                meldingPubliserer.subsumsjon()
+            }
+        }
+
+        meldingPubliserer.sendMeldinger()
        // sjekk har avviksvurdert før?
             // hvis nei -> behov for sammenligningsgrunnlag
             // hvis ja -> har beregningsgrunnlaget endret seg?
