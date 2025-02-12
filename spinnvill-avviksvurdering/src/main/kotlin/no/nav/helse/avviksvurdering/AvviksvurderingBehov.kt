@@ -12,7 +12,7 @@ class AvviksvurderingBehov private constructor(
     val vedtaksperiodeId: UUID,
     val organisasjonsnummer: String,
     val beregningsgrunnlag : Beregningsgrunnlag,
-    val json: Map<String, Any?>,
+    val json: Map<String, Any>,
     private var løst: Boolean
 ) {
     fun erLøst() = løst
@@ -30,7 +30,7 @@ class AvviksvurderingBehov private constructor(
             vedtaksperiodeId: UUID,
             organisasjonsnummer: String,
             beregningsgrunnlag: Beregningsgrunnlag,
-            json: Map<String, Any?>,
+            json: Map<String, Any>,
         ): AvviksvurderingBehov {
             return AvviksvurderingBehov(
                 vilkårsgrunnlagId = vilkårsgrunnlagId,
