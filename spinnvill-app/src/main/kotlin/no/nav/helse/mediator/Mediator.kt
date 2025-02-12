@@ -60,7 +60,7 @@ class Mediator(
     }
 
     override fun håndter(behov: AvviksvurderingBehov) {
-        val meldingPubliserer = MeldingPubliserer(rapidsConnection, behov)
+        val meldingPubliserer = MeldingPubliserer(rapidsConnection, behov, versjonAvKode)
         // sjekke om vi har et ubehandlet behov for fødselsnummer=x og skjæringstidspunkt=y
             // hvis ja -> returner
         if (harUbehandletBehov(behov.fødselsnummer, behov.skjæringstidspunkt)) return
@@ -75,8 +75,9 @@ class Mediator(
             is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> meldingPubliserer.behovløsningUtenVurdering(resultat.gjeldendeGrunnlag.id)
             is Avviksvurderingsresultat.AvvikVurdert -> {
                 val avviksvurdering = resultat.vurdering
+                meldingPubliserer.`8-30 ledd 2 punktum 1`(avviksvurdering)
+                if (avviksvurdering.harAkseptabeltAvvik) meldingPubliserer.`8-30 ledd 1`(avviksvurdering.beregningsgrunnlag)
                 meldingPubliserer.behovløsningMedVurdering(avviksvurdering)
-                meldingPubliserer.subsumsjon()
             }
         }
 

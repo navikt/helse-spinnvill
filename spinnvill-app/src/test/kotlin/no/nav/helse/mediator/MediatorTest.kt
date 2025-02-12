@@ -137,7 +137,8 @@ internal class MediatorTest {
         mottaAvviksvurderingBehov()
 
 
-        assertEquals(1, testRapid.inspektør.size)
+        assertEquals(3, testRapid.inspektør.size)
+        assertEquals(2, testRapid.inspektør.hendelser("subsumsjon").size)
         assertEquals(1, testRapid.inspektør.behov("Avviksvurdering").size)
         val behovNode = testRapid.inspektør.behov("Avviksvurdering").single()
         assertEquals(FØDSELSNUMMER, behovNode.path("fødselsnummer").asText())

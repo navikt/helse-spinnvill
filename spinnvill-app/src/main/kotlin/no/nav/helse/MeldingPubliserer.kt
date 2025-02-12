@@ -3,12 +3,19 @@ package no.nav.helse
 import no.nav.helse.avviksvurdering.Avviksvurdering
 import no.nav.helse.avviksvurdering.AvviksvurderingBehov
 import no.nav.helse.avviksvurdering.BehovForSammenligningsgrunnlag
+import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.mediator.producer.Message
+import no.nav.helse.mediator.producer.SubsumsjonProducer
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
+import java.time.LocalDate
 import java.util.*
 
-class MeldingPubliserer(private val rapidsConnection: RapidsConnection, private val avviksvurderingBehov: AvviksvurderingBehov) {
+class MeldingPubliserer(
+    private val rapidsConnection: RapidsConnection,
+    private val avviksvurderingBehov: AvviksvurderingBehov,
+    private val versjonAvKode: VersjonAvKode,
+) {
 
     private val meldinger = mutableListOf<Message>()
 
@@ -29,8 +36,35 @@ class MeldingPubliserer(private val rapidsConnection: RapidsConnection, private 
         }
     }
 
-    fun subsumsjon() {
-
+    private fun SubsumsjonProducer.SubsumsjonsmeldingDto.tilMelding(): Message.Hendelse {
+        return Message.Hendelse(
+            navn = "subsumsjon",
+            innhold = mapOf(
+                "subsumsjon" to mutableMapOf(
+                    "fodselsnummer" to avviksvurderingBehov.fødselsnummer.value,
+                    "id" to this.id,
+                    "tidsstempel" to this.tidsstempel,
+                    "kilde" to "spinnvill",
+                    "versjon" to "1.0.0",
+                    "paragraf" to this.paragraf,
+                    "lovverk" to this.lovverk,
+                    "lovverksversjon" to this.lovverksversjon,
+                    "utfall" to this.utfall,
+                    "input" to this.input,
+                    "output" to this.output,
+                    "sporing" to mapOf(
+                        "organisasjonsnummer" to listOf(avviksvurderingBehov.organisasjonsnummer),
+                        "vedtaksperiode" to listOf(avviksvurderingBehov.vedtaksperiodeId.toString()),
+                        "vilkårsgrunnlag" to listOf(avviksvurderingBehov.vilkårsgrunnlagId.toString())
+                    ),
+                    "versjonAvKode" to versjonAvKode.value
+                ).apply {
+                    compute("ledd") { _, _ -> this@tilMelding.ledd }
+                    compute("bokstav") { _, _ -> this@tilMelding.bokstav }
+                    compute("punktum") { _, _ -> this@tilMelding.punktum }
+                },
+            )
+        )
     }
 
     fun behovløsningUtenVurdering(avviksvurderingId: UUID) {
@@ -95,5 +129,82 @@ class MeldingPubliserer(private val rapidsConnection: RapidsConnection, private 
             "beregningSlutt" to beregningsperiodeTom,
             "skjæringstidspunkt" to skjæringstidspunkt
         )
+    }
+
+    internal fun `8-30 ledd 1`(beregningsgrunnlag: Beregningsgrunnlag) {
+        val subsumsjon = SubsumsjonProducer.SubsumsjonsmeldingDto(
+            paragraf = "8-30",
+            ledd = 1,
+            bokstav = null,
+            punktum = null,
+            lovverk = "folketrygdloven",
+            lovverksversjon = LocalDate.of(2019, 1, 1),
+            utfall = SubsumsjonProducer.Utfall.VILKAR_BEREGNET,
+            input = mapOf(
+                "omregnedeÅrsinntekter" to beregningsgrunnlag.omregnedeÅrsinntekter.map { (arbeidsgiverreferanse, omregnetÅrsinntekt) ->
+                    mapOf(
+                        "arbeidsgiverreferanse" to arbeidsgiverreferanse.value,
+                        "inntekt" to omregnetÅrsinntekt.value
+                    )
+                },
+            ),
+            output = mapOf(
+                "grunnlagForSykepengegrunnlag" to beregningsgrunnlag.totalOmregnetÅrsinntekt,
+            )
+        )
+        meldinger.add(subsumsjon.tilMelding())
+    }
+
+    internal fun `8-30 ledd 2 punktum 1`(avviksvurdering: Avviksvurdering) {
+        val beregningsgrunnlag = avviksvurdering.beregningsgrunnlag
+        val sammenligningsgrunnlag = avviksvurdering.sammenligningsgrunnlag
+        val subsumsjon = SubsumsjonProducer.SubsumsjonsmeldingDto(
+            paragraf = "8-30",
+            ledd = 2,
+            bokstav = null,
+            punktum = 1,
+            lovverk = "folketrygdloven",
+            lovverksversjon = LocalDate.of(2019, 1, 1),
+            utfall = SubsumsjonProducer.Utfall.VILKAR_BEREGNET,
+            input = mapOf(
+                "maksimaltTillattAvvikPåÅrsinntekt" to avviksvurdering.maksimaltTillattAvvik,
+                "grunnlagForSykepengegrunnlag" to mapOf(
+                    "totalbeløp" to beregningsgrunnlag.totalOmregnetÅrsinntekt,
+                    "omregnedeÅrsinntekter" to beregningsgrunnlag.omregnedeÅrsinntekter.map { (arbeidsgiverreferanse, omregnetÅrsinntekt) ->
+                        mapOf(
+                            "arbeidsgiverreferanse" to arbeidsgiverreferanse.value,
+                            "inntekt" to omregnetÅrsinntekt.value
+                        )
+                    }
+                ),
+                "sammenligningsgrunnlag" to mapOf(
+                    "totalbeløp" to sammenligningsgrunnlag.totaltInnrapportertÅrsinntekt,
+                    "innrapporterteMånedsinntekter" to sammenligningsgrunnlag.inntekter.flatMap { (arbeidsgiverreferanse, inntekter) ->
+                        inntekter.map {
+                            arbeidsgiverreferanse to it
+
+                        }
+                    }.groupBy { (_, inntekt) -> inntekt.måned }.map { (måned, inntekter) ->
+                        mapOf(
+                            "måned" to måned,
+                            "inntekter" to inntekter.map { (arbeidsgiverreferanse, inntekt) ->
+                                mapOf(
+                                    "arbeidsgiverreferanse" to arbeidsgiverreferanse.value,
+                                    "inntekt" to inntekt.inntekt.value,
+                                    "fordel" to inntekt.fordel?.value,
+                                    "beskrivelse" to inntekt.beskrivelse?.value,
+                                    "inntektstype" to inntekt.inntektstype,
+                                )
+                            }
+                        )
+                    }
+                )
+            ),
+            output = mapOf(
+                "avviksprosent" to avviksvurdering.avviksprosent,
+                "harAkseptabeltAvvik" to avviksvurdering.harAkseptabeltAvvik
+            )
+        )
+        meldinger.add(subsumsjon.tilMelding())
     }
 }
