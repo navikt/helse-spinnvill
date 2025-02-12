@@ -90,7 +90,6 @@ class Mediator(
        // marker behov som løst
     }
 
-
     override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
         val fødselsnummer = Fødselsnummer(sammenligningsgrunnlagMessage.fødselsnummer)
         val skjæringstidspunkt = sammenligningsgrunnlagMessage.skjæringstidspunkt

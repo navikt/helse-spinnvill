@@ -1,12 +1,20 @@
 package no.nav.helse.db
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.zaxxer.hikari.HikariDataSource
+import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
+import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.avviksvurdering.AvviksvurderingBehov
+import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.dto.AvviksvurderingBehovDto
 import no.nav.helse.dto.AvviksvurderingDto
+import no.nav.helse.somFnr
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.*
 
 class Database private constructor(env: Map<String, String>) {
     private val dataSourceBuilder = DataSourceBuilder(env)
@@ -27,8 +35,25 @@ class Database private constructor(env: Map<String, String>) {
         return avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
     }
 
-    fun finnUbehandledeAvviksvurderingBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehovDto? {
-        return avviksvurderingBehovDao.findUløst(fødselsnummer, skjæringstidspunkt)
+    fun finnUbehandledeAvviksvurderingBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehov? {
+        return avviksvurderingBehovDao.findUløst(fødselsnummer, skjæringstidspunkt)?.let { dto ->
+            val jsonNode = jacksonObjectMapper().convertValue<JsonNode>(dto.json)
+            AvviksvurderingBehov.fraLagring(
+                behovId = dto.id,
+                vilkårsgrunnlagId = jsonNode["Avviksvurdering"].get("vilkårsgrunnlagId").asUUID(),
+                skjæringstidspunkt = dto.skjæringstidspunkt,
+                fødselsnummer = dto.fødselsnummer.somFnr(),
+                vedtaksperiodeId = jsonNode["vedtaksperiodeId"].asUUID(),
+                organisasjonsnummer = jsonNode["organisasjonsnummer"].asText(),
+                løst = dto.løst != null,
+                beregningsgrunnlag = Beregningsgrunnlag.opprett(
+                    jsonNode["Avviksvurdering"].get("omregnedeÅrsinntekter").associate {
+                        Arbeidsgiverreferanse(it["organisasjonsnummer"].asText()) to OmregnetÅrsinntekt(it["beløp"].asDouble())
+                    }
+                ),
+                json = dto.json,
+            )
+        }
     }
 
     fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) {
@@ -58,5 +83,7 @@ class Database private constructor(env: Map<String, String>) {
                 instance ?: Database(env).also { instance = it }
             }
         }
+
+        private fun JsonNode.asUUID(): UUID = UUID.fromString(this.asText())
     }
 }

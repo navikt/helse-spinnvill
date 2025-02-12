@@ -44,5 +44,29 @@ class AvviksvurderingBehov private constructor(
                 løst = false
             )
         }
+
+        fun fraLagring(
+            behovId: UUID,
+            vilkårsgrunnlagId: UUID,
+            skjæringstidspunkt: LocalDate,
+            fødselsnummer: Fødselsnummer,
+            vedtaksperiodeId: UUID,
+            organisasjonsnummer: String,
+            beregningsgrunnlag: Beregningsgrunnlag,
+            løst: Boolean,
+            json: Map<String, Any>,
+        ): AvviksvurderingBehov {
+            return AvviksvurderingBehov(
+                vilkårsgrunnlagId = vilkårsgrunnlagId,
+                behovId = behovId,
+                skjæringstidspunkt = skjæringstidspunkt,
+                fødselsnummer = fødselsnummer,
+                vedtaksperiodeId = vedtaksperiodeId,
+                organisasjonsnummer = organisasjonsnummer,
+                beregningsgrunnlag = beregningsgrunnlag,
+                json = json,
+                løst = løst
+            )
+        }
     }
 }

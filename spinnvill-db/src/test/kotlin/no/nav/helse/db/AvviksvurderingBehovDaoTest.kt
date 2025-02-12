@@ -31,8 +31,8 @@ internal class AvviksvurderingBehovDaoTest {
         val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(etAvviksvurderingBehov.fødselsnummer, etAvviksvurderingBehov.skjæringstidspunkt)
 
         assertNotNull(funnetAvviksvurderingBehov)
-        assertEquals(etAvviksvurderingBehov.behovId, funnetAvviksvurderingBehov?.id)
-        assertEquals(etAvviksvurderingBehov.fødselsnummer.value, funnetAvviksvurderingBehov?.fødselsnummer)
+        assertEquals(etAvviksvurderingBehov.behovId, funnetAvviksvurderingBehov?.behovId)
+        assertEquals(etAvviksvurderingBehov.fødselsnummer, funnetAvviksvurderingBehov?.fødselsnummer)
         assertEquals(etAvviksvurderingBehov.skjæringstidspunkt, funnetAvviksvurderingBehov?.skjæringstidspunkt)
     }
 
@@ -61,7 +61,7 @@ internal class AvviksvurderingBehovDaoTest {
         val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
 
         assertNotNull(funnetAvviksvurderingBehov)
-        assertEquals(id, funnetAvviksvurderingBehov?.id)
+        assertEquals(id, funnetAvviksvurderingBehov?.behovId)
     }
 
     @Test
@@ -81,8 +81,8 @@ internal class AvviksvurderingBehovDaoTest {
 
         assertNotNull(funnetAvviksvurderingBehov)
         assertNotNull(etTilfunnetAvviksvurderingBehov)
-        assertEquals(id, funnetAvviksvurderingBehov?.id)
-        assertEquals(enTilId, etTilfunnetAvviksvurderingBehov?.id)
+        assertEquals(id, funnetAvviksvurderingBehov?.behovId)
+        assertEquals(enTilId, etTilfunnetAvviksvurderingBehov?.behovId)
     }
 
     @Test
@@ -95,8 +95,8 @@ internal class AvviksvurderingBehovDaoTest {
         val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
 
         assertNotNull(funnetAvviksvurderingBehov)
-        assertEquals(etAvviksvurderingBehov.behovId, funnetAvviksvurderingBehov?.id)
-        assertEquals(etAvviksvurderingBehov.fødselsnummer.value, funnetAvviksvurderingBehov?.fødselsnummer)
+        assertEquals(etAvviksvurderingBehov.behovId, funnetAvviksvurderingBehov?.behovId)
+        assertEquals(etAvviksvurderingBehov.fødselsnummer, funnetAvviksvurderingBehov?.fødselsnummer)
         assertEquals(etAvviksvurderingBehov.skjæringstidspunkt, funnetAvviksvurderingBehov?.skjæringstidspunkt)
     }
 
@@ -106,15 +106,37 @@ internal class AvviksvurderingBehovDaoTest {
         id: UUID = UUID.randomUUID(),
         løst: LocalDateTime? = null
     ): AvviksvurderingBehov {
+        val vilkårsgrunnlagId = UUID.randomUUID()
+        val vedtaksperiodeId = UUID.randomUUID()
+        val organisasjonsnummer = "00000000"
+        val beløp = 200000.0
         return AvviksvurderingBehov.nyttBehov(
             behovId = id,
             fødselsnummer = Fødselsnummer(fødselsnummer),
             skjæringstidspunkt = skjæringstidspunkt,
-            vilkårsgrunnlagId = UUID.randomUUID(),
-            vedtaksperiodeId = UUID.randomUUID(),
-            organisasjonsnummer = "00000000",
-            beregningsgrunnlag = Beregningsgrunnlag.opprett(mapOf(Arbeidsgiverreferanse("00000000") to OmregnetÅrsinntekt(200000.0))),
-            json = emptyMap(),
+            vilkårsgrunnlagId = vilkårsgrunnlagId,
+            vedtaksperiodeId = vedtaksperiodeId,
+            organisasjonsnummer = organisasjonsnummer,
+            beregningsgrunnlag = Beregningsgrunnlag.opprett(
+                mapOf(
+                    pair = Arbeidsgiverreferanse(organisasjonsnummer) to OmregnetÅrsinntekt(
+                        beløp,
+                    ),
+                ),
+            ),
+            json = mapOf(
+                "organisasjonsnummer" to organisasjonsnummer,
+                "vedtaksperiodeId" to vedtaksperiodeId,
+                "Avviksvurdering" to mapOf(
+                    "vilkårsgrunnlagId" to vilkårsgrunnlagId,
+                    "omregnedeÅrsinntekter" to listOf(
+                        mapOf(
+                            "organisasjonsnummer" to organisasjonsnummer,
+                            "beløp" to beløp
+                        ),
+                    )
+                )
+            ),
         ).also {
             if (løst != null) it.løs()
         }
