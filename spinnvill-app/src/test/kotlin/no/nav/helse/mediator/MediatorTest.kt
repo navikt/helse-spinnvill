@@ -3,6 +3,7 @@
 package no.nav.helse.mediator
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.nav.helse.*
 import no.nav.helse.db.TestDatabase
@@ -19,10 +20,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.*
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.*
 
 internal class MediatorTest {
     private val testRapid = TestRapid()
@@ -99,12 +97,84 @@ internal class MediatorTest {
 
         assertEquals(1, testRapid.inspektør.size)
         assertEquals(1, testRapid.inspektør.behov("InntekterForSammenligningsgrunnlag").size)
-        testRapid.inspektør.behov("InntekterForSammenligningsgrunnlag").map {
-            assertEquals(FØDSELSNUMMER, it.path("fødselsnummer").asText())
-            assertEquals(ORGANISASJONSNUMMER, it.path("organisasjonsnummer").asText())
-            assertEquals(SKJÆRINGSTIDSPUNKT, it.path("skjæringstidspunkt").asLocalDate())
-            assertEquals(vedtaksperiodeId, it.path("vedtaksperiodeId").asUUID())
+        val behovNode = testRapid.inspektør.behov("InntekterForSammenligningsgrunnlag").single()
+        assertEquals(FØDSELSNUMMER, behovNode.path("fødselsnummer").asText())
+        assertEquals(ORGANISASJONSNUMMER, behovNode.path("organisasjonsnummer").asText())
+        assertEquals(SKJÆRINGSTIDSPUNKT, behovNode.path("skjæringstidspunkt").asLocalDate())
+        assertEquals(vedtaksperiodeId, behovNode.path("vedtaksperiodeId").asUUID())
+    }
+
+    @Test
+    fun `sender behovløsningUtenVurdering hvis det ikke gjøres ny avviksvurdering`() {
+        mottaUtkastTilVedtak()
+        mottaSammenligningsgrunnlag()
+
+        testRapid.reset()
+
+        mottaAvviksvurderingBehov()
+
+        assertEquals(1, testRapid.inspektør.size)
+        assertEquals(1, testRapid.inspektør.behov("Avviksvurdering").size)
+        val behovNode = testRapid.inspektør.behov("Avviksvurdering").single()
+        assertEquals(FØDSELSNUMMER, behovNode.path("fødselsnummer").asText())
+        assertEquals(ORGANISASJONSNUMMER, behovNode.path("organisasjonsnummer").asText())
+        assertEquals(SKJÆRINGSTIDSPUNKT, behovNode.path("skjæringstidspunkt").asLocalDate())
+
+        val løsningNode = behovNode.path("@løsning").path("Avviksvurdering")
+        assertEquals("TrengerIkkeNyVurdering", løsningNode.path("utfall").asText())
+        assertNotNull(løsningNode.get("avviksvurderingId"))
+    }
+
+    @Test
+    fun `sender behovløsningMedVurdering hvis det gjøres ny avviksvurdering`() {
+        mottaUtkastTilVedtak(beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
+            mapOf(ORGANISASJONSNUMMER.somArbeidsgiverref() to OmregnetÅrsinntekt(900000.0))
+        ))
+        mottaSammenligningsgrunnlag()
+
+        testRapid.reset()
+
+        mottaAvviksvurderingBehov()
+
+
+        assertEquals(1, testRapid.inspektør.size)
+        assertEquals(1, testRapid.inspektør.behov("Avviksvurdering").size)
+        val behovNode = testRapid.inspektør.behov("Avviksvurdering").single()
+        assertEquals(FØDSELSNUMMER, behovNode.path("fødselsnummer").asText())
+        assertEquals(ORGANISASJONSNUMMER, behovNode.path("organisasjonsnummer").asText())
+        assertEquals(SKJÆRINGSTIDSPUNKT, behovNode.path("skjæringstidspunkt").asLocalDate())
+
+        val løsningNode = behovNode.path("@løsning").path("Avviksvurdering")
+        assertEquals("NyVurderingForetatt", løsningNode.path("utfall").asText())
+        assertNotNull(løsningNode.get("avviksvurderingId"))
+        assertNotNull(løsningNode.get("harAkseptabeltAvvik"))
+        assertNotNull(løsningNode.get("maksimaltTillattAvvik"))
+        assertNotNull(løsningNode.get("opprettet"))
+
+        val beregningsgrunnlagNode = løsningNode.path("beregningsgrunnlag")
+        assertNotNull(beregningsgrunnlagNode.get("totalbeløp"))
+        val omregnedeÅrsinntekter = beregningsgrunnlagNode.path("omregnedeÅrsinntekter") as ArrayNode
+        assertFalse(omregnedeÅrsinntekter.isEmpty)
+        omregnedeÅrsinntekter.forEach {
+            assertNotNull(it.get("arbeidsgiverreferanse"))
+            assertNotNull(it.get("beløp"))
         }
+
+        val sammenligningsgrunnlagNode = løsningNode.path("sammenligningsgrunnlag")
+        assertNotNull(sammenligningsgrunnlagNode.get("totalbeløp"))
+        val innrapporterteInntekterNode = sammenligningsgrunnlagNode.path("innrapporterteInntekter") as ArrayNode
+        assertFalse(innrapporterteInntekterNode.isEmpty)
+        innrapporterteInntekterNode.forEach { innrapportertInntekt ->
+            assertNotNull(innrapportertInntekt.get("arbeidsgiverreferanse"))
+            val inntekterNode = innrapportertInntekt.path("inntekter") as ArrayNode
+            assertFalse(inntekterNode.isEmpty)
+            inntekterNode.forEach { inntekt ->
+                assertNotNull(inntekt.get("årMåned"))
+                assertNotNull(inntekt.get("beløp"))
+            }
+        }
+
+
     }
 
 
@@ -406,11 +476,7 @@ internal class MediatorTest {
                     "omregnedeÅrsinntekter": [
                         {
                             "organisasjonsnummer": "$organisasjonsnummer",
-                            "beløp": 500000.0
-                        },
-                        {
-                            "organisasjonsnummer": "000000000",
-                            "beløp": 200000.20
+                            "beløp": 600000.0
                         }
                     ]
                 },

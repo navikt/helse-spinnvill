@@ -26,6 +26,10 @@ sealed class Message(
         val navn: String,
         innhold: Map<String, Any>
     ) : Message(innhold)
+
+    class Løsning(
+        innhold: Map<String, Any>
+    ) : Message(innhold)
 }
 
 class MeldingProducer(
@@ -49,10 +53,11 @@ class MeldingProducer(
     internal fun publiserMeldinger() {
         producers
             .flatMap {
-                it.ferdigstill().map { message ->
+                it.ferdigstill().mapNotNull { message ->
                     when (message) {
                         is Message.Behov -> message to JsonMessage.newNeed(message.behov, message.innhold)
                         is Message.Hendelse -> message to JsonMessage.newMessage(message.navn, message.innhold)
+                        is Message.Løsning -> null
                     }
                 }
             }.onEach { (_, json) ->
@@ -79,6 +84,7 @@ class MeldingProducer(
             when (message) {
                 is Message.Behov -> sikkerlogg.info("Etterspør {}. Behov: {}", kv("behov", message.behov), json)
                 is Message.Hendelse -> sikkerlogg.info("Publiserer melding med {}. Innhold: {}", kv("@event_name", message.navn), json)
+                is Message.Løsning -> TODO()
             }
         }
     }
@@ -93,6 +99,7 @@ class MeldingProducer(
             when (message) {
                 is Message.Behov -> logg.info("Etterspør {}", kv("behov", message.behov))
                 is Message.Hendelse -> logg.info("Publiserer melding med {}", kv("@event_name", message.navn))
+                is Message.Løsning -> TODO()
             }
         }
     }

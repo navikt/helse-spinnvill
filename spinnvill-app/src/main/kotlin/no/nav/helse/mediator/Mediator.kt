@@ -72,9 +72,10 @@ class Mediator(
 
         when (val resultat = avviksvurderinger.nyttBeregningsgrunnlag(beregningsgrunnlag = behov.beregningsgrunnlag)) {
             is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> meldingPubliserer.behovForSammenligningsgrunnlag(resultat.behov)
-            is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> meldingPubliserer.avviksvurderingBehovLøsning()
+            is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> meldingPubliserer.behovløsningUtenVurdering(resultat.gjeldendeGrunnlag.id)
             is Avviksvurderingsresultat.AvvikVurdert -> {
-                meldingPubliserer.avviksvurderingBehovLøsning()
+                val avviksvurdering = resultat.vurdering
+                meldingPubliserer.behovløsningMedVurdering(avviksvurdering)
                 meldingPubliserer.subsumsjon()
             }
         }
