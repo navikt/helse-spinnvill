@@ -37,32 +37,35 @@ class MeldingPubliserer(
     }
 
     private fun SubsumsjonProducer.SubsumsjonsmeldingDto.tilMelding(): Message.Hendelse {
+        val dto = this
         return Message.Hendelse(
             navn = "subsumsjon",
             innhold = mapOf(
-                "subsumsjon" to mutableMapOf(
-                    "fodselsnummer" to avviksvurderingBehov.fødselsnummer.value,
-                    "id" to this.id,
-                    "tidsstempel" to this.tidsstempel,
-                    "kilde" to "spinnvill",
-                    "versjon" to "1.0.0",
-                    "paragraf" to this.paragraf,
-                    "lovverk" to this.lovverk,
-                    "lovverksversjon" to this.lovverksversjon,
-                    "utfall" to this.utfall,
-                    "input" to this.input,
-                    "output" to this.output,
-                    "sporing" to mapOf(
-                        "organisasjonsnummer" to listOf(avviksvurderingBehov.organisasjonsnummer),
-                        "vedtaksperiode" to listOf(avviksvurderingBehov.vedtaksperiodeId.toString()),
-                        "vilkårsgrunnlag" to listOf(avviksvurderingBehov.vilkårsgrunnlagId.toString())
-                    ),
+                "subsumsjon" to buildMap {
+                    put("fodselsnummer", avviksvurderingBehov.fødselsnummer.value)
+                    put("id", dto.id)
+                    put("tidsstempel", dto.tidsstempel)
+                    put("kilde", "spinnvill")
+                    put("versjon", "1.0.0")
+                    put("paragraf", dto.paragraf)
+                    put("lovverk", dto.lovverk)
+                    put("lovverksversjon", dto.lovverksversjon)
+                    put("utfall", dto.utfall)
+                    put("input", dto.input)
+                    put("output", dto.output)
+                    put(
+                        "sporing",
+                        mapOf(
+                            "organisasjonsnummer" to listOf(avviksvurderingBehov.organisasjonsnummer),
+                            "vedtaksperiode" to listOf(avviksvurderingBehov.vedtaksperiodeId.toString()),
+                            "vilkårsgrunnlag" to listOf(avviksvurderingBehov.vilkårsgrunnlagId.toString())
+                        ),
+                    )
                     "versjonAvKode" to versjonAvKode.value
-                ).apply {
-                    compute("ledd") { _, _ -> this@tilMelding.ledd }
-                    compute("bokstav") { _, _ -> this@tilMelding.bokstav }
-                    compute("punktum") { _, _ -> this@tilMelding.punktum }
-                },
+                    if (dto.ledd != null) put("ledd", dto.ledd)
+                    if (dto.bokstav != null) put("bokstav", dto.bokstav)
+                    if (dto.punktum != null) put("punktum", dto.punktum)
+                }
             )
         )
     }
