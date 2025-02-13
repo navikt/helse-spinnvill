@@ -1,6 +1,7 @@
 package no.nav.helse.mediator
 
 import no.nav.helse.*
+import no.nav.helse.db.DatabaseDtoBuilder
 import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.helpers.januar
 import no.nav.helse.mediator.Mediator.Companion.tilDomene

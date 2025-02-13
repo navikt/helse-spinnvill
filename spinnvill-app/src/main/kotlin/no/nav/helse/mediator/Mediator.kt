@@ -4,6 +4,7 @@ import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.*
 import no.nav.helse.avviksvurdering.*
 import no.nav.helse.db.Database
+import no.nav.helse.db.DatabaseDtoBuilder
 import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.kafka.*
 import no.nav.helse.mediator.producer.*

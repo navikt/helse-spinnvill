@@ -1,4 +1,4 @@
-package no.nav.helse.mediator
+package no.nav.helse.db
 
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
 import no.nav.helse.avviksvurdering.Avviksvurderingsgrunnlag
@@ -8,7 +8,7 @@ import no.nav.helse.dto.AvviksvurderingDto
 
 class DatabaseDtoBuilder {
 
-    internal fun buildAll(grunnlagene: List<Avviksvurderingsgrunnlag>): List<AvviksvurderingDto> = grunnlagene.toDto()
+    fun buildAll(grunnlagene: List<Avviksvurderingsgrunnlag>): List<AvviksvurderingDto> = grunnlagene.toDto()
 
     private fun Collection<Avviksvurderingsgrunnlag>.toDto() = map { grunnlag ->
         val innrapporterteInntekter = grunnlag.sammenligningsgrunnlag.inntekter.associate { it.arbeidsgiverreferanse to it.inntekter.toDto() }
