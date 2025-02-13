@@ -21,7 +21,7 @@ class Mediator(
 
     init {
         GodkjenningsbehovRiver(rapidsConnection, this)
-        SammenligningsgrunnlagRiver(rapidsConnection, this)
+        SammenligningsgrunnlagRiverOld(rapidsConnection, this)
         AvviksvurderingbehovRiver(rapidsConnection, this)
     }
 
@@ -90,9 +90,9 @@ class Mediator(
         behov.lagre()
     }
 
-    override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
-        val fødselsnummer = Fødselsnummer(sammenligningsgrunnlagMessage.fødselsnummer)
-        val skjæringstidspunkt = sammenligningsgrunnlagMessage.skjæringstidspunkt
+    override fun håndter(sammenligningsgrunnlagMessageOld: SammenligningsgrunnlagMessageOld) {
+        val fødselsnummer = Fødselsnummer(sammenligningsgrunnlagMessageOld.fødselsnummer)
+        val skjæringstidspunkt = sammenligningsgrunnlagMessageOld.skjæringstidspunkt
 
         if (finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt) != null) {
             logg.warn("Ignorerer duplikat sammenligningsgrunnlag for eksisterende avviksvurdering")
@@ -101,11 +101,11 @@ class Mediator(
         }
 
         val avviksvurderinger = hentGrunnlagshistorikk(fødselsnummer, skjæringstidspunkt)
-        val sammenligningsgrunnlag = nyttSammenligningsgrunnlag(sammenligningsgrunnlagMessage)
+        val sammenligningsgrunnlag = nyttSammenligningsgrunnlag(sammenligningsgrunnlagMessageOld)
         avviksvurderinger.håndterNytt(sammenligningsgrunnlag)
         avviksvurderinger.lagre()
 
-        rapidsConnection.queueReplayMessage(fødselsnummer.value, sammenligningsgrunnlagMessage.utkastTilVedtakJson)
+        rapidsConnection.queueReplayMessage(fødselsnummer.value, sammenligningsgrunnlagMessageOld.utkastTilVedtakJson)
     }
 
     private fun Grunnlagshistorikk.lagre() {
@@ -156,9 +156,9 @@ class Mediator(
         )
     }
 
-    private fun nyttSammenligningsgrunnlag(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage): Sammenligningsgrunnlag {
+    private fun nyttSammenligningsgrunnlag(sammenligningsgrunnlagMessageOld: SammenligningsgrunnlagMessageOld): Sammenligningsgrunnlag {
         return Sammenligningsgrunnlag(
-            sammenligningsgrunnlagMessage.sammenligningsgrunnlag.map {(arbeidsgiver, inntekter) ->
+            sammenligningsgrunnlagMessageOld.sammenligningsgrunnlag.map { (arbeidsgiver, inntekter) ->
                 ArbeidsgiverInntekt(arbeidsgiver.somArbeidsgiverref(), inntekter.map {
                     ArbeidsgiverInntekt.MånedligInntekt(
                         inntekt = InntektPerMåned(it.beløp),
@@ -208,12 +208,12 @@ class Mediator(
             )
         }
 
-        private fun SammenligningsgrunnlagMessage.Inntektstype.tilDomene(): ArbeidsgiverInntekt.Inntektstype {
+        private fun SammenligningsgrunnlagMessageOld.Inntektstype.tilDomene(): ArbeidsgiverInntekt.Inntektstype {
             return when (this) {
-                SammenligningsgrunnlagMessage.Inntektstype.LØNNSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
-                SammenligningsgrunnlagMessage.Inntektstype.NÆRINGSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.NÆRINGSINNTEKT
-                SammenligningsgrunnlagMessage.Inntektstype.PENSJON_ELLER_TRYGD -> ArbeidsgiverInntekt.Inntektstype.PENSJON_ELLER_TRYGD
-                SammenligningsgrunnlagMessage.Inntektstype.YTELSE_FRA_OFFENTLIGE -> ArbeidsgiverInntekt.Inntektstype.YTELSE_FRA_OFFENTLIGE
+                SammenligningsgrunnlagMessageOld.Inntektstype.LØNNSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                SammenligningsgrunnlagMessageOld.Inntektstype.NÆRINGSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.NÆRINGSINNTEKT
+                SammenligningsgrunnlagMessageOld.Inntektstype.PENSJON_ELLER_TRYGD -> ArbeidsgiverInntekt.Inntektstype.PENSJON_ELLER_TRYGD
+                SammenligningsgrunnlagMessageOld.Inntektstype.YTELSE_FRA_OFFENTLIGE -> ArbeidsgiverInntekt.Inntektstype.YTELSE_FRA_OFFENTLIGE
             }
         }
 

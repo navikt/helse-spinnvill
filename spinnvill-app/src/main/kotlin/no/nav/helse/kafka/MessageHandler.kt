@@ -7,6 +7,6 @@ interface MessageHandler {
 
     fun håndter(behov: AvviksvurderingBehov)
 
-    fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage)
+    fun håndter(sammenligningsgrunnlagMessageOld: SammenligningsgrunnlagMessageOld)
 
 }

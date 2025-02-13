@@ -10,7 +10,7 @@ import no.nav.helse.rapids_rivers.asYearMonth
 import java.time.LocalDate
 import java.time.YearMonth
 
-class SammenligningsgrunnlagMessage(packet: JsonMessage) {
+class SammenligningsgrunnlagMessageOld(packet: JsonMessage) {
     val utkastTilVedtakJson: String = objectMapper.writeValueAsString(packet["utkastTilVedtak"])
     val skjæringstidspunkt: LocalDate = packet["InntekterForSammenligningsgrunnlag.skjæringstidspunkt"].asLocalDate()
     val fødselsnummer: String = packet["fødselsnummer"].asText()

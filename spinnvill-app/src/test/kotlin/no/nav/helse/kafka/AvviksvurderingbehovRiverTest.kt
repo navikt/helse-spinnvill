@@ -24,7 +24,7 @@ class AvviksvurderingbehovRiverTest {
             this.behov.add(behov)
         }
 
-        override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}
+        override fun håndter(sammenligningsgrunnlagMessageOld: SammenligningsgrunnlagMessageOld) {}
     }
 
     private companion object {

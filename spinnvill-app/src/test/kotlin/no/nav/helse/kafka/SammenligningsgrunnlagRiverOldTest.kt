@@ -13,18 +13,18 @@ import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.test.assertEquals
 
-class SammenligningsgrunnlagRiverTest {
+class SammenligningsgrunnlagRiverOldTest {
 
     private val testRapid = TestRapid()
 
     private val messageHandler = object : MessageHandler {
-        val messages = mutableListOf<SammenligningsgrunnlagMessage>()
+        val messages = mutableListOf<SammenligningsgrunnlagMessageOld>()
 
         override fun håndter(message: GodkjenningsbehovMessage) {}
         override fun håndter(behov: AvviksvurderingBehov) {}
 
-        override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {
-            messages.add(sammenligningsgrunnlagMessage)
+        override fun håndter(sammenligningsgrunnlagMessageOld: SammenligningsgrunnlagMessageOld) {
+            messages.add(sammenligningsgrunnlagMessageOld)
         }
 
     }
@@ -35,7 +35,7 @@ class SammenligningsgrunnlagRiverTest {
     }
 
     init {
-        SammenligningsgrunnlagRiver(testRapid, messageHandler)
+        SammenligningsgrunnlagRiverOld(testRapid, messageHandler)
     }
 
     @Test

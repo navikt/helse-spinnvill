@@ -3,7 +3,7 @@ package no.nav.helse.kafka
 import com.fasterxml.jackson.databind.JsonNode
 import no.nav.helse.rapids_rivers.*
 
-internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, private val messageHandler: MessageHandler) : River.PacketListener {
+internal class SammenligningsgrunnlagRiverOld(rapidsConnection: RapidsConnection, private val messageHandler: MessageHandler) : River.PacketListener {
     init {
         River(rapidsConnection).apply {
             validate {
@@ -23,6 +23,6 @@ internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, p
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        messageHandler.håndter(SammenligningsgrunnlagMessage(packet))
+        messageHandler.håndter(SammenligningsgrunnlagMessageOld(packet))
     }
 }

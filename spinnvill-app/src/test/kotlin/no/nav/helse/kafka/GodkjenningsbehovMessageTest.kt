@@ -23,7 +23,7 @@ class GodkjenningsbehovMessageTest {
         override fun håndter(behov: AvviksvurderingBehov) {
         }
 
-        override fun håndter(sammenligningsgrunnlagMessage: SammenligningsgrunnlagMessage) {}
+        override fun håndter(sammenligningsgrunnlagMessageOld: SammenligningsgrunnlagMessageOld) {}
     }
 
     init {
