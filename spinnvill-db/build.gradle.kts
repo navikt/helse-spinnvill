@@ -21,7 +21,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
 
     implementation("org.postgresql:postgresql:$postgresqlVersion")
-    implementation("com.zaxxer:HikariCP:$hikariCPVersion")
+    api("com.zaxxer:HikariCP:$hikariCPVersion")
     implementation("org.flywaydb:flyway-core:$flywayCoreVersion")
     implementation("org.flywaydb:flyway-database-postgresql:$flywayCoreVersion")
     implementation("io.micrometer:micrometer-registry-prometheus:$micrometerVersion")
