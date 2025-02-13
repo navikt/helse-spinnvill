@@ -1,18 +1,19 @@
 package no.nav.helse
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.helse.avviksvurdering.*
-import no.nav.helse.helpers.desember
-import no.nav.helse.helpers.dummyBeregningsgrunnlag
-import no.nav.helse.helpers.dummySammenligningsgrunnlag
-import no.nav.helse.helpers.januar
+import no.nav.helse.helpers.*
 import no.nav.helse.kafka.asUUID
 import no.nav.helse.rapids_rivers.asLocalDate
 import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.isMissingOrNull
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.YearMonth
 import java.util.*
 
@@ -45,6 +46,28 @@ class MeldingPublisererTest {
         assertEquals(beregningsperiodeTom, behovdata["beregningSlutt"].asYearMonth())
         assertEquals(skjæringstidspunkt, behovdata["skjæringstidspunkt"].asLocalDate())
         assertEquals(behovId, behovdata["avviksvurderingBehovId"].asUUID())
+    }
+
+    @Test
+    fun `felter blir lagt på behov for sammenligningsgrunnlag`() {
+        val skjæringstidspunkt = 1.januar
+        val beregningsperiodeFom = januar(2017)
+        val beregningsperiodeTom = desember(2017)
+        meldingPubliserer.behovForSammenligningsgrunnlag(BehovForSammenligningsgrunnlag(skjæringstidspunkt, beregningsperiodeFom, beregningsperiodeTom))
+        meldingPubliserer.`8-30 ledd 1`(dummyBeregningsgrunnlag)
+        meldingPubliserer.`8-30 ledd 2 punktum 1`(avviksvurdering = avviksvurdering(
+            false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0
+        ))
+        meldingPubliserer.sendMeldinger()
+
+
+        assertEquals(3, testRapid.inspektør.size)
+        testRapid.inspektør.meldinger().forEach {
+            assertEquals(fødselsnummer, it.path("fødselsnummer").asText().somFnr())
+            assertEquals(organisasjonsnummer, it.path("organisasjonsnummer").asText().somArbeidsgiverref())
+            assertEquals(skjæringstidspunkt, it.path("skjæringstidspunkt").asLocalDate())
+            assertEquals(vedtaksperiodeId, it.path("vedtaksperiodeId").asUUID())
+        }
     }
 
     @Test
@@ -140,6 +163,98 @@ class MeldingPublisererTest {
         assertEquals(false, output["harAkseptabeltAvvik"].asBoolean())
     }
 
+    @Test
+    fun `svarer ut behov med løsning uten vurdering`() {
+        val avviksvurderingId = UUID.randomUUID()
+        meldingPubliserer.behovløsningUtenVurdering(avviksvurderingId)
+        meldingPubliserer.sendMeldinger()
+
+        assertEquals(1, testRapid.inspektør.behov("Avviksvurdering").size)
+        val behovNode = testRapid.inspektør.behov("Avviksvurdering").single()
+
+        val løsningNode = behovNode.path("@løsning").path("Avviksvurdering")
+        assertEquals("TrengerIkkeNyVurdering", løsningNode.path("utfall").asText())
+        assertNotNull(løsningNode.get("avviksvurderingId"))
+    }
+
+    @Test
+    fun `svarer ut behov med løsning med vurdering`() {
+        meldingPubliserer.behovløsningMedVurdering(vurdering = avviksvurdering(
+            false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0
+        ))
+        meldingPubliserer.sendMeldinger()
+
+        assertEquals(1, testRapid.inspektør.behov("Avviksvurdering").size)
+        val behovNode = testRapid.inspektør.behov("Avviksvurdering").single()
+
+        val løsningNode = behovNode.path("@løsning").path("Avviksvurdering")
+        assertEquals("NyVurderingForetatt", løsningNode.path("utfall").asText())
+        assertNotNull(løsningNode.get("avviksvurderingId"))
+        assertNotNull(løsningNode.get("harAkseptabeltAvvik"))
+        assertNotNull(løsningNode.get("maksimaltTillattAvvik"))
+        assertNotNull(løsningNode.get("opprettet"))
+
+        val beregningsgrunnlagNode = løsningNode.path("beregningsgrunnlag")
+        assertNotNull(beregningsgrunnlagNode.get("totalbeløp"))
+        val omregnedeÅrsinntekter = beregningsgrunnlagNode.path("omregnedeÅrsinntekter") as ArrayNode
+        assertFalse(omregnedeÅrsinntekter.isEmpty)
+        omregnedeÅrsinntekter.forEach {
+            assertNotNull(it.get("arbeidsgiverreferanse"))
+            assertNotNull(it.get("beløp"))
+        }
+
+        val sammenligningsgrunnlagNode = løsningNode.path("sammenligningsgrunnlag")
+        assertNotNull(sammenligningsgrunnlagNode.get("totalbeløp"))
+        val innrapporterteInntekterNode = sammenligningsgrunnlagNode.path("innrapporterteInntekter") as ArrayNode
+        assertFalse(innrapporterteInntekterNode.isEmpty)
+        innrapporterteInntekterNode.forEach { innrapportertInntekt ->
+            assertNotNull(innrapportertInntekt.get("arbeidsgiverreferanse"))
+            val inntekterNode = innrapportertInntekt.path("inntekter") as ArrayNode
+            assertFalse(inntekterNode.isEmpty)
+            inntekterNode.forEach { inntekt ->
+                assertNotNull(inntekt.get("årMåned"))
+                assertNotNull(inntekt.get("beløp"))
+            }
+        }
+    }
+
+    private fun avviksvurderingBehovJsonMap(
+        fødselsnummer: String,
+        organisasjonsnummer: String,
+        skjæringstidspunkt: LocalDate
+    ): Map<String, Any> {
+        @Language("JSON")
+        val json = """
+            {
+                "@event_name": "behov",
+                "@behovId": "c64a73be-7337-4f25-8923-94f355c23d76",
+                "@behov": [
+                    "Avviksvurdering"
+                ],
+                "fødselsnummer": "$fødselsnummer",
+                "organisasjonsnummer": "$organisasjonsnummer",
+                "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
+                "Avviksvurdering": {
+                  "skjæringstidspunkt": "$skjæringstidspunkt",
+                    "vilkårsgrunnlagId": "87b9339d-a67d-49b0-af36-c93d6f9249ae",
+                    "omregnedeÅrsinntekter": [
+                        {
+                            "organisasjonsnummer": "$organisasjonsnummer",
+                            "beløp": 500000.0
+                        },
+                        {
+                            "organisasjonsnummer": "000000000",
+                            "beløp": 200000.20
+                        }
+                    ]
+                },
+                "@id": "ba376523-62b1-49d7-8647-f902c739b634",
+                "@opprettet": "2018-01-01T00:00:00.000"
+            }
+        """.trimIndent()
+        return objectMapper.readValue<Map<String, Any>>(json)
+    }
+
     private fun avviksvurderingBehov(): AvviksvurderingBehov {
         return AvviksvurderingBehov.nyttBehov(
             vilkårsgrunnlagId = vilkårsgrunnlagId,
@@ -149,7 +264,7 @@ class MeldingPublisererTest {
             vedtaksperiodeId = vedtaksperiodeId,
             organisasjonsnummer = organisasjonsnummer,
             beregningsgrunnlag = beregningsgrunnlag,
-            json = emptyMap()
+            json = avviksvurderingBehovJsonMap(organisasjonsnummer = organisasjonsnummer.value, fødselsnummer = fødselsnummer.value, skjæringstidspunkt = 1.januar)
         )
     }
 
@@ -174,6 +289,16 @@ class MeldingPublisererTest {
         assertNotNull(jsonNode) { "Forventer at noden ikke er null" }
         jsonNode?.isMissingOrNull()?.let { assertFalse(it) { "Forventer at noden ikke mangler" } }
     }
+
+    private fun TestRapid.RapidInspector.meldinger() =
+        (0 until size).map { index -> message(index) }
+
+    private fun TestRapid.RapidInspector.hendelser(type: String) =
+        meldinger().filter { it.path("@event_name").asText() == type }
+
+    private fun TestRapid.RapidInspector.behov(behov: String) =
+        hendelser("behov")
+            .filter { it.path("@behov").map(JsonNode::asText).containsAll(listOf(behov)) }
 }
 
 

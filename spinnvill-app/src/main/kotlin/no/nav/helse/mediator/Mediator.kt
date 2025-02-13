@@ -22,6 +22,7 @@ class Mediator(
     init {
         GodkjenningsbehovRiver(rapidsConnection, this)
         SammenligningsgrunnlagRiverOld(rapidsConnection, this)
+        SammenligningsgrunnlagRiver(rapidsConnection, this)
         AvviksvurderingbehovRiver(rapidsConnection, this)
     }
 
@@ -73,16 +74,38 @@ class Mediator(
                 markerBehovSomLøst(behov)
             }
             is Avviksvurderingsresultat.AvvikVurdert -> {
-                val avviksvurdering = resultat.vurdering
-                meldingPubliserer.`8-30 ledd 2 punktum 1`(avviksvurdering)
-                if (avviksvurdering.harAkseptabeltAvvik) meldingPubliserer.`8-30 ledd 1`(avviksvurdering.beregningsgrunnlag)
-                meldingPubliserer.behovløsningMedVurdering(avviksvurdering)
-                markerBehovSomLøst(behov)
+                vurderAvvik(resultat, meldingPubliserer, behov)
             }
         }
-
+        avviksvurderinger.lagre()
         meldingPubliserer.sendMeldinger()
-       // marker behov som løst
+    }
+
+    override fun håndter(sammenligningsgrunnlagLøsning: SammenligningsgrunnlagLøsning) {
+        val fødselsnummer = sammenligningsgrunnlagLøsning.fødselsnummer
+        val skjæringstidspunkt = sammenligningsgrunnlagLøsning.skjæringstidspunkt
+
+        val avviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(fødselsnummer, skjæringstidspunkt) ?: return
+        if (avviksvurderingBehov.behovId != sammenligningsgrunnlagLøsning.avviksvurderingBehovId) return
+
+        val meldingPubliserer = MeldingPubliserer(rapidsConnection, avviksvurderingBehov, versjonAvKode)
+        val avviksvurderinger = hentGrunnlagshistorikk(fødselsnummer, skjæringstidspunkt)
+        val resultat = avviksvurderinger.nyttSammenligningsgrunnlag(sammenligningsgrunnlagLøsning.sammenligningsgrunnlag, avviksvurderingBehov.beregningsgrunnlag)
+        vurderAvvik(resultat, meldingPubliserer, avviksvurderingBehov)
+        avviksvurderinger.lagre()
+        meldingPubliserer.sendMeldinger()
+    }
+
+    private fun vurderAvvik(
+        resultat: Avviksvurderingsresultat.AvvikVurdert,
+        meldingPubliserer: MeldingPubliserer,
+        avviksvurderingBehov: AvviksvurderingBehov,
+    ) {
+        val avviksvurdering = resultat.vurdering
+        meldingPubliserer.`8-30 ledd 2 punktum 1`(avviksvurdering)
+        if (avviksvurdering.harAkseptabeltAvvik) meldingPubliserer.`8-30 ledd 1`(avviksvurdering.beregningsgrunnlag)
+        meldingPubliserer.behovløsningMedVurdering(avviksvurdering)
+        markerBehovSomLøst(avviksvurderingBehov)
     }
 
     private fun markerBehovSomLøst(behov: AvviksvurderingBehov) {
@@ -106,15 +129,6 @@ class Mediator(
         avviksvurderinger.lagre()
 
         rapidsConnection.queueReplayMessage(fødselsnummer.value, sammenligningsgrunnlagMessageOld.utkastTilVedtakJson)
-    }
-
-    override fun håndter(sammenligningsgrunnlagLøsning: SammenligningsgrunnlagLøsning) {
-        //Har vi et ubehandlet avviksvurderingBehov for fødselsnummer=x og skjæringstidspunkt=y
-            // hvis nei -> returner (burde logges?)
-            // hvis ja ->
-                // Har det ubehandlede avviksvurderingBehovet samme id som vi har
-                    // hvis nei -> returner (burde logges?)
-                    // hvis ja -> vurder avvik
     }
 
     private fun Grunnlagshistorikk.lagre() {

@@ -73,6 +73,14 @@ class GrunnlagshistorikkTest {
     }
 
     @Test
+    fun `gjør ny avviksvurdering når vi mottar sammenligningsgrunnlag`() {
+        val avviksvurderinger = avviksvurderinger()
+        val avviksvurdering = avviksvurderinger.nyttSammenligningsgrunnlag(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0), beregningsgrunnlag(arbeidsgiver to 600000.0))
+
+        assertTrue(avviksvurdering.vurdering.harAkseptabeltAvvik)
+    }
+
+    @Test
     fun `be om sammenligningsgrunnlag hvis det ikke er gjort noen avviksvurderinger enda - old`() {
         val avviksvurderinger = avviksvurderinger()
         val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
