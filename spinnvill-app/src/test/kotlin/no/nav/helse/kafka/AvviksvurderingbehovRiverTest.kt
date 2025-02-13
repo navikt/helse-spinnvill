@@ -5,6 +5,7 @@ import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.avviksvurdering.AvviksvurderingBehov
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
+import no.nav.helse.avviksvurdering.SammenligningsgrunnlagLøsning
 import no.nav.helse.helpers.januar
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
@@ -25,6 +26,7 @@ class AvviksvurderingbehovRiverTest {
         }
 
         override fun håndter(sammenligningsgrunnlagMessageOld: SammenligningsgrunnlagMessageOld) {}
+        override fun håndter(sammenligningsgrunnlagLøsning: SammenligningsgrunnlagLøsning) {}
     }
 
     private companion object {

@@ -1,34 +1,38 @@
-@file:Suppress("SameParameterValue")
-
 package no.nav.helse.kafka
 
+import no.nav.helse.Beskrivelse
+import no.nav.helse.Fordel
+import no.nav.helse.InntektPerMåned
+import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
 import no.nav.helse.avviksvurdering.AvviksvurderingBehov
+import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import no.nav.helse.avviksvurdering.SammenligningsgrunnlagLøsning
 import no.nav.helse.helpers.januar
-import no.nav.helse.helpers.objectMapper
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import no.nav.helse.somArbeidsgiverref
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.*
 import kotlin.test.assertEquals
 
-class SammenligningsgrunnlagRiverOldTest {
+class SammenligningsgrunnlagRiverTest {
 
     private val testRapid = TestRapid()
 
     private val messageHandler = object : MessageHandler {
-        val messages = mutableListOf<SammenligningsgrunnlagMessageOld>()
+        val messages = mutableListOf<SammenligningsgrunnlagLøsning>()
 
         override fun håndter(message: GodkjenningsbehovMessage) {}
         override fun håndter(behov: AvviksvurderingBehov) {}
 
-        override fun håndter(sammenligningsgrunnlagMessageOld: SammenligningsgrunnlagMessageOld) {
-            messages.add(sammenligningsgrunnlagMessageOld)
-        }
+        override fun håndter(sammenligningsgrunnlagMessageOld: SammenligningsgrunnlagMessageOld) {}
 
-        override fun håndter(sammenligningsgrunnlagLøsning: SammenligningsgrunnlagLøsning) {}
+        override fun håndter(sammenligningsgrunnlagLøsning: SammenligningsgrunnlagLøsning) {
+            messages.add(sammenligningsgrunnlagLøsning)
+        }
     }
 
     private companion object {
@@ -37,31 +41,54 @@ class SammenligningsgrunnlagRiverOldTest {
     }
 
     init {
-        SammenligningsgrunnlagRiverOld(testRapid, messageHandler)
+        SammenligningsgrunnlagRiver(testRapid, messageHandler)
     }
 
     @Test
     fun `Leser inn sammenligningsgrunnlag løsning`() {
+        val avviksvurderingBehovId = UUID.randomUUID()
         testRapid.sendTestMessage(
             sammenligningsgrunnlagJsonMed(
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
+                avviksvurderingBehovId = avviksvurderingBehovId,
                 inntekter = inntekterForSammenligningsgrunnlag(
                     YearMonth.of(2023, 1) to listOf(inntekt())
                 )
             )
         )
-        assertEquals(1, messageHandler.messages.size)
+        val meldinger = messageHandler.messages
+        val melding = meldinger.single()
+
+        assertEquals(FØDSELSNUMMER, melding.fødselsnummer.value)
+        assertEquals(1.januar, melding.skjæringstidspunkt)
+        assertEquals(avviksvurderingBehovId, melding.avviksvurderingBehovId)
+        val expected = Sammenligningsgrunnlag(
+            listOf(
+                ArbeidsgiverInntekt(
+                    ORGANISASJONSNUMMER.somArbeidsgiverref(), listOf(
+                        ArbeidsgiverInntekt.MånedligInntekt(
+                            inntekt = InntektPerMåned(value = 20000.0), måned = YearMonth.of(2023, 1),
+                            fordel = Fordel("En fordel"),
+                            beskrivelse = Beskrivelse("En beskrivelse"),
+                            inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                        )
+                    )
+                )
+            )
+        )
+        assertEquals(expected, melding.sammenligningsgrunnlag)
     }
 
     @Test
     fun `Leser ikke inn sammenligningsgrunnlag uten løsning`() {
         testRapid.sendTestMessage(
             sammenligningsgrunnlagJsonUtenLøsning(
-                FØDSELSNUMMER,
-                ORGANISASJONSNUMMER,
-                1.januar
+                fødselsnummer = FØDSELSNUMMER,
+                organisasjonsnummer = ORGANISASJONSNUMMER,
+                skjæringstidspunkt = 1.januar,
+                avviksvurderingBehovId = UUID.randomUUID()
             )
         )
         assertEquals(0, messageHandler.messages.size)
@@ -71,9 +98,10 @@ class SammenligningsgrunnlagRiverOldTest {
     fun `Leser ikke inn sammenligningsgrunnlag som mangler årMåned`() {
         testRapid.sendTestMessage(
             sammenligningsgrunnlagJsonMed(
-                FØDSELSNUMMER,
-                ORGANISASJONSNUMMER,
-                1.januar,
+                fødselsnummer = FØDSELSNUMMER,
+                organisasjonsnummer = ORGANISASJONSNUMMER,
+                skjæringstidspunkt = 1.januar,
+                avviksvurderingBehovId = UUID.randomUUID(),
                 inntekterForSammenligningsgrunnlag(null to emptyList())
             )
         )
@@ -87,6 +115,7 @@ class SammenligningsgrunnlagRiverOldTest {
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
+                avviksvurderingBehovId = UUID.randomUUID(),
                 inntekter = inntekterForSammenligningsgrunnlag(YearMonth.of(2023, 1) to null)
             )
         )
@@ -100,6 +129,7 @@ class SammenligningsgrunnlagRiverOldTest {
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
+                avviksvurderingBehovId = UUID.randomUUID(),
                 inntekter = inntekterForSammenligningsgrunnlag(
                     YearMonth.of(2023, 1) to listOf(inntekt(fordel = null))
                 )
@@ -115,6 +145,7 @@ class SammenligningsgrunnlagRiverOldTest {
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
+                avviksvurderingBehovId = UUID.randomUUID(),
                 inntekterForSammenligningsgrunnlag(
                     YearMonth.of(2023, 1) to listOf(inntekt(inntektstype = null))
                 )
@@ -131,6 +162,7 @@ class SammenligningsgrunnlagRiverOldTest {
                     fødselsnummer = FØDSELSNUMMER,
                     organisasjonsnummer = ORGANISASJONSNUMMER,
                     skjæringstidspunkt = 1.januar,
+                    avviksvurderingBehovId = UUID.randomUUID(),
                     inntekterForSammenligningsgrunnlag(
                         YearMonth.of(2023, 1) to listOf(inntekt(arbeidsgiverMangler = true))
                     )
@@ -147,6 +179,7 @@ class SammenligningsgrunnlagRiverOldTest {
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
+                avviksvurderingBehovId = UUID.randomUUID(),
                 inntekterForSammenligningsgrunnlag(
                     YearMonth.of(2023, 1) to listOf(inntekt(beløp = null))
                 )
@@ -162,6 +195,7 @@ class SammenligningsgrunnlagRiverOldTest {
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
+                avviksvurderingBehovId = UUID.randomUUID(),
                 inntekterForSammenligningsgrunnlag(
                     YearMonth.of(2023, 1) to listOf(inntekt(inntektstype = "NOE ANNET"))
                 )
@@ -177,6 +211,7 @@ class SammenligningsgrunnlagRiverOldTest {
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
+                avviksvurderingBehovId = UUID.randomUUID(),
                 inntekter = inntekterForSammenligningsgrunnlag(
                     YearMonth.of(2023, 1) to listOf(inntekt(fordel = null))
                 ),
@@ -188,6 +223,7 @@ class SammenligningsgrunnlagRiverOldTest {
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
+                avviksvurderingBehovId = UUID.randomUUID(),
                 inntekter = inntekterForSammenligningsgrunnlag(
                     YearMonth.of(2023, 1) to listOf(inntekt(fordel = null))
                 )
@@ -214,8 +250,8 @@ class SammenligningsgrunnlagRiverOldTest {
         return Inntekt(
             beløp = beløp,
             inntektstype = inntektstype,
-            orgnummer = if (arbeidsgiverMangler) null else "987654321",
-            fødselsnummer = if (arbeidsgiverMangler) null else "12345678910",
+            orgnummer = if (arbeidsgiverMangler) null else ORGANISASJONSNUMMER,
+            fødselsnummer = if (arbeidsgiverMangler) null else FØDSELSNUMMER,
             beskrivelse = beskrivelse,
             fordel = fordel
         )
@@ -236,14 +272,17 @@ class SammenligningsgrunnlagRiverOldTest {
     )
 
     private fun List<InntektForSammenligningsgrunnlag>.toJson(): String {
-        return objectMapper.writeValueAsString(this)
+        return no.nav.helse.helpers.objectMapper.writeValueAsString(this)
     }
 
     private fun sammenligningsgrunnlagJsonMed(
         fødselsnummer: String,
         organisasjonsnummer: String,
         skjæringstidspunkt: LocalDate,
-        inntekter: List<InntektForSammenligningsgrunnlag>,
+        avviksvurderingBehovId: UUID?,
+        inntekter: List<InntektForSammenligningsgrunnlag> = inntekterForSammenligningsgrunnlag(
+            YearMonth.of(2023, 1) to listOf(inntekt())
+        ),
         final: Boolean = true
     ): String {
         @Language("JSON")
@@ -258,8 +297,8 @@ class SammenligningsgrunnlagRiverOldTest {
               "fødselsnummer": "$fødselsnummer",
               "organisasjonsnummer": "$organisasjonsnummer",
               "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
-              "utkastTilVedtak": {},
               "InntekterForSammenligningsgrunnlag": {
+                "avviksvurderingBehovId": "$avviksvurderingBehovId",
                 "skjæringstidspunkt": "$skjæringstidspunkt",
                 "beregningStart": "2018-01",
                 "beregningSlutt": "2018-02"
@@ -278,7 +317,8 @@ class SammenligningsgrunnlagRiverOldTest {
     private fun sammenligningsgrunnlagJsonUtenLøsning(
         fødselsnummer: String,
         organisasjonsnummer: String,
-        skjæringstidspunkt: LocalDate
+        skjæringstidspunkt: LocalDate,
+        avviksvurderingBehovId: UUID,
     ): String {
         @Language("JSON")
         val json = """
@@ -292,8 +332,8 @@ class SammenligningsgrunnlagRiverOldTest {
               "fødselsnummer": "$fødselsnummer",
               "organisasjonsnummer": "$organisasjonsnummer",
               "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
-              "utkastTilVedtak": {},
               "InntekterForSammenligningsgrunnlag": {
+                "avviksvurderingBehovId": "$avviksvurderingBehovId",
                 "skjæringstidspunkt": "$skjæringstidspunkt",
                 "beregningStart": "2018-01",
                 "beregningSlutt": "2018-02"
@@ -304,4 +344,5 @@ class SammenligningsgrunnlagRiverOldTest {
         """.trimIndent()
         return json
     }
+
 }

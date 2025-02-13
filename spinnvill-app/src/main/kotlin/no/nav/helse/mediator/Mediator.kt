@@ -108,6 +108,15 @@ class Mediator(
         rapidsConnection.queueReplayMessage(fødselsnummer.value, sammenligningsgrunnlagMessageOld.utkastTilVedtakJson)
     }
 
+    override fun håndter(sammenligningsgrunnlagLøsning: SammenligningsgrunnlagLøsning) {
+        //Har vi et ubehandlet avviksvurderingBehov for fødselsnummer=x og skjæringstidspunkt=y
+            // hvis nei -> returner (burde logges?)
+            // hvis ja ->
+                // Har det ubehandlede avviksvurderingBehovet samme id som vi har
+                    // hvis nei -> returner (burde logges?)
+                    // hvis ja -> vurder avvik
+    }
+
     private fun Grunnlagshistorikk.lagre() {
         val builder = DatabaseDtoBuilder()
         database.lagreGrunnlagshistorikk(builder.buildAll(grunnlagene()))
