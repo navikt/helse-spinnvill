@@ -1,12 +1,12 @@
 package no.nav.helse.db
 
-import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.avviksvurdering.AvviksvurderingBehov
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.helpers.februar
 import no.nav.helse.helpers.januar
+import no.nav.helse.somArbeidsgiverref
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -110,7 +110,7 @@ internal class AvviksvurderingBehovDaoTest {
     ): AvviksvurderingBehov {
         val vilkårsgrunnlagId = UUID.randomUUID()
         val vedtaksperiodeId = UUID.randomUUID()
-        val organisasjonsnummer = "00000000"
+        val organisasjonsnummer = "00000000".somArbeidsgiverref()
         val beløp = 200000.0
         return AvviksvurderingBehov.nyttBehov(
             behovId = id,
@@ -121,7 +121,7 @@ internal class AvviksvurderingBehovDaoTest {
             organisasjonsnummer = organisasjonsnummer,
             beregningsgrunnlag = Beregningsgrunnlag.opprett(
                 mapOf(
-                    pair = Arbeidsgiverreferanse(organisasjonsnummer) to OmregnetÅrsinntekt(
+                    pair = organisasjonsnummer to OmregnetÅrsinntekt(
                         beløp,
                     ),
                 ),

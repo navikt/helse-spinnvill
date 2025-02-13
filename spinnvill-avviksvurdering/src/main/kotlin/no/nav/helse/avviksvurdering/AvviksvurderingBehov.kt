@@ -1,5 +1,6 @@
 package no.nav.helse.avviksvurdering
 
+import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
 import java.time.LocalDate
 import java.util.*
@@ -10,7 +11,7 @@ class AvviksvurderingBehov private constructor(
     val skjæringstidspunkt: LocalDate,
     val fødselsnummer: Fødselsnummer,
     val vedtaksperiodeId: UUID,
-    val organisasjonsnummer: String,
+    val organisasjonsnummer: Arbeidsgiverreferanse,
     val beregningsgrunnlag : Beregningsgrunnlag,
     val json: Map<String, Any>,
     private var løst: Boolean
@@ -28,7 +29,7 @@ class AvviksvurderingBehov private constructor(
             skjæringstidspunkt: LocalDate,
             fødselsnummer: Fødselsnummer,
             vedtaksperiodeId: UUID,
-            organisasjonsnummer: String,
+            organisasjonsnummer: Arbeidsgiverreferanse,
             beregningsgrunnlag: Beregningsgrunnlag,
             json: Map<String, Any>,
         ): AvviksvurderingBehov {
@@ -51,7 +52,7 @@ class AvviksvurderingBehov private constructor(
             skjæringstidspunkt: LocalDate,
             fødselsnummer: Fødselsnummer,
             vedtaksperiodeId: UUID,
-            organisasjonsnummer: String,
+            organisasjonsnummer: Arbeidsgiverreferanse,
             beregningsgrunnlag: Beregningsgrunnlag,
             løst: Boolean,
             json: Map<String, Any>,

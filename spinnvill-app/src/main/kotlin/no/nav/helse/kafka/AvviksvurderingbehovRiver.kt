@@ -5,9 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import net.logstash.logback.argument.StructuredArguments.kv
-import no.nav.helse.Arbeidsgiverreferanse
-import no.nav.helse.Fødselsnummer
-import no.nav.helse.OmregnetÅrsinntekt
+import no.nav.helse.*
 import no.nav.helse.avviksvurdering.AvviksvurderingBehov
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.rapids_rivers.*
@@ -42,9 +40,9 @@ internal class AvviksvurderingbehovRiver(rapidsConnection: RapidsConnection, pri
                 vilkårsgrunnlagId = packet["Avviksvurdering.vilkårsgrunnlagId"].asUUID(),
                 behovId = packet["@behovId"].asUUID(),
                 skjæringstidspunkt = packet["Avviksvurdering.skjæringstidspunkt"].asLocalDate(),
-                fødselsnummer = Fødselsnummer(packet["fødselsnummer"].asText()),
+                fødselsnummer = packet["fødselsnummer"].asText().somFnr(),
                 vedtaksperiodeId = packet["vedtaksperiodeId"].asUUID(),
-                organisasjonsnummer = packet["organisasjonsnummer"].asText(),
+                organisasjonsnummer = packet["organisasjonsnummer"].asText().somArbeidsgiverref(),
                 beregningsgrunnlag = Beregningsgrunnlag.opprett(packet["Avviksvurdering.omregnedeÅrsinntekter"].associate {
                     Arbeidsgiverreferanse(it["organisasjonsnummer"].asText()) to OmregnetÅrsinntekt(it["beløp"].asDouble())
                 }),

@@ -4,14 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.zaxxer.hikari.HikariDataSource
-import no.nav.helse.Arbeidsgiverreferanse
-import no.nav.helse.Fødselsnummer
-import no.nav.helse.OmregnetÅrsinntekt
+import no.nav.helse.*
 import no.nav.helse.avviksvurdering.AvviksvurderingBehov
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.dto.AvviksvurderingBehovDto
 import no.nav.helse.dto.AvviksvurderingDto
-import no.nav.helse.somFnr
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -44,7 +41,7 @@ class Database private constructor(env: Map<String, String>) {
                 skjæringstidspunkt = dto.skjæringstidspunkt,
                 fødselsnummer = dto.fødselsnummer.somFnr(),
                 vedtaksperiodeId = jsonNode["vedtaksperiodeId"].asUUID(),
-                organisasjonsnummer = jsonNode["organisasjonsnummer"].asText(),
+                organisasjonsnummer = jsonNode["organisasjonsnummer"].asText().somArbeidsgiverref(),
                 løst = dto.løst != null,
                 beregningsgrunnlag = Beregningsgrunnlag.opprett(
                     jsonNode["Avviksvurdering"].get("omregnedeÅrsinntekter").associate {

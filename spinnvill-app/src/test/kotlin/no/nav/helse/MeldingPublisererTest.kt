@@ -147,7 +147,7 @@ class MeldingPublisererTest {
             skjæringstidspunkt = 1.januar,
             fødselsnummer = fødselsnummer,
             vedtaksperiodeId = vedtaksperiodeId,
-            organisasjonsnummer = organisasjonsnummer.value,
+            organisasjonsnummer = organisasjonsnummer,
             beregningsgrunnlag = beregningsgrunnlag,
             json = emptyMap()
         )
