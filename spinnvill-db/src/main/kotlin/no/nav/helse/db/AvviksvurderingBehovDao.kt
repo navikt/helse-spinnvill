@@ -54,16 +54,17 @@ internal class AvviksvurderingBehovDao {
         }
     }
 
-    internal fun lagre(avviksvurderingBehovDto: AvviksvurderingBehovDto): AvviksvurderingBehovDto {
+    internal fun lagre(avviksvurderingBehovDto: AvviksvurderingBehovDto) {
         return transaction {
-            val etAvviksvurderingBehov = EtAvviksvurderingBehov.new(avviksvurderingBehovDto.id) {
+            EtAvviksvurderingBehov.findByIdAndUpdate(avviksvurderingBehovDto.id) {
+                it.løst = avviksvurderingBehovDto.løst
+            } ?: EtAvviksvurderingBehov.new(avviksvurderingBehovDto.id) {
                 fødselsnummer = avviksvurderingBehovDto.fødselsnummer
                 skjæringstidspunkt = avviksvurderingBehovDto.skjæringstidspunkt
                 opprettet = avviksvurderingBehovDto.opprettet
-                løst = avviksvurderingBehovDto.løst ?: løst
+                løst = null
                 json = mapper.valueToTree(avviksvurderingBehovDto.json)
             }
-            etAvviksvurderingBehov.dto()
         }
     }
 

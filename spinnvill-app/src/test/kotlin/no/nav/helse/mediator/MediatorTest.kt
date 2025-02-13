@@ -112,6 +112,8 @@ internal class MediatorTest {
         testRapid.reset()
 
         mottaAvviksvurderingBehov()
+        val behov = database.finnUbehandledeAvviksvurderingBehov(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
+        assertNull(behov) // behovet er markert ferdigstilt
 
         assertEquals(1, testRapid.inspektør.size)
         assertEquals(1, testRapid.inspektør.behov("Avviksvurdering").size)
@@ -136,6 +138,8 @@ internal class MediatorTest {
 
         mottaAvviksvurderingBehov()
 
+        val behov = database.finnUbehandledeAvviksvurderingBehov(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
+        assertNull(behov) // behovet er markert ferdigstilt
 
         assertEquals(3, testRapid.inspektør.size)
         assertEquals(2, testRapid.inspektør.hendelser("subsumsjon").size)

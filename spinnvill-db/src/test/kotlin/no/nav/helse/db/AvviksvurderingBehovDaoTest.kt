@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.*
 
 internal class AvviksvurderingBehovDaoTest {
@@ -37,10 +36,12 @@ internal class AvviksvurderingBehovDaoTest {
     }
 
     @Test
-    fun `Finner ikke et løst avviksvurderingBehov`() {
+    fun `Finner ikke et løst avviksvurderingBehov når avviksvurdering-behovet er løst`() {
         val fødselsnummer = "12345678910"
         val skjæringstidspunkt = 1.januar
-        val etAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt, løst = LocalDateTime.now())
+        val etAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt)
+        database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
+        etAvviksvurderingBehov.løs()
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
 
         val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
@@ -53,10 +54,12 @@ internal class AvviksvurderingBehovDaoTest {
         val fødselsnummer = "12345678910"
         val skjæringstidspunkt = 1.januar
         val id = UUID.randomUUID()
-        val etAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt, løst = LocalDateTime.now(), id = UUID.randomUUID())
-        val etTilAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt, løst = null, id = id)
+        val etAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt, id = UUID.randomUUID())
+        val etTilAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt, id = id)
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
         database.lagreAvviksvurderingBehov(etTilAvviksvurderingBehov)
+        etAvviksvurderingBehov.løs()
+        database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
 
         val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
 
@@ -71,8 +74,8 @@ internal class AvviksvurderingBehovDaoTest {
         val etTilSkjæringstidspunkt = 1.februar
         val id = UUID.randomUUID()
         val enTilId = UUID.randomUUID()
-        val etAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt, løst = null, id = id)
-        val etTilAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= etTilSkjæringstidspunkt, løst = null, id = enTilId)
+        val etAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt, id = id)
+        val etTilAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= etTilSkjæringstidspunkt, id = enTilId)
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
         database.lagreAvviksvurderingBehov(etTilAvviksvurderingBehov)
 
@@ -104,7 +107,6 @@ internal class AvviksvurderingBehovDaoTest {
         fødselsnummer: String = "12345678910",
         skjæringstidspunkt: LocalDate = 1.januar,
         id: UUID = UUID.randomUUID(),
-        løst: LocalDateTime? = null
     ): AvviksvurderingBehov {
         val vilkårsgrunnlagId = UUID.randomUUID()
         val vedtaksperiodeId = UUID.randomUUID()
@@ -137,8 +139,6 @@ internal class AvviksvurderingBehovDaoTest {
                     )
                 )
             ),
-        ).also {
-            if (løst != null) it.løs()
-        }
+        )
     }
 }
