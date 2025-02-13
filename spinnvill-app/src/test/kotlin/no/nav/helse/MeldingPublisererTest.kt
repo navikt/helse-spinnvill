@@ -49,7 +49,7 @@ class MeldingPublisererTest {
     }
 
     @Test
-    fun `felter blir lagt på behov for sammenligningsgrunnlag`() {
+    fun `standardfelter blir lagt på alle utgående meldinger`() {
         val skjæringstidspunkt = 1.januar
         val beregningsperiodeFom = januar(2017)
         val beregningsperiodeTom = desember(2017)

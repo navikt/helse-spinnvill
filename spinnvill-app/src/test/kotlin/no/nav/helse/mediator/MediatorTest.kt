@@ -48,23 +48,9 @@ internal class MediatorTest {
     fun `sender behov for sammenligningsgrunnlag`() {
         mottaAvviksvurderingBehov()
 
-        val beregningsperiodeTom = YearMonth.from(SKJÆRINGSTIDSPUNKT.minusMonths(1))
-        val beregningsperiodeFom = beregningsperiodeTom.minusMonths(11)
-
         assertEquals(1, testRapid.inspektør.size)
         assertEquals("behov", testRapid.inspektør.field(0, "@event_name").asText())
-        assertEquals(
-            beregningsperiodeFom,
-            testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("beregningStart").asYearMonth()
-        )
-        assertEquals(
-            beregningsperiodeTom,
-            testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("beregningSlutt").asYearMonth()
-        )
-        assertEquals(
-            SKJÆRINGSTIDSPUNKT,
-            testRapid.inspektør.field(0, "InntekterForSammenligningsgrunnlag").path("skjæringstidspunkt").asLocalDate()
-        )
+        assertEquals(listOf("InntekterForSammenligningsgrunnlag"), testRapid.inspektør.field(0, "@behov").map { it.asText() })
     }
 
     @Test
