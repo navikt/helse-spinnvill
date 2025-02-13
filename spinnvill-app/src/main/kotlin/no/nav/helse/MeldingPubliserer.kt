@@ -120,7 +120,14 @@ class MeldingPubliserer(
 
     fun behovForSammenligningsgrunnlag(behov: BehovForSammenligningsgrunnlag) {
         val behovNavn = "InntekterForSammenligningsgrunnlag"
-        meldinger.add(Message.Behov(setOf(behovNavn), mapOf(behovNavn to behov.toMap())))
+        meldinger.add(
+            Message.Behov(
+                setOf(behovNavn),
+                mapOf(
+                    behovNavn to (mapOf("avviksvurderingBehovId" to avviksvurderingBehov.behovId) + behov.toMap())
+                )
+            )
+        )
     }
 
     private fun BehovForSammenligningsgrunnlag.toMap(): Map<String, Any> {

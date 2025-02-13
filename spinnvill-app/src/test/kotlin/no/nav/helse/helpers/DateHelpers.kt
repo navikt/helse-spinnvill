@@ -1,6 +1,7 @@
 package no.nav.helse.helpers
 
 import java.time.LocalDate
+import java.time.YearMonth
 
 fun Int.januar(year: Int = 2018): LocalDate = LocalDate.of(year, 1, this)
 fun Int.februar(year: Int = 2018): LocalDate = LocalDate.of(year, 2, this)
@@ -18,3 +19,6 @@ val Int.januar get() = this.januar()
 val Int.februar get() = this.februar()
 val Int.mars get() = this.mars()
 val Int.april get() = this.april()
+
+fun januar(year: Int = 2018): YearMonth = YearMonth.from(1.januar(year))
+fun desember(year: Int = 2018): YearMonth = YearMonth.from(1.desember(year))

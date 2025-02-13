@@ -1,13 +1,13 @@
 package no.nav.helse
 
 import com.fasterxml.jackson.databind.JsonNode
-import no.nav.helse.avviksvurdering.Avviksvurdering
-import no.nav.helse.avviksvurdering.AvviksvurderingBehov
-import no.nav.helse.avviksvurdering.Beregningsgrunnlag
-import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
+import no.nav.helse.avviksvurdering.*
+import no.nav.helse.helpers.desember
 import no.nav.helse.helpers.dummyBeregningsgrunnlag
 import no.nav.helse.helpers.dummySammenligningsgrunnlag
 import no.nav.helse.helpers.januar
+import no.nav.helse.kafka.asUUID
+import no.nav.helse.rapids_rivers.asLocalDate
 import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.isMissingOrNull
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -27,6 +27,25 @@ class MeldingPublisererTest {
     private val sammenligningsgrunnlag = dummySammenligningsgrunnlag
     private val testRapid = TestRapid()
     private val meldingPubliserer = MeldingPubliserer(testRapid, avviksvurderingBehov(), versjonAvKode)
+
+    @Test
+    fun `lag sammenligningsgrunnlag-behov`() {
+        val skjæringstidspunkt = 1.januar
+        val beregningsperiodeFom = januar(2017)
+        val beregningsperiodeTom = desember(2017)
+        meldingPubliserer.behovForSammenligningsgrunnlag(BehovForSammenligningsgrunnlag(skjæringstidspunkt, beregningsperiodeFom, beregningsperiodeTom))
+        meldingPubliserer.sendMeldinger()
+
+        val message = testRapid.inspektør.message(0)
+        val behovdata = message["InntekterForSammenligningsgrunnlag"]
+
+        assertEquals("behov", message["@event_name"].asText())
+        assertEquals(listOf("InntekterForSammenligningsgrunnlag"), message["@behov"].map { it.asText() })
+        assertEquals(beregningsperiodeFom, behovdata["beregningStart"].asYearMonth())
+        assertEquals(beregningsperiodeTom, behovdata["beregningSlutt"].asYearMonth())
+        assertEquals(skjæringstidspunkt, behovdata["skjæringstidspunkt"].asLocalDate())
+        assertEquals(behovId, behovdata["avviksvurderingBehovId"].asUUID())
+    }
 
     @Test
     fun `lag subsumsjonsmelding for fastsettelse etter hovedregel - 8-30 ledd 1`() {
