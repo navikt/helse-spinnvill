@@ -26,7 +26,7 @@ object TestDatabase {
         "DATABASE_PASSWORD" to postgres.password,
     )
 
-    fun database() = Database.instance(miljøvariabler)
+    fun database() = PgDatabase.instance(miljøvariabler)
 
     fun reset() {
         database().datasource().use {

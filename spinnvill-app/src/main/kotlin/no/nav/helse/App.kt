@@ -1,6 +1,7 @@
 package no.nav.helse
 
 import no.nav.helse.db.Database
+import no.nav.helse.db.PgDatabase
 import no.nav.helse.mediator.Mediator
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -27,7 +28,7 @@ class App(private val env: Map<String, String> = System.getenv()) : RapidsConnec
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {
-        database = Database.instance(env)
+        database = PgDatabase.instance(env)
         database.migrate()
     }
 

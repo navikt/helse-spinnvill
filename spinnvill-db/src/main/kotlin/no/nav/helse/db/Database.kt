@@ -13,7 +13,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class Database private constructor(env: Map<String, String>) {
+class PgDatabase private constructor(env: Map<String, String>): Database {
     private val dataSourceBuilder = DataSourceBuilder(env)
     private val avviksvurdering = Avviksvurdering()
     private val avviksvurderingBehovDao = AvviksvurderingBehovDao()
@@ -22,17 +22,17 @@ class Database private constructor(env: Map<String, String>) {
         org.jetbrains.exposed.sql.Database.connect(datasource())
     }
 
-    fun migrate() {
+    override fun migrate() {
         dataSourceBuilder.migrate()
     }
 
-    internal fun datasource(): HikariDataSource = dataSourceBuilder.getDataSource()
+    override fun datasource(): HikariDataSource = dataSourceBuilder.getDataSource()
 
-    fun finnSisteAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
+    override fun finnSisteAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
         return avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
     }
 
-    fun finnUbehandledeAvviksvurderingBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehov? {
+    override fun finnUbehandledeAvviksvurderingBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehov? {
         return avviksvurderingBehovDao.findUløst(fødselsnummer, skjæringstidspunkt)?.let { dto ->
             val jsonNode = jacksonObjectMapper().convertValue<JsonNode>(dto.json)
             AvviksvurderingBehov.fraLagring(
@@ -53,7 +53,7 @@ class Database private constructor(env: Map<String, String>) {
         }
     }
 
-    fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) {
+    override fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) {
         val dto = AvviksvurderingBehovDto(
             avviksvurderingBehov.behovId,
             fødselsnummer = avviksvurderingBehov.fødselsnummer.value,
@@ -65,11 +65,11 @@ class Database private constructor(env: Map<String, String>) {
         avviksvurderingBehovDao.lagre(dto)
     }
 
-    fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<AvviksvurderingDto> {
+    override fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<AvviksvurderingDto> {
         return avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt)
     }
 
-    fun lagreGrunnlagshistorikk(avviksvurderinger: List<AvviksvurderingDto>) {
+    override fun lagreGrunnlagshistorikk(avviksvurderinger: List<AvviksvurderingDto>) {
         avviksvurdering.upsertAll(avviksvurderinger)
     }
 
@@ -77,10 +77,25 @@ class Database private constructor(env: Map<String, String>) {
         private var instance: Database? = null
         fun instance(env: Map<String, String>): Database {
             return instance ?: synchronized(this) {
-                instance ?: Database(env).also { instance = it }
+                instance ?: PgDatabase(env).also { instance = it }
             }
         }
 
         private fun JsonNode.asUUID(): UUID = UUID.fromString(this.asText())
     }
+}
+
+interface Database {
+    fun datasource(): HikariDataSource
+    fun migrate()
+
+    fun finnSisteAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto?
+
+    fun finnUbehandledeAvviksvurderingBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehov?
+
+    fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov)
+
+    fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<AvviksvurderingDto>
+
+    fun lagreGrunnlagshistorikk(avviksvurderinger: List<AvviksvurderingDto>)
 }
