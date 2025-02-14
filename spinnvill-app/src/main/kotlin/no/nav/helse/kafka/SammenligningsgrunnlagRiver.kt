@@ -34,12 +34,14 @@ internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, p
         val fødselsnummer = packet["fødselsnummer"].asText().somFnr()
         val avviksvurderingBehovId = packet["InntekterForSammenligningsgrunnlag.avviksvurderingBehovId"].asUUID()
         val sammenligningsgrunnlag = mapSammenligningsgrunnlag(packet["@løsning.InntekterForSammenligningsgrunnlag"])
-        messageHandler.håndter(SammenligningsgrunnlagLøsning(
-            fødselsnummer = fødselsnummer,
-            skjæringstidspunkt = skjæringstidspunkt,
-            avviksvurderingBehovId = avviksvurderingBehovId,
-            sammenligningsgrunnlag = Sammenligningsgrunnlag(sammenligningsgrunnlag)
-        ))
+        messageHandler.håndter(
+            SammenligningsgrunnlagLøsning(
+                fødselsnummer = fødselsnummer,
+                skjæringstidspunkt = skjæringstidspunkt,
+                avviksvurderingBehovId = avviksvurderingBehovId,
+                sammenligningsgrunnlag = Sammenligningsgrunnlag(sammenligningsgrunnlag)
+            )
+        )
     }
 
     private fun mapSammenligningsgrunnlag(opplysninger: JsonNode) =

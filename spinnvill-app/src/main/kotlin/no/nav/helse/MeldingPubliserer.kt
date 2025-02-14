@@ -106,7 +106,7 @@ class MeldingPubliserer(
                         "innrapporterteInntekter" to vurdering.sammenligningsgrunnlag.inntekter.map { (arbeidsgiverreferanse, inntekter) ->
                             mapOf(
                                 "arbeidsgiverreferanse" to arbeidsgiverreferanse,
-                                "inntekter" to inntekter.map { (årMåned, beløp) ->
+                                "inntekter" to inntekter.map { (beløp, årMåned) ->
                                     mapOf(
                                         "årMåned" to årMåned,
                                         "beløp" to beløp

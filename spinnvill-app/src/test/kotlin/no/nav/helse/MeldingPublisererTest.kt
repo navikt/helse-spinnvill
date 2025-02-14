@@ -7,6 +7,7 @@ import no.nav.helse.avviksvurdering.*
 import no.nav.helse.helpers.*
 import no.nav.helse.kafka.asUUID
 import no.nav.helse.rapids_rivers.asLocalDate
+import no.nav.helse.rapids_rivers.asLocalDateTime
 import no.nav.helse.rapids_rivers.asYearMonth
 import no.nav.helse.rapids_rivers.isMissingOrNull
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -174,7 +175,7 @@ class MeldingPublisererTest {
 
         val løsningNode = behovNode.path("@løsning").path("Avviksvurdering")
         assertEquals("TrengerIkkeNyVurdering", løsningNode.path("utfall").asText())
-        assertNotNull(løsningNode.get("avviksvurderingId"))
+        assertNotNull(løsningNode.get("avviksvurderingId").asUUID())
     }
 
     @Test
@@ -189,31 +190,32 @@ class MeldingPublisererTest {
 
         val løsningNode = behovNode.path("@løsning").path("Avviksvurdering")
         assertEquals("NyVurderingForetatt", løsningNode.path("utfall").asText())
-        assertNotNull(løsningNode.get("avviksvurderingId"))
-        assertNotNull(løsningNode.get("harAkseptabeltAvvik"))
-        assertNotNull(løsningNode.get("maksimaltTillattAvvik"))
-        assertNotNull(løsningNode.get("opprettet"))
+        assertNotNull(løsningNode.get("avviksvurderingId").asUUID())
+        assertNotNull(løsningNode.get("harAkseptabeltAvvik").asBoolean())
+        assertNotNull(løsningNode.get("maksimaltTillattAvvik").asDouble())
+        assertNotNull(løsningNode.get("avviksprosent").asDouble())
+        assertNotNull(løsningNode.get("opprettet").asLocalDateTime())
 
         val beregningsgrunnlagNode = løsningNode.path("beregningsgrunnlag")
-        assertNotNull(beregningsgrunnlagNode.get("totalbeløp"))
+        assertNotNull(beregningsgrunnlagNode.get("totalbeløp").asDouble())
         val omregnedeÅrsinntekter = beregningsgrunnlagNode.path("omregnedeÅrsinntekter") as ArrayNode
         assertFalse(omregnedeÅrsinntekter.isEmpty)
         omregnedeÅrsinntekter.forEach {
-            assertNotNull(it.get("arbeidsgiverreferanse"))
-            assertNotNull(it.get("beløp"))
+            assertNotNull(it.get("arbeidsgiverreferanse").asText().somArbeidsgiverref())
+            assertNotNull(it.get("beløp").asDouble())
         }
 
         val sammenligningsgrunnlagNode = løsningNode.path("sammenligningsgrunnlag")
-        assertNotNull(sammenligningsgrunnlagNode.get("totalbeløp"))
+        assertNotNull(sammenligningsgrunnlagNode.get("totalbeløp").asDouble())
         val innrapporterteInntekterNode = sammenligningsgrunnlagNode.path("innrapporterteInntekter") as ArrayNode
         assertFalse(innrapporterteInntekterNode.isEmpty)
         innrapporterteInntekterNode.forEach { innrapportertInntekt ->
-            assertNotNull(innrapportertInntekt.get("arbeidsgiverreferanse"))
+            assertNotNull(innrapportertInntekt.get("arbeidsgiverreferanse").asText().somArbeidsgiverref())
             val inntekterNode = innrapportertInntekt.path("inntekter") as ArrayNode
             assertFalse(inntekterNode.isEmpty)
             inntekterNode.forEach { inntekt ->
-                assertNotNull(inntekt.get("årMåned"))
-                assertNotNull(inntekt.get("beløp"))
+                assertNotNull(inntekt.get("årMåned").asYearMonth())
+                assertNotNull(inntekt.get("beløp").asDouble())
             }
         }
     }

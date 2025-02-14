@@ -91,7 +91,10 @@ class Mediator(
 
         val meldingPubliserer = MeldingPubliserer(rapidsConnection, avviksvurderingBehov, versjonAvKode)
         val avviksvurderinger = hentGrunnlagshistorikk(fødselsnummer, skjæringstidspunkt)
-        val resultat = avviksvurderinger.nyttSammenligningsgrunnlag(sammenligningsgrunnlagLøsning.sammenligningsgrunnlag, avviksvurderingBehov.beregningsgrunnlag)
+        val resultat = avviksvurderinger.nyttSammenligningsgrunnlag(
+            sammenligningsgrunnlag = sammenligningsgrunnlagLøsning.sammenligningsgrunnlag,
+            beregningsgrunnlag = avviksvurderingBehov.beregningsgrunnlag
+        )
         vurderAvvik(resultat, meldingPubliserer, avviksvurderingBehov)
         avviksvurderinger.lagre()
         meldingPubliserer.sendMeldinger()
