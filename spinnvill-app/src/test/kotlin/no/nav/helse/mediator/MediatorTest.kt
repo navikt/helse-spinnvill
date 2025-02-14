@@ -7,10 +7,12 @@ import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.Inntektstype.LØNNSINNTE
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.MånedligInntekt
 import no.nav.helse.db.Database
 import no.nav.helse.dto.AvviksvurderingDto
+import no.nav.helse.helpers.dummyBeregningsgrunnlag
 import no.nav.helse.helpers.januar
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -50,6 +52,29 @@ class MediatorTest {
     }
 
     @Test
+    fun `filtrerer vekk infotrygdAvviksvurderinger fordi disse skal ikke brukes videre og `() {
+        val database = databaseStub()
+        val testRapid = TestRapid()
+        val mediator = Mediator(VersjonAvKode("versjon"), testRapid) { database }
+
+        database.finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt)
+        mediator.håndter(
+            AvviksvurderingBehov.nyttBehov(
+                vilkårsgrunnlagId = UUID.randomUUID(),
+                behovId = UUID.randomUUID(),
+                skjæringstidspunkt = skjæringstidspunkt,
+                fødselsnummer = fødselsnummer,
+                vedtaksperiodeId = UUID.randomUUID(),
+                organisasjonsnummer = organisasjonsnummer,
+                beregningsgrunnlag = dummyBeregningsgrunnlag,
+                json = emptyMap()
+            )
+        )
+        assertEquals(1, testRapid.inspektør.size)
+        assertEquals(listOf("InntekterForSammenligningsgrunnlag"), testRapid.inspektør.message(0)["@behov"].map { it.asText() })
+    }
+
+    @Test
     fun `ignorerer sammenligningsgrunnlag-løsning dersom ubehandlet behov ikke har samme id som avviksvurderingbehov-iden på løsningen`() {
         val enBehovId = UUID.randomUUID()
         val enAnnenBehovId = UUID.randomUUID()
@@ -78,9 +103,22 @@ class MediatorTest {
         override fun datasource(): HikariDataSource = error("Not implemented in test")
         override fun migrate() = error("Not implemented in test")
         override fun finnSisteAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto = error("Not implemented in test")
-        override fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) = error("Not implemented in test")
-        override fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<AvviksvurderingDto> = error("Not implemented in test")
-        override fun lagreGrunnlagshistorikk(avviksvurderinger: List<AvviksvurderingDto>) = error("Not implemented in test")
+        override fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) {}
+        override fun finnAvviksvurderingsgrunnlag(
+            fødselsnummer: Fødselsnummer,
+            skjæringstidspunkt: LocalDate,
+        ): List<AvviksvurderingDto> = listOf(
+            AvviksvurderingDto(
+                UUID.randomUUID(),
+                fødselsnummer,
+                skjæringstidspunkt,
+                LocalDateTime.now(),
+                AvviksvurderingDto.KildeDto.INFOTRYGD,
+                AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()),
+                AvviksvurderingDto.BeregningsgrunnlagDto(emptyMap())
+            )
+        )
+        override fun lagreGrunnlagshistorikk(avviksvurderinger: List<AvviksvurderingDto>) {}
 
         override fun finnUbehandledeAvviksvurderingBehov(
             fødselsnummer: Fødselsnummer,

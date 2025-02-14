@@ -66,7 +66,7 @@ class Mediator(
         if (harUbehandletBehov(behov.fødselsnummer, behov.skjæringstidspunkt)) return
 
         behov.lagre()
-        val avviksvurderinger = hentGrunnlagshistorikk(behov.fødselsnummer, behov.skjæringstidspunkt)
+        val avviksvurderinger = hentGrunnlagshistorikkUtenInfotrygd(behov.fødselsnummer, behov.skjæringstidspunkt)
 
         when (val resultat = avviksvurderinger.nyttBeregningsgrunnlag(beregningsgrunnlag = behov.beregningsgrunnlag)) {
             is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> meldingPubliserer.behovForSammenligningsgrunnlag(resultat.behov)
@@ -154,6 +154,13 @@ class Mediator(
 
     private fun hentGrunnlagshistorikk(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Grunnlagshistorikk {
         val grunnlag = database.finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt).map { it.tilDomene() }
+        return Grunnlagshistorikk(fødselsnummer, skjæringstidspunkt, grunnlag)
+    }
+
+    private fun hentGrunnlagshistorikkUtenInfotrygd(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Grunnlagshistorikk {
+        val grunnlag = database.finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt)
+            .filterNot { it.kilde == AvviksvurderingDto.KildeDto.INFOTRYGD }
+            .map { it.tilDomene() }
         return Grunnlagshistorikk(fødselsnummer, skjæringstidspunkt, grunnlag)
     }
 
