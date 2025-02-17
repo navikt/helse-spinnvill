@@ -77,10 +77,10 @@ class AvviksvurderingbehovRiverTest {
                     "Avviksvurdering"
                 ],
                 "fødselsnummer": "$fødselsnummer",
-                "organisasjonsnummer": "$organisasjonsnummer",
-                "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
                 "Avviksvurdering": {
-                  "skjæringstidspunkt": "$skjæringstidspunkt",
+                    "organisasjonsnummer": "$organisasjonsnummer",
+                    "vedtaksperiodeId": "d6a1575f-a241-4338-baea-26df557f7506",
+                    "skjæringstidspunkt": "$skjæringstidspunkt",
                     "vilkårsgrunnlagId": "87b9339d-a67d-49b0-af36-c93d6f9249ae",
                     "omregnedeÅrsinntekter": [
                         {

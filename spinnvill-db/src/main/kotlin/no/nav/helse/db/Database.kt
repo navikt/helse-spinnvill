@@ -40,8 +40,8 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
                 vilkårsgrunnlagId = jsonNode["Avviksvurdering"].get("vilkårsgrunnlagId").asUUID(),
                 skjæringstidspunkt = dto.skjæringstidspunkt,
                 fødselsnummer = dto.fødselsnummer.somFnr(),
-                vedtaksperiodeId = jsonNode["vedtaksperiodeId"].asUUID(),
-                organisasjonsnummer = jsonNode["organisasjonsnummer"].asText().somArbeidsgiverref(),
+                vedtaksperiodeId = jsonNode["Avviksvurdering"].get("vedtaksperiodeId").asUUID(),
+                organisasjonsnummer = jsonNode["Avviksvurdering"].get("organisasjonsnummer").asText().somArbeidsgiverref(),
                 løst = dto.løst != null,
                 beregningsgrunnlag = Beregningsgrunnlag.opprett(
                     jsonNode["Avviksvurdering"].get("omregnedeÅrsinntekter").associate {

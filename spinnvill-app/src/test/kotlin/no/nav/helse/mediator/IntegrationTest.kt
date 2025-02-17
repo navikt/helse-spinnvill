@@ -427,10 +427,10 @@ internal class IntegrationTest {
                     "Avviksvurdering"
                 ],
                 "fødselsnummer": "$fødselsnummer",
-                "organisasjonsnummer": "$organisasjonsnummer",
-                "vedtaksperiodeId": "$vedtaksperiodeId",
                 "Avviksvurdering": {
-                  "skjæringstidspunkt": "$skjæringstidspunkt",
+                    "organisasjonsnummer": "$organisasjonsnummer",
+                    "vedtaksperiodeId": "$vedtaksperiodeId",
+                    "skjæringstidspunkt": "$skjæringstidspunkt",
                     "vilkårsgrunnlagId": "87b9339d-a67d-49b0-af36-c93d6f9249ae",
                     "omregnedeÅrsinntekter": ${beregningsgrunnlagDto.toJson()} 
                 },

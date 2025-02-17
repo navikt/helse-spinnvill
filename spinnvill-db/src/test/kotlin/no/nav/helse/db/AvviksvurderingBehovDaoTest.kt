@@ -27,7 +27,10 @@ internal class AvviksvurderingBehovDaoTest {
         val etAvviksvurderingBehov = etAvviksvurderingBehov()
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
 
-        val funnetAvviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(etAvviksvurderingBehov.fødselsnummer, etAvviksvurderingBehov.skjæringstidspunkt)
+        val funnetAvviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(
+            etAvviksvurderingBehov.fødselsnummer,
+            etAvviksvurderingBehov.skjæringstidspunkt
+        )
 
         assertNotNull(funnetAvviksvurderingBehov)
         assertEquals(etAvviksvurderingBehov.behovId, funnetAvviksvurderingBehov?.behovId)
@@ -39,12 +42,14 @@ internal class AvviksvurderingBehovDaoTest {
     fun `Finner ikke et løst avviksvurderingBehov når avviksvurdering-behovet er løst`() {
         val fødselsnummer = "12345678910"
         val skjæringstidspunkt = 1.januar
-        val etAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt)
+        val etAvviksvurderingBehov =
+            etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt = skjæringstidspunkt)
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
         etAvviksvurderingBehov.løs()
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
 
-        val funnetAvviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
+        val funnetAvviksvurderingBehov =
+            database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
 
         assertNull(funnetAvviksvurderingBehov)
     }
@@ -54,14 +59,20 @@ internal class AvviksvurderingBehovDaoTest {
         val fødselsnummer = "12345678910"
         val skjæringstidspunkt = 1.januar
         val id = UUID.randomUUID()
-        val etAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt, id = UUID.randomUUID())
-        val etTilAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt, id = id)
+        val etAvviksvurderingBehov = etAvviksvurderingBehov(
+            fødselsnummer = fødselsnummer,
+            skjæringstidspunkt = skjæringstidspunkt,
+            id = UUID.randomUUID()
+        )
+        val etTilAvviksvurderingBehov =
+            etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt = skjæringstidspunkt, id = id)
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
         database.lagreAvviksvurderingBehov(etTilAvviksvurderingBehov)
         etAvviksvurderingBehov.løs()
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
 
-        val funnetAvviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
+        val funnetAvviksvurderingBehov =
+            database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
 
         assertNotNull(funnetAvviksvurderingBehov)
         assertEquals(id, funnetAvviksvurderingBehov?.behovId)
@@ -74,13 +85,20 @@ internal class AvviksvurderingBehovDaoTest {
         val etTilSkjæringstidspunkt = 1.februar
         val id = UUID.randomUUID()
         val enTilId = UUID.randomUUID()
-        val etAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= skjæringstidspunkt, id = id)
-        val etTilAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt= etTilSkjæringstidspunkt, id = enTilId)
+        val etAvviksvurderingBehov =
+            etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt = skjæringstidspunkt, id = id)
+        val etTilAvviksvurderingBehov = etAvviksvurderingBehov(
+            fødselsnummer = fødselsnummer,
+            skjæringstidspunkt = etTilSkjæringstidspunkt,
+            id = enTilId
+        )
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
         database.lagreAvviksvurderingBehov(etTilAvviksvurderingBehov)
 
-        val funnetAvviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
-        val etTilfunnetAvviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), etTilSkjæringstidspunkt)
+        val funnetAvviksvurderingBehov =
+            database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
+        val etTilfunnetAvviksvurderingBehov =
+            database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), etTilSkjæringstidspunkt)
 
         assertNotNull(funnetAvviksvurderingBehov)
         assertNotNull(etTilfunnetAvviksvurderingBehov)
@@ -95,7 +113,8 @@ internal class AvviksvurderingBehovDaoTest {
         val etAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer, skjæringstidspunkt)
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
 
-        val funnetAvviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
+        val funnetAvviksvurderingBehov =
+            database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
 
         assertNotNull(funnetAvviksvurderingBehov)
         assertEquals(etAvviksvurderingBehov.behovId, funnetAvviksvurderingBehov?.behovId)
@@ -127,9 +146,9 @@ internal class AvviksvurderingBehovDaoTest {
                 ),
             ),
             json = mapOf(
-                "organisasjonsnummer" to organisasjonsnummer,
-                "vedtaksperiodeId" to vedtaksperiodeId,
                 "Avviksvurdering" to mapOf(
+                    "organisasjonsnummer" to organisasjonsnummer,
+                    "vedtaksperiodeId" to vedtaksperiodeId,
                     "vilkårsgrunnlagId" to vilkårsgrunnlagId,
                     "omregnedeÅrsinntekter" to listOf(
                         mapOf(
