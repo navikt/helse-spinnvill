@@ -49,6 +49,12 @@ spec:
             value: "true"
           - name: pgaudit.log
             value: "write"
+  accessPolicy:
+    outbound:
+      external:
+        - host: tbd-unleash-api.nav.cloud.nais.io
+  envFrom:
+    - secret: spinnvill-unleash-api-token
   env:
     - name: KAFKA_RAPID_TOPIC
       value: tbd.rapid.v1
