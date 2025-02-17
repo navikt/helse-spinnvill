@@ -24,7 +24,8 @@ class MeldingPublisererTest {
     private val vedtaksperiodeId = UUID.randomUUID()
     private val vilkårsgrunnlagId = UUID.randomUUID()
     private val behovId = UUID.randomUUID()
-    private val versjonAvKode = VersjonAvKode("hello")
+    val versjonAvKodeValue = "hello"
+    private val versjonAvKode = VersjonAvKode(versjonAvKodeValue)
     private val beregningsgrunnlag = dummyBeregningsgrunnlag
     private val sammenligningsgrunnlag = dummySammenligningsgrunnlag
     private val testRapid = TestRapid()
@@ -90,6 +91,7 @@ class MeldingPublisererTest {
         assertEquals("VILKAR_BEREGNET", subsumsjon["utfall"].asText())
         assertEquals("folketrygdloven", subsumsjon["lovverk"].asText())
         assertEquals("2019-01-01", subsumsjon["lovverksversjon"].asText())
+        assertEquals(versjonAvKodeValue, subsumsjon["versjonAvKode"].asText())
 
         assertPresent(subsumsjon["input"])
         assertPresent(subsumsjon["output"])
@@ -124,6 +126,7 @@ class MeldingPublisererTest {
         assertEquals("VILKAR_BEREGNET", subsumsjon["utfall"].asText())
         assertEquals("folketrygdloven", subsumsjon["lovverk"].asText())
         assertEquals("2019-01-01", subsumsjon["lovverksversjon"].asText())
+        assertEquals(versjonAvKodeValue, subsumsjon["versjonAvKode"].asText())
 
         assertPresent(subsumsjon["input"])
         val input = subsumsjon["input"]

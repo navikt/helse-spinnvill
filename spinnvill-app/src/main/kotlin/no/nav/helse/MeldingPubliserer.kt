@@ -61,7 +61,7 @@ class MeldingPubliserer(
                             "vilkårsgrunnlag" to listOf(avviksvurderingBehov.vilkårsgrunnlagId.toString())
                         ),
                     )
-                    "versjonAvKode" to versjonAvKode.value
+                    put("versjonAvKode", versjonAvKode.value)
                     if (dto.ledd != null) put("ledd", dto.ledd)
                     if (dto.bokstav != null) put("bokstav", dto.bokstav)
                     if (dto.punktum != null) put("punktum", dto.punktum)
