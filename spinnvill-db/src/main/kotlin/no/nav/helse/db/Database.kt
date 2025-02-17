@@ -28,10 +28,6 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
 
     override fun datasource(): HikariDataSource = dataSourceBuilder.getDataSource()
 
-    override fun finnSisteAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
-        return avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
-    }
-
     override fun finnUbehandletAvviksvurderingBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehov? {
         return avviksvurderingBehovDao.findUløst(fødselsnummer, skjæringstidspunkt)?.let { dto ->
             val jsonNode = jacksonObjectMapper().convertValue<JsonNode>(dto.json)
@@ -88,8 +84,6 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
 interface Database {
     fun datasource(): HikariDataSource
     fun migrate()
-
-    fun finnSisteAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto?
 
     fun finnUbehandletAvviksvurderingBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehov?
 

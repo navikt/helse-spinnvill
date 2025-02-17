@@ -46,7 +46,7 @@ class MediatorTest {
     fun `ignorerer sammenligningsgrunnlag-løsning dersom det ikke finnes noe ubehandlet avviksvurdering-behov`() {
         val database = databaseStub()
         val testRapid = TestRapid()
-        val mediator = Mediator(VersjonAvKode("versjon"), testRapid, object : FeatureToggles {}) { database }
+        val mediator = Mediator(VersjonAvKode("versjon"), testRapid) { database }
         mediator.håndter(SammenligningsgrunnlagLøsning(fødselsnummer, skjæringstidspunkt, UUID.randomUUID(), sammenligningsgrunnlag))
         assertEquals(0, testRapid.inspektør.size)
     }
@@ -55,7 +55,7 @@ class MediatorTest {
     fun `filtrerer vekk infotrygdAvviksvurderinger fordi disse skal ikke brukes videre og `() {
         val database = databaseStub()
         val testRapid = TestRapid()
-        val mediator = Mediator(VersjonAvKode("versjon"), testRapid, object : FeatureToggles {}) { database }
+        val mediator = Mediator(VersjonAvKode("versjon"), testRapid) { database }
 
         database.finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt)
         mediator.håndter(
@@ -81,7 +81,7 @@ class MediatorTest {
         val etUbehandletAvviksvurderingBehov = avviksvurderingBehov(enBehovId)
         val database = databaseStub(etUbehandletAvviksvurderingBehov)
         val testRapid = TestRapid()
-        val mediator = Mediator(VersjonAvKode("versjon"), testRapid, object : FeatureToggles {}) { database }
+        val mediator = Mediator(VersjonAvKode("versjon"), testRapid) { database }
         mediator.håndter(SammenligningsgrunnlagLøsning(fødselsnummer, skjæringstidspunkt, enAnnenBehovId, sammenligningsgrunnlag))
         assertEquals(0, testRapid.inspektør.size)
     }
@@ -102,7 +102,6 @@ class MediatorTest {
     private fun databaseStub(returnedAvviksvurderingBehov: AvviksvurderingBehov? = null) = object : Database {
         override fun datasource(): HikariDataSource = error("Not implemented in test")
         override fun migrate() = error("Not implemented in test")
-        override fun finnSisteAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto = error("Not implemented in test")
         override fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) {}
         override fun finnAvviksvurderingsgrunnlag(
             fødselsnummer: Fødselsnummer,

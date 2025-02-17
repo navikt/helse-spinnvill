@@ -19,13 +19,11 @@ class AvviksvurderingbehovRiverTest {
 
     private val messageHandler = object : MessageHandler {
         val behov = mutableListOf<AvviksvurderingBehov>()
-        override fun håndter(message: GodkjenningsbehovMessage) {}
 
         override fun håndter(behov: AvviksvurderingBehov) {
             this.behov.add(behov)
         }
 
-        override fun håndter(sammenligningsgrunnlagMessageOld: SammenligningsgrunnlagMessageOld) {}
         override fun håndter(løsning: SammenligningsgrunnlagLøsning) {}
     }
 
@@ -112,4 +110,9 @@ class AvviksvurderingbehovRiverTest {
     ) = avviksvurderingJsonNode(fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
         .med("@løsning" to "{}")
         .let(objectMapper::writeValueAsString)
+
+    private fun ObjectNode.med(vararg felter: Pair<String, Any>): ObjectNode {
+        felter.forEach { (key, value) -> replace(key, objectMapper.valueToTree(value)) }
+        return this
+    }
 }

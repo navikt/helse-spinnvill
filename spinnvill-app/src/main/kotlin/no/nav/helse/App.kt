@@ -19,7 +19,6 @@ class App(private val env: Map<String, String> = System.getenv()) : RapidsConnec
         Mediator(
             versjonAvKode = VersjonAvKode(versjonAvKode(env)),
             rapidsConnection = rapidsConnection,
-            featureToggles = UnleashFeatureToggles(env),
             databaseProvider = { database }
         )
     }

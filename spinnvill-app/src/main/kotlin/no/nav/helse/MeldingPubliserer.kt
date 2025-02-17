@@ -5,10 +5,10 @@ import no.nav.helse.avviksvurdering.AvviksvurderingBehov
 import no.nav.helse.avviksvurdering.BehovForSammenligningsgrunnlag
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.mediator.producer.Message
-import no.nav.helse.mediator.producer.SubsumsjonProducer
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 class MeldingPubliserer(
@@ -36,7 +36,7 @@ class MeldingPubliserer(
         }
     }
 
-    private fun SubsumsjonProducer.SubsumsjonsmeldingDto.tilMelding(): Message.Hendelse {
+    private fun SubsumsjonsmeldingDto.tilMelding(): Message.Hendelse {
         val dto = this
         return Message.Hendelse(
             navn = "subsumsjon",
@@ -142,14 +142,14 @@ class MeldingPubliserer(
     }
 
     internal fun `8-30 ledd 1`(beregningsgrunnlag: Beregningsgrunnlag) {
-        val subsumsjon = SubsumsjonProducer.SubsumsjonsmeldingDto(
+        val subsumsjon = SubsumsjonsmeldingDto(
             paragraf = "8-30",
             ledd = 1,
             bokstav = null,
             punktum = null,
             lovverk = "folketrygdloven",
             lovverksversjon = LocalDate.of(2019, 1, 1),
-            utfall = SubsumsjonProducer.Utfall.VILKAR_BEREGNET,
+            utfall = Utfall.VILKAR_BEREGNET,
             input = mapOf(
                 "omregnedeÅrsinntekter" to beregningsgrunnlag.omregnedeÅrsinntekter.map { (arbeidsgiverreferanse, omregnetÅrsinntekt) ->
                     mapOf(
@@ -168,14 +168,14 @@ class MeldingPubliserer(
     internal fun `8-30 ledd 2 punktum 1`(avviksvurdering: Avviksvurdering) {
         val beregningsgrunnlag = avviksvurdering.beregningsgrunnlag
         val sammenligningsgrunnlag = avviksvurdering.sammenligningsgrunnlag
-        val subsumsjon = SubsumsjonProducer.SubsumsjonsmeldingDto(
+        val subsumsjon = SubsumsjonsmeldingDto(
             paragraf = "8-30",
             ledd = 2,
             bokstav = null,
             punktum = 1,
             lovverk = "folketrygdloven",
             lovverksversjon = LocalDate.of(2019, 1, 1),
-            utfall = SubsumsjonProducer.Utfall.VILKAR_BEREGNET,
+            utfall = Utfall.VILKAR_BEREGNET,
             input = mapOf(
                 "maksimaltTillattAvvikPåÅrsinntekt" to avviksvurdering.maksimaltTillattAvvik,
                 "grunnlagForSykepengegrunnlag" to mapOf(
@@ -216,5 +216,24 @@ class MeldingPubliserer(
             )
         )
         meldinger.add(subsumsjon.tilMelding())
+    }
+
+    internal data class SubsumsjonsmeldingDto(
+        val paragraf: String,
+        val ledd: Int?,
+        val bokstav: String?,
+        val punktum: Int?,
+        val lovverk: String,
+        val lovverksversjon: LocalDate,
+        val utfall: Utfall,
+        val input: Map<String, Any>,
+        val output: Map<String, Any>,
+    ) {
+        val id: UUID = UUID.randomUUID()
+        val tidsstempel: LocalDateTime = LocalDateTime.now()
+    }
+
+    internal enum class Utfall {
+        VILKAR_OPPFYLT, VILKAR_IKKE_OPPFYLT, VILKAR_UAVKLART, VILKAR_BEREGNET
     }
 }
