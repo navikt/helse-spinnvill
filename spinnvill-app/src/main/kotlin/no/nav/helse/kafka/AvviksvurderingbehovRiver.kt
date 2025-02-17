@@ -31,9 +31,10 @@ internal class AvviksvurderingbehovRiver(rapidsConnection: RapidsConnection, pri
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
+        logg.info("Leser avviksvurdering-behov")
         sikkerlogg.info(
-            "Leser avviksvurderingbehov {}",
-            kv("Fødselsnummer", packet["fødselsnummer"].asText())
+            "Leser avviksvurdering-behov for {}",
+            kv("fødselsnummer", packet["fødselsnummer"].asText())
         )
         messageHandler.håndter(
             AvviksvurderingBehov.nyttBehov(
@@ -53,5 +54,6 @@ internal class AvviksvurderingbehovRiver(rapidsConnection: RapidsConnection, pri
 
     private companion object {
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
+        private val logg = LoggerFactory.getLogger(this::class.java)
     }
 }

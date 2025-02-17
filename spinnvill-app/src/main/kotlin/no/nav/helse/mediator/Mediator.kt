@@ -101,15 +101,20 @@ class Mediator(
         val meldingPubliserer = MeldingPubliserer(rapidsConnection, behov, versjonAvKode)
         if (harUbesvartBehov(behov.fødselsnummer, behov.skjæringstidspunkt)) return
 
+        logg.info("Behandler avviksvurdering-behov")
+        sikkerlogg.info("Behandler avviksvurdering-behov for {}", kv("fødselsnummer", behov.fødselsnummer))
+
         behov.lagre()
         val avviksvurderinger = hentGrunnlagshistorikkUtenInfotrygd(behov.fødselsnummer, behov.skjæringstidspunkt)
 
         when (val resultat = avviksvurderinger.nyttBeregningsgrunnlag(beregningsgrunnlag = behov.beregningsgrunnlag)) {
-            is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> meldingPubliserer.behovForSammenligningsgrunnlag(
-                resultat.behov
-            )
+            is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> {
+                logg.info("Ber om sammenligningsgrunnlag")
+                meldingPubliserer.behovForSammenligningsgrunnlag(resultat.behov)
+            }
 
             is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> {
+                logg.info("Trenger ikke foreta ny vurdering")
                 meldingPubliserer.behovløsningUtenVurdering(resultat.gjeldendeGrunnlag.id)
                 markerBehovSomLøst(behov)
             }
@@ -129,6 +134,9 @@ class Mediator(
         val avviksvurderingBehov =
             database.finnUbehandletAvviksvurderingBehov(fødselsnummer, skjæringstidspunkt) ?: return
         if (avviksvurderingBehov.behovId != sammenligningsgrunnlagLøsning.avviksvurderingBehovId) return
+
+        logg.info("Behandler sammenligningsgrunnlag-løsning")
+        sikkerlogg.info("Behandler sammenligningsgrunnlag-løsning for {}", kv("fødselsnummer", sammenligningsgrunnlagLøsning.fødselsnummer))
 
         val meldingPubliserer = MeldingPubliserer(rapidsConnection, avviksvurderingBehov, versjonAvKode)
         val avviksvurderinger = hentGrunnlagshistorikk(fødselsnummer, skjæringstidspunkt)
@@ -150,6 +158,7 @@ class Mediator(
         meldingPubliserer.`8-30 ledd 2 punktum 1`(avviksvurdering)
         if (avviksvurdering.harAkseptabeltAvvik) meldingPubliserer.`8-30 ledd 1`(avviksvurdering.beregningsgrunnlag)
         meldingPubliserer.behovløsningMedVurdering(avviksvurdering)
+        logg.info("Ny vurdering foretatt")
         markerBehovSomLøst(avviksvurderingBehov)
     }
 

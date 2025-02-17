@@ -2,6 +2,7 @@ package no.nav.helse.kafka
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.*
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.Inntektstype
@@ -9,6 +10,7 @@ import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.MånedligInntekt
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import no.nav.helse.avviksvurdering.SammenligningsgrunnlagLøsning
 import no.nav.helse.rapids_rivers.*
+import org.slf4j.LoggerFactory
 
 internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, private val messageHandler: MessageHandler) : River.PacketListener {
     init {
@@ -34,6 +36,8 @@ internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, p
         val fødselsnummer = packet["fødselsnummer"].asText().somFnr()
         val avviksvurderingBehovId = packet["InntekterForSammenligningsgrunnlag.avviksvurderingBehovId"].asUUID()
         val sammenligningsgrunnlag = mapSammenligningsgrunnlag(packet["@løsning.InntekterForSammenligningsgrunnlag"])
+        logg.info("Leser sammenligningsgrunnlag-løsning")
+        sikkerlogg.info("Leser sammenligningsgrunnlag-løsning for {}", kv("fødselsnummer", fødselsnummer))
         messageHandler.håndter(
             SammenligningsgrunnlagLøsning(
                 fødselsnummer = fødselsnummer,
@@ -75,5 +79,10 @@ internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, p
         path("orgnummer").isTextual -> path("orgnummer").asText().somArbeidsgiverref()
         path("fødselsnummer").isTextual -> path("fødselsnummer").asText().somArbeidsgiverref()
         else -> error("Mangler arbeidsgiver for inntekt i svar på sammenligningsgrunnlagbehov")
+    }
+
+    private companion object {
+        private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
+        private val logg = LoggerFactory.getLogger(this::class.java)
     }
 }
