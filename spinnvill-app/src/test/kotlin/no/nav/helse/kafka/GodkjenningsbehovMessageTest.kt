@@ -2,6 +2,7 @@
 
 package no.nav.helse.kafka
 
+import no.nav.helse.FeatureToggles
 import no.nav.helse.avviksvurdering.AvviksvurderingBehov
 import no.nav.helse.avviksvurdering.SammenligningsgrunnlagLøsning
 import no.nav.helse.helpers.januar
@@ -29,7 +30,7 @@ class GodkjenningsbehovMessageTest {
     }
 
     init {
-        GodkjenningsbehovRiver(testRapid, messageHandler)
+        GodkjenningsbehovRiver(testRapid, messageHandler, object: FeatureToggles {})
     }
 
     @Test

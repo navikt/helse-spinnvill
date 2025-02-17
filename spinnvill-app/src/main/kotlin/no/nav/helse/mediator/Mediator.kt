@@ -22,9 +22,7 @@ class Mediator(
     private val database by lazy(databaseProvider)
 
     init {
-        if (!featureToggles.skalBenytteNyAvviksvurderingløype()) {
-            GodkjenningsbehovRiver(rapidsConnection, this)
-        }
+        GodkjenningsbehovRiver(rapidsConnection, this, featureToggles)
         SammenligningsgrunnlagRiverOld(rapidsConnection, this)
         SammenligningsgrunnlagRiver(rapidsConnection, this)
         AvviksvurderingbehovRiver(rapidsConnection, this)
