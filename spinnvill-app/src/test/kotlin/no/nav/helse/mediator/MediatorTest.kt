@@ -120,7 +120,7 @@ class MediatorTest {
         )
         override fun lagreGrunnlagshistorikk(avviksvurderinger: List<AvviksvurderingDto>) {}
 
-        override fun finnUbehandledeAvviksvurderingBehov(
+        override fun finnUbehandletAvviksvurderingBehov(
             fødselsnummer: Fødselsnummer,
             skjæringstidspunkt: LocalDate,
         ): AvviksvurderingBehov? = returnedAvviksvurderingBehov

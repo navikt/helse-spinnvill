@@ -81,6 +81,25 @@ class GrunnlagshistorikkTest {
     }
 
     @Test
+    fun `nytt avviksvurderingsgrunnlag blir lagt til i historikken når vi mottar nytt beregningsgrunnlag som utløser ny avviksvurdering`() {
+        val avviksvurderinger = avviksvurderinger()
+        avviksvurderinger.nyttSammenligningsgrunnlag(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0), beregningsgrunnlag(arbeidsgiver to 600000.0))
+        avviksvurderinger.nyttBeregningsgrunnlag(beregningsgrunnlag(arbeidsgiver to 500000.0)) // Trigger ny avviksvurdering
+        val resultat = avviksvurderinger.nyttBeregningsgrunnlag(beregningsgrunnlag(arbeidsgiver to 500000.0)) // Skal ikke trigge ny avviksvurdering fordi den har likt beregningsgrunnlag som linja over
+
+        assertIs<Avviksvurderingsresultat.TrengerIkkeNyVurdering>(resultat)
+        assertEquals(2, avviksvurderinger.grunnlagene().size)
+    }
+
+    @Test
+    fun `nytt avviksvurderingsgrunnlag blir lagt til i historikken når vi mottar sammenligningsgrunnlag`() {
+        val avviksvurderinger = avviksvurderinger()
+        avviksvurderinger.nyttSammenligningsgrunnlag(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0), beregningsgrunnlag(arbeidsgiver to 600000.0))
+
+        assertEquals(1, avviksvurderinger.grunnlagene().size)
+    }
+
+    @Test
     fun `be om sammenligningsgrunnlag hvis det ikke er gjort noen avviksvurderinger enda - old`() {
         val avviksvurderinger = avviksvurderinger()
         val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))

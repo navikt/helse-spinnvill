@@ -32,7 +32,7 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
         return avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
     }
 
-    override fun finnUbehandledeAvviksvurderingBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehov? {
+    override fun finnUbehandletAvviksvurderingBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehov? {
         return avviksvurderingBehovDao.findUløst(fødselsnummer, skjæringstidspunkt)?.let { dto ->
             val jsonNode = jacksonObjectMapper().convertValue<JsonNode>(dto.json)
             AvviksvurderingBehov.fraLagring(
@@ -91,7 +91,7 @@ interface Database {
 
     fun finnSisteAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto?
 
-    fun finnUbehandledeAvviksvurderingBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehov?
+    fun finnUbehandletAvviksvurderingBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehov?
 
     fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov)
 

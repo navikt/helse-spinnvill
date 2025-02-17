@@ -27,6 +27,7 @@ class Mediator(
         AvviksvurderingbehovRiver(rapidsConnection, this)
     }
 
+    @Deprecated("Tilhører gammel løype")
     override fun håndter(message: GodkjenningsbehovMessage) {
         val meldingProducer = nyMeldingProducer(message)
 
@@ -61,62 +62,7 @@ class Mediator(
         meldingProducer.publiserMeldinger()
     }
 
-    override fun håndter(behov: AvviksvurderingBehov) {
-        val meldingPubliserer = MeldingPubliserer(rapidsConnection, behov, versjonAvKode)
-        if (harUbehandletBehov(behov.fødselsnummer, behov.skjæringstidspunkt)) return
-
-        behov.lagre()
-        val avviksvurderinger = hentGrunnlagshistorikkUtenInfotrygd(behov.fødselsnummer, behov.skjæringstidspunkt)
-
-        when (val resultat = avviksvurderinger.nyttBeregningsgrunnlag(beregningsgrunnlag = behov.beregningsgrunnlag)) {
-            is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> meldingPubliserer.behovForSammenligningsgrunnlag(resultat.behov)
-            is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> {
-                meldingPubliserer.behovløsningUtenVurdering(resultat.gjeldendeGrunnlag.id)
-                markerBehovSomLøst(behov)
-            }
-            is Avviksvurderingsresultat.AvvikVurdert -> {
-                vurderAvvik(resultat, meldingPubliserer, behov)
-            }
-        }
-        avviksvurderinger.lagre()
-        meldingPubliserer.sendMeldinger()
-    }
-
-    override fun håndter(sammenligningsgrunnlagLøsning: SammenligningsgrunnlagLøsning) {
-        val fødselsnummer = sammenligningsgrunnlagLøsning.fødselsnummer
-        val skjæringstidspunkt = sammenligningsgrunnlagLøsning.skjæringstidspunkt
-
-        val avviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(fødselsnummer, skjæringstidspunkt) ?: return
-        if (avviksvurderingBehov.behovId != sammenligningsgrunnlagLøsning.avviksvurderingBehovId) return
-
-        val meldingPubliserer = MeldingPubliserer(rapidsConnection, avviksvurderingBehov, versjonAvKode)
-        val avviksvurderinger = hentGrunnlagshistorikk(fødselsnummer, skjæringstidspunkt)
-        val resultat = avviksvurderinger.nyttSammenligningsgrunnlag(
-            sammenligningsgrunnlag = sammenligningsgrunnlagLøsning.sammenligningsgrunnlag,
-            beregningsgrunnlag = avviksvurderingBehov.beregningsgrunnlag
-        )
-        vurderAvvik(resultat, meldingPubliserer, avviksvurderingBehov)
-        avviksvurderinger.lagre()
-        meldingPubliserer.sendMeldinger()
-    }
-
-    private fun vurderAvvik(
-        resultat: Avviksvurderingsresultat.AvvikVurdert,
-        meldingPubliserer: MeldingPubliserer,
-        avviksvurderingBehov: AvviksvurderingBehov,
-    ) {
-        val avviksvurdering = resultat.vurdering
-        meldingPubliserer.`8-30 ledd 2 punktum 1`(avviksvurdering)
-        if (avviksvurdering.harAkseptabeltAvvik) meldingPubliserer.`8-30 ledd 1`(avviksvurdering.beregningsgrunnlag)
-        meldingPubliserer.behovløsningMedVurdering(avviksvurdering)
-        markerBehovSomLøst(avviksvurderingBehov)
-    }
-
-    private fun markerBehovSomLøst(behov: AvviksvurderingBehov) {
-        behov.løs()
-        behov.lagre()
-    }
-
+    @Deprecated("Tilhører gammel løype")
     override fun håndter(sammenligningsgrunnlagMessageOld: SammenligningsgrunnlagMessageOld) {
         val fødselsnummer = Fødselsnummer(sammenligningsgrunnlagMessageOld.fødselsnummer)
         val skjæringstidspunkt = sammenligningsgrunnlagMessageOld.skjæringstidspunkt
@@ -135,6 +81,62 @@ class Mediator(
         rapidsConnection.queueReplayMessage(fødselsnummer.value, sammenligningsgrunnlagMessageOld.utkastTilVedtakJson)
     }
 
+    override fun håndter(behov: AvviksvurderingBehov) {
+        val meldingPubliserer = MeldingPubliserer(rapidsConnection, behov, versjonAvKode)
+        if (harUbesvartBehov(behov.fødselsnummer, behov.skjæringstidspunkt)) return
+
+        behov.lagre()
+        val avviksvurderinger = hentGrunnlagshistorikkUtenInfotrygd(behov.fødselsnummer, behov.skjæringstidspunkt)
+
+        when (val resultat = avviksvurderinger.nyttBeregningsgrunnlag(beregningsgrunnlag = behov.beregningsgrunnlag)) {
+            is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> meldingPubliserer.behovForSammenligningsgrunnlag(resultat.behov)
+            is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> {
+                meldingPubliserer.behovløsningUtenVurdering(resultat.gjeldendeGrunnlag.id)
+                markerBehovSomLøst(behov)
+            }
+            is Avviksvurderingsresultat.AvvikVurdert -> {
+                subsummerOgSvarPåBehov(resultat, meldingPubliserer, behov)
+            }
+        }
+        avviksvurderinger.lagre()
+        meldingPubliserer.sendMeldinger()
+    }
+
+    override fun håndter(sammenligningsgrunnlagLøsning: SammenligningsgrunnlagLøsning) {
+        val fødselsnummer = sammenligningsgrunnlagLøsning.fødselsnummer
+        val skjæringstidspunkt = sammenligningsgrunnlagLøsning.skjæringstidspunkt
+
+        val avviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(fødselsnummer, skjæringstidspunkt) ?: return
+        if (avviksvurderingBehov.behovId != sammenligningsgrunnlagLøsning.avviksvurderingBehovId) return
+
+        val meldingPubliserer = MeldingPubliserer(rapidsConnection, avviksvurderingBehov, versjonAvKode)
+        val avviksvurderinger = hentGrunnlagshistorikk(fødselsnummer, skjæringstidspunkt)
+        val resultat = avviksvurderinger.nyttSammenligningsgrunnlag(
+            sammenligningsgrunnlag = sammenligningsgrunnlagLøsning.sammenligningsgrunnlag,
+            beregningsgrunnlag = avviksvurderingBehov.beregningsgrunnlag
+        )
+        subsummerOgSvarPåBehov(resultat, meldingPubliserer, avviksvurderingBehov)
+        avviksvurderinger.lagre()
+        meldingPubliserer.sendMeldinger()
+    }
+
+    private fun subsummerOgSvarPåBehov(
+        resultat: Avviksvurderingsresultat.AvvikVurdert,
+        meldingPubliserer: MeldingPubliserer,
+        avviksvurderingBehov: AvviksvurderingBehov,
+    ) {
+        val avviksvurdering = resultat.vurdering
+        meldingPubliserer.`8-30 ledd 2 punktum 1`(avviksvurdering)
+        if (avviksvurdering.harAkseptabeltAvvik) meldingPubliserer.`8-30 ledd 1`(avviksvurdering.beregningsgrunnlag)
+        meldingPubliserer.behovløsningMedVurdering(avviksvurdering)
+        markerBehovSomLøst(avviksvurderingBehov)
+    }
+
+    private fun markerBehovSomLøst(behov: AvviksvurderingBehov) {
+        behov.løs()
+        behov.lagre()
+    }
+
     private fun Grunnlagshistorikk.lagre() {
         val builder = DatabaseDtoBuilder()
         database.lagreGrunnlagshistorikk(builder.buildAll(grunnlagene()))
@@ -148,8 +150,8 @@ class Mediator(
         return database.finnSisteAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt)?.tilDomene()
     }
 
-    private fun harUbehandletBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Boolean {
-        return database.finnUbehandledeAvviksvurderingBehov(fødselsnummer, skjæringstidspunkt) != null
+    private fun harUbesvartBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Boolean {
+        return database.finnUbehandletAvviksvurderingBehov(fødselsnummer, skjæringstidspunkt) != null
     }
 
     private fun hentGrunnlagshistorikk(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Grunnlagshistorikk {

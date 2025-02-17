@@ -27,7 +27,7 @@ internal class AvviksvurderingBehovDaoTest {
         val etAvviksvurderingBehov = etAvviksvurderingBehov()
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
 
-        val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(etAvviksvurderingBehov.fødselsnummer, etAvviksvurderingBehov.skjæringstidspunkt)
+        val funnetAvviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(etAvviksvurderingBehov.fødselsnummer, etAvviksvurderingBehov.skjæringstidspunkt)
 
         assertNotNull(funnetAvviksvurderingBehov)
         assertEquals(etAvviksvurderingBehov.behovId, funnetAvviksvurderingBehov?.behovId)
@@ -44,7 +44,7 @@ internal class AvviksvurderingBehovDaoTest {
         etAvviksvurderingBehov.løs()
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
 
-        val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
+        val funnetAvviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
 
         assertNull(funnetAvviksvurderingBehov)
     }
@@ -61,7 +61,7 @@ internal class AvviksvurderingBehovDaoTest {
         etAvviksvurderingBehov.løs()
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
 
-        val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
+        val funnetAvviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
 
         assertNotNull(funnetAvviksvurderingBehov)
         assertEquals(id, funnetAvviksvurderingBehov?.behovId)
@@ -79,8 +79,8 @@ internal class AvviksvurderingBehovDaoTest {
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
         database.lagreAvviksvurderingBehov(etTilAvviksvurderingBehov)
 
-        val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
-        val etTilfunnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(Fødselsnummer(fødselsnummer), etTilSkjæringstidspunkt)
+        val funnetAvviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
+        val etTilfunnetAvviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), etTilSkjæringstidspunkt)
 
         assertNotNull(funnetAvviksvurderingBehov)
         assertNotNull(etTilfunnetAvviksvurderingBehov)
@@ -95,7 +95,7 @@ internal class AvviksvurderingBehovDaoTest {
         val etAvviksvurderingBehov = etAvviksvurderingBehov(fødselsnummer, skjæringstidspunkt)
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
 
-        val funnetAvviksvurderingBehov = database.finnUbehandledeAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
+        val funnetAvviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(Fødselsnummer(fødselsnummer), skjæringstidspunkt)
 
         assertNotNull(funnetAvviksvurderingBehov)
         assertEquals(etAvviksvurderingBehov.behovId, funnetAvviksvurderingBehov?.behovId)

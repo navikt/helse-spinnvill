@@ -61,7 +61,7 @@ internal class IntegrationTest {
         testRapid.reset()
 
         mottaAvviksvurderingBehov()
-        val behov = database.finnUbehandledeAvviksvurderingBehov(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
+        val behov = database.finnUbehandletAvviksvurderingBehov(FØDSELSNUMMER.somFnr(), SKJÆRINGSTIDSPUNKT)
         assertNull(behov) // behovet er markert ferdigstilt
 
         assertEquals(1, testRapid.inspektør.size)
