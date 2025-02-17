@@ -37,7 +37,7 @@ internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, p
         val avviksvurderingBehovId = packet["InntekterForSammenligningsgrunnlag.avviksvurderingBehovId"].asUUID()
         val sammenligningsgrunnlag = mapSammenligningsgrunnlag(packet["@løsning.InntekterForSammenligningsgrunnlag"])
         logg.info("Leser sammenligningsgrunnlag-løsning")
-        sikkerlogg.info("Leser sammenligningsgrunnlag-løsning for {}", kv("fødselsnummer", fødselsnummer))
+        sikkerlogg.info("Leser sammenligningsgrunnlag-løsning for {}", kv("fødselsnummer", fødselsnummer.value))
         messageHandler.håndter(
             SammenligningsgrunnlagLøsning(
                 fødselsnummer = fødselsnummer,
