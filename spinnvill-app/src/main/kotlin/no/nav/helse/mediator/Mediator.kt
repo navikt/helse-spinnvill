@@ -98,14 +98,15 @@ class Mediator(
     }
 
     override fun håndter(behov: AvviksvurderingBehov) {
+        val fødselsnummer = behov.fødselsnummer
         val meldingPubliserer = MeldingPubliserer(rapidsConnection, behov, versjonAvKode)
-        if (harUbesvartBehov(behov.fødselsnummer, behov.skjæringstidspunkt)) return
+        if (harUbesvartBehov(fødselsnummer, behov.skjæringstidspunkt)) return
 
         logg.info("Behandler avviksvurdering-behov")
-        sikkerlogg.info("Behandler avviksvurdering-behov for {}", kv("fødselsnummer", behov.fødselsnummer))
+        sikkerlogg.info("Behandler avviksvurdering-behov for {}", kv("fødselsnummer", fødselsnummer.value))
 
         behov.lagre()
-        val avviksvurderinger = hentGrunnlagshistorikkUtenInfotrygd(behov.fødselsnummer, behov.skjæringstidspunkt)
+        val avviksvurderinger = hentGrunnlagshistorikkUtenInfotrygd(fødselsnummer, behov.skjæringstidspunkt)
 
         when (val resultat = avviksvurderinger.nyttBeregningsgrunnlag(beregningsgrunnlag = behov.beregningsgrunnlag)) {
             is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> {
@@ -136,7 +137,7 @@ class Mediator(
         if (avviksvurderingBehov.behovId != løsning.avviksvurderingBehovId) return
 
         logg.info("Behandler sammenligningsgrunnlag-løsning")
-        sikkerlogg.info("Behandler sammenligningsgrunnlag-løsning for {}", kv("fødselsnummer", løsning.fødselsnummer))
+        sikkerlogg.info("Behandler sammenligningsgrunnlag-løsning for {}", kv("fødselsnummer", fødselsnummer.value))
 
         val meldingPubliserer = MeldingPubliserer(rapidsConnection, avviksvurderingBehov, versjonAvKode)
         val avviksvurderinger = hentGrunnlagshistorikk(fødselsnummer, skjæringstidspunkt)
