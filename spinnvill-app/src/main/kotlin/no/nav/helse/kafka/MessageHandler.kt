@@ -10,5 +10,5 @@ interface MessageHandler {
 
     fun håndter(sammenligningsgrunnlagMessageOld: SammenligningsgrunnlagMessageOld)
 
-    fun håndter(sammenligningsgrunnlagLøsning: SammenligningsgrunnlagLøsning)
+    fun håndter(løsning: SammenligningsgrunnlagLøsning)
 }

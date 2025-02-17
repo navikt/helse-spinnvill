@@ -30,8 +30,8 @@ class SammenligningsgrunnlagRiverTest {
 
         override fun håndter(sammenligningsgrunnlagMessageOld: SammenligningsgrunnlagMessageOld) {}
 
-        override fun håndter(sammenligningsgrunnlagLøsning: SammenligningsgrunnlagLøsning) {
-            messages.add(sammenligningsgrunnlagLøsning)
+        override fun håndter(løsning: SammenligningsgrunnlagLøsning) {
+            messages.add(løsning)
         }
     }
 

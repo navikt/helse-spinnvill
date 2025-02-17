@@ -127,21 +127,21 @@ class Mediator(
         meldingPubliserer.sendMeldinger()
     }
 
-    override fun håndter(sammenligningsgrunnlagLøsning: SammenligningsgrunnlagLøsning) {
-        val fødselsnummer = sammenligningsgrunnlagLøsning.fødselsnummer
-        val skjæringstidspunkt = sammenligningsgrunnlagLøsning.skjæringstidspunkt
+    override fun håndter(løsning: SammenligningsgrunnlagLøsning) {
+        val fødselsnummer = løsning.fødselsnummer
+        val skjæringstidspunkt = løsning.skjæringstidspunkt
 
         val avviksvurderingBehov =
             database.finnUbehandletAvviksvurderingBehov(fødselsnummer, skjæringstidspunkt) ?: return
-        if (avviksvurderingBehov.behovId != sammenligningsgrunnlagLøsning.avviksvurderingBehovId) return
+        if (avviksvurderingBehov.behovId != løsning.avviksvurderingBehovId) return
 
         logg.info("Behandler sammenligningsgrunnlag-løsning")
-        sikkerlogg.info("Behandler sammenligningsgrunnlag-løsning for {}", kv("fødselsnummer", sammenligningsgrunnlagLøsning.fødselsnummer))
+        sikkerlogg.info("Behandler sammenligningsgrunnlag-løsning for {}", kv("fødselsnummer", løsning.fødselsnummer))
 
         val meldingPubliserer = MeldingPubliserer(rapidsConnection, avviksvurderingBehov, versjonAvKode)
         val avviksvurderinger = hentGrunnlagshistorikk(fødselsnummer, skjæringstidspunkt)
         val resultat = avviksvurderinger.nyttSammenligningsgrunnlag(
-            sammenligningsgrunnlag = sammenligningsgrunnlagLøsning.sammenligningsgrunnlag,
+            sammenligningsgrunnlag = løsning.sammenligningsgrunnlag,
             beregningsgrunnlag = avviksvurderingBehov.beregningsgrunnlag
         )
         subsummerOgSvarPåBehov(resultat, meldingPubliserer, avviksvurderingBehov)

@@ -26,7 +26,7 @@ class AvviksvurderingbehovRiverTest {
         }
 
         override fun håndter(sammenligningsgrunnlagMessageOld: SammenligningsgrunnlagMessageOld) {}
-        override fun håndter(sammenligningsgrunnlagLøsning: SammenligningsgrunnlagLøsning) {}
+        override fun håndter(løsning: SammenligningsgrunnlagLøsning) {}
     }
 
     private companion object {
