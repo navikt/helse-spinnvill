@@ -73,6 +73,7 @@ internal abstract class AbstractDatabaseTest {
         fødselsnummer: String,
         avviksvurderingId: UUID = UUID.randomUUID(),
         sammenligningsgrunnlagId: UUID = UUID.randomUUID(),
+        behovId: UUID = UUID.randomUUID(),
         skjæringstidspunkt: LocalDate = LocalDate.of(2018, 1, 1),
     ) {
         Flyway
@@ -80,6 +81,7 @@ internal abstract class AbstractDatabaseTest {
             .dataSource(dataSource)
             .placeholders(
                 mapOf(
+                    "behov_id" to behovId.toString(),
                     "avviksvurdering_id" to avviksvurderingId.toString(),
                     "sammenligninsgrunnlag_id" to sammenligningsgrunnlagId.toString(),
                     "fødselsnummer" to fødselsnummer,
@@ -93,7 +95,7 @@ internal abstract class AbstractDatabaseTest {
 
     protected fun assertTabellinnhold(booleanExpressionBlock: (actualTabellCount: Int) -> Pair<Boolean, String>) {
         val tabeller = finnTabeller().toMutableList()
-        tabeller.removeAll(listOf("flyway_schema_history", "vilkårsgrunnlag_kobling", "avviksvurdering_behov"))
+        tabeller.removeAll(listOf("flyway_schema_history", "vilkårsgrunnlag_kobling"))
         tabeller.forEach {
             val rowCount = finnRowCount(it)
             if (it in listOf("manedsinntekt")) {
