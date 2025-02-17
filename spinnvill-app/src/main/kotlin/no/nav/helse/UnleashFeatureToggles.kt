@@ -11,8 +11,8 @@ class UnleashFeatureToggles(env: Map<String, String>) : FeatureToggles {
     private val apiEnv = requireNotNull(env["UNLEASH_SERVER_API_ENV"])
     private val config: UnleashConfig =
         UnleashConfig.builder()
-            .appName("spesialist")
-            .instanceId("spesialist")
+            .appName("spinnvill")
+            .instanceId("spinnvill")
             .unleashAPI(apiUrl)
             .apiKey(apiKey)
             .environment(apiEnv)
