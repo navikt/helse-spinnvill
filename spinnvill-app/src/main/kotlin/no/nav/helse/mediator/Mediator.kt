@@ -15,13 +15,16 @@ import java.time.LocalDate
 class Mediator(
     private val versjonAvKode: VersjonAvKode,
     private val rapidsConnection: RapidsConnection,
+    featureToggles: FeatureToggles,
     databaseProvider: () -> Database,
 ) : MessageHandler {
 
     private val database by lazy(databaseProvider)
 
     init {
-        GodkjenningsbehovRiver(rapidsConnection, this)
+        if (!featureToggles.skalBenytteNyAvviksvurderingløype()) {
+            GodkjenningsbehovRiver(rapidsConnection, this)
+        }
         SammenligningsgrunnlagRiverOld(rapidsConnection, this)
         SammenligningsgrunnlagRiver(rapidsConnection, this)
         AvviksvurderingbehovRiver(rapidsConnection, this)
@@ -32,7 +35,11 @@ class Mediator(
         val meldingProducer = nyMeldingProducer(message)
 
         logg.info("Behandler utkast_til_vedtak for {}", kv("vedtaksperiodeId", message.vedtaksperiodeId))
-        sikkerlogg.info("Behandler utkast_til_vedtak for {}, {}", kv("fødselsnummer", message.fødselsnummer), kv("vedtaksperiodeId", message.vedtaksperiodeId))
+        sikkerlogg.info(
+            "Behandler utkast_til_vedtak for {}, {}",
+            kv("fødselsnummer", message.fødselsnummer),
+            kv("vedtaksperiodeId", message.vedtaksperiodeId)
+        )
 
         val behovProducer = BehovProducer(utkastTilVedtakJson = message.toJson())
         val varselProducer = VarselProducer(vedtaksperiodeId = message.vedtaksperiodeId)
@@ -40,7 +47,13 @@ class Mediator(
         val avvikVurdertProducer = AvvikVurdertProducer(vilkårsgrunnlagId = message.vilkårsgrunnlagId)
         val godkjenningsbehovProducer = GodkjenningsbehovProducer(message)
 
-        meldingProducer.nyProducer(behovProducer, varselProducer, subsumsjonProducer, avvikVurdertProducer, godkjenningsbehovProducer)
+        meldingProducer.nyProducer(
+            behovProducer,
+            varselProducer,
+            subsumsjonProducer,
+            avvikVurdertProducer,
+            godkjenningsbehovProducer
+        )
 
         val beregningsgrunnlag = nyttBeregningsgrunnlag(message)
         val avviksvurderinger = hentGrunnlagshistorikk(Fødselsnummer(message.fødselsnummer), message.skjæringstidspunkt)
@@ -54,6 +67,7 @@ class Mediator(
                 avvikVurdertProducer.avvikVurdert(vurdertAvvik)
                 varselProducer.avvikVurdert(vurdertAvvik.harAkseptabeltAvvik, vurdertAvvik.avviksprosent)
             }
+
             is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> {
                 godkjenningsbehovProducer.registrerGodkjenningsbehovForUtsending(resultat.gjeldendeGrunnlag)
             }
@@ -69,7 +83,11 @@ class Mediator(
 
         if (finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt) != null) {
             logg.warn("Ignorerer duplikat sammenligningsgrunnlag for eksisterende avviksvurdering")
-            sikkerlogg.warn("Ignorerer duplikat sammenligningsgrunnlag for {} {}", kv("fødselsnummer", fødselsnummer.value), kv("skjæringstidspunkt", skjæringstidspunkt))
+            sikkerlogg.warn(
+                "Ignorerer duplikat sammenligningsgrunnlag for {} {}",
+                kv("fødselsnummer", fødselsnummer.value),
+                kv("skjæringstidspunkt", skjæringstidspunkt)
+            )
             return
         }
 
@@ -89,11 +107,15 @@ class Mediator(
         val avviksvurderinger = hentGrunnlagshistorikkUtenInfotrygd(behov.fødselsnummer, behov.skjæringstidspunkt)
 
         when (val resultat = avviksvurderinger.nyttBeregningsgrunnlag(beregningsgrunnlag = behov.beregningsgrunnlag)) {
-            is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> meldingPubliserer.behovForSammenligningsgrunnlag(resultat.behov)
+            is Avviksvurderingsresultat.TrengerSammenligningsgrunnlag -> meldingPubliserer.behovForSammenligningsgrunnlag(
+                resultat.behov
+            )
+
             is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> {
                 meldingPubliserer.behovløsningUtenVurdering(resultat.gjeldendeGrunnlag.id)
                 markerBehovSomLøst(behov)
             }
+
             is Avviksvurderingsresultat.AvvikVurdert -> {
                 subsummerOgSvarPåBehov(resultat, meldingPubliserer, behov)
             }
@@ -106,7 +128,8 @@ class Mediator(
         val fødselsnummer = sammenligningsgrunnlagLøsning.fødselsnummer
         val skjæringstidspunkt = sammenligningsgrunnlagLøsning.skjæringstidspunkt
 
-        val avviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(fødselsnummer, skjæringstidspunkt) ?: return
+        val avviksvurderingBehov =
+            database.finnUbehandletAvviksvurderingBehov(fødselsnummer, skjæringstidspunkt) ?: return
         if (avviksvurderingBehov.behovId != sammenligningsgrunnlagLøsning.avviksvurderingBehovId) return
 
         val meldingPubliserer = MeldingPubliserer(rapidsConnection, avviksvurderingBehov, versjonAvKode)
@@ -146,7 +169,10 @@ class Mediator(
         database.lagreAvviksvurderingBehov(this)
     }
 
-    private fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurderingsgrunnlag? {
+    private fun finnAvviksvurderingsgrunnlag(
+        fødselsnummer: Fødselsnummer,
+        skjæringstidspunkt: LocalDate,
+    ): Avviksvurderingsgrunnlag? {
         return database.finnSisteAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt)?.tilDomene()
     }
 
@@ -154,12 +180,18 @@ class Mediator(
         return database.finnUbehandletAvviksvurderingBehov(fødselsnummer, skjæringstidspunkt) != null
     }
 
-    private fun hentGrunnlagshistorikk(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Grunnlagshistorikk {
+    private fun hentGrunnlagshistorikk(
+        fødselsnummer: Fødselsnummer,
+        skjæringstidspunkt: LocalDate,
+    ): Grunnlagshistorikk {
         val grunnlag = database.finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt).map { it.tilDomene() }
         return Grunnlagshistorikk(fødselsnummer, skjæringstidspunkt, grunnlag)
     }
 
-    private fun hentGrunnlagshistorikkUtenInfotrygd(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Grunnlagshistorikk {
+    private fun hentGrunnlagshistorikkUtenInfotrygd(
+        fødselsnummer: Fødselsnummer,
+        skjæringstidspunkt: LocalDate,
+    ): Grunnlagshistorikk {
         val grunnlag = database.finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt)
             .filterNot { it.kilde == AvviksvurderingDto.KildeDto.INFOTRYGD }
             .map { it.tilDomene() }

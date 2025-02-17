@@ -36,7 +36,7 @@ internal class IntegrationTest {
     )
 
     init {
-        Mediator(VersjonAvKode("1.0.0"), testRapid, ::database)
+        Mediator(VersjonAvKode("1.0.0"), testRapid, object : FeatureToggles {}, ::database)
     }
 
     @BeforeEach
