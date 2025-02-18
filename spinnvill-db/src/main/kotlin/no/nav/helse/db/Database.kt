@@ -5,10 +5,9 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.helse.*
-import no.nav.helse.avviksvurdering.AvviksvurderingBehov
-import no.nav.helse.avviksvurdering.Beregningsgrunnlag
+import no.nav.helse.avviksvurdering.*
+import no.nav.helse.db.DatabaseDtoBuilder.Companion.tilDomene
 import no.nav.helse.dto.AvviksvurderingBehovDto
-import no.nav.helse.dto.AvviksvurderingDto
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -61,12 +60,13 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
         avviksvurderingBehovDao.lagre(dto)
     }
 
-    override fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<AvviksvurderingDto> {
-        return avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt)
+    override fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<Avviksvurderingsgrunnlag> {
+        return avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt).map { it.tilDomene() }
     }
 
-    override fun lagreGrunnlagshistorikk(avviksvurderinger: List<AvviksvurderingDto>) {
-        avviksvurdering.upsertAll(avviksvurderinger)
+    override fun lagreGrunnlagshistorikk(grunnlagene: List<Avviksvurderingsgrunnlag>) {
+        val builder = DatabaseDtoBuilder()
+        avviksvurdering.upsertAll(builder.buildAll(grunnlagene))
     }
 
     companion object {
@@ -89,7 +89,7 @@ interface Database {
 
     fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov)
 
-    fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<AvviksvurderingDto>
+    fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<Avviksvurderingsgrunnlag>
 
-    fun lagreGrunnlagshistorikk(avviksvurderinger: List<AvviksvurderingDto>)
+    fun lagreGrunnlagshistorikk(grunnlagene: List<Avviksvurderingsgrunnlag>)
 }

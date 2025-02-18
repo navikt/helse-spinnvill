@@ -1,14 +1,11 @@
 package no.nav.helse.db
 
-import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
-import no.nav.helse.avviksvurdering.Avviksvurderingsgrunnlag
-import no.nav.helse.avviksvurdering.Beregningsgrunnlag
-import no.nav.helse.avviksvurdering.Kilde
+import no.nav.helse.avviksvurdering.*
 import no.nav.helse.dto.AvviksvurderingDto
 
 class DatabaseDtoBuilder {
 
-    fun buildAll(grunnlagene: List<Avviksvurderingsgrunnlag>): List<AvviksvurderingDto> = grunnlagene.toDto()
+    internal fun buildAll(grunnlagene: List<Avviksvurderingsgrunnlag>): List<AvviksvurderingDto> = grunnlagene.toDto()
 
     private fun Collection<Avviksvurderingsgrunnlag>.toDto() = map { grunnlag ->
         val innrapporterteInntekter = grunnlag.sammenligningsgrunnlag.inntekter.associate { it.arbeidsgiverreferanse to it.inntekter.toDto() }
@@ -52,5 +49,53 @@ class DatabaseDtoBuilder {
         Kilde.SPLEIS -> AvviksvurderingDto.KildeDto.SPLEIS
         Kilde.SPINNVILL -> AvviksvurderingDto.KildeDto.SPINNVILL
         Kilde.INFOTRYGD -> AvviksvurderingDto.KildeDto.INFOTRYGD
+    }
+
+    internal companion object {
+        internal fun AvviksvurderingDto.tilDomene(): Avviksvurderingsgrunnlag {
+            val beregningsgrunnlag = beregningsgrunnlag?.let {
+                Beregningsgrunnlag.opprett(it.omregnedeÅrsinntekter)
+            } ?: Ingen
+
+            return Avviksvurderingsgrunnlag(
+                id = id,
+                fødselsnummer = fødselsnummer,
+                skjæringstidspunkt = skjæringstidspunkt,
+                beregningsgrunnlag = beregningsgrunnlag,
+                opprettet = opprettet,
+                kilde = this.kilde.tilDomene(),
+                sammenligningsgrunnlag = Sammenligningsgrunnlag(
+                    sammenligningsgrunnlag.innrapporterteInntekter.map { (organisasjonsnummer, inntekter) ->
+                        ArbeidsgiverInntekt(
+                            arbeidsgiverreferanse = organisasjonsnummer,
+                            inntekter = inntekter.map {
+                                ArbeidsgiverInntekt.MånedligInntekt(
+                                    inntekt = it.inntekt,
+                                    måned = it.måned,
+                                    fordel = it.fordel,
+                                    beskrivelse = it.beskrivelse,
+                                    inntektstype = it.inntektstype.tilDomene()
+                                )
+                            }
+                        )
+                    }
+                )
+            )
+        }
+
+        private fun AvviksvurderingDto.InntektstypeDto.tilDomene(): ArbeidsgiverInntekt.Inntektstype {
+            return when (this) {
+                AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.NÆRINGSINNTEKT
+                AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD -> ArbeidsgiverInntekt.Inntektstype.PENSJON_ELLER_TRYGD
+                AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE -> ArbeidsgiverInntekt.Inntektstype.YTELSE_FRA_OFFENTLIGE
+            }
+        }
+
+        private fun AvviksvurderingDto.KildeDto.tilDomene() = when (this) {
+            AvviksvurderingDto.KildeDto.SPINNVILL -> Kilde.SPINNVILL
+            AvviksvurderingDto.KildeDto.SPLEIS -> Kilde.SPLEIS
+            AvviksvurderingDto.KildeDto.INFOTRYGD -> Kilde.INFOTRYGD
+        }
     }
 }

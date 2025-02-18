@@ -6,8 +6,6 @@ import no.nav.helse.MeldingPubliserer
 import no.nav.helse.VersjonAvKode
 import no.nav.helse.avviksvurdering.*
 import no.nav.helse.db.Database
-import no.nav.helse.db.DatabaseDtoBuilder
-import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.kafka.AvviksvurderingbehovRiver
 import no.nav.helse.kafka.MessageHandler
 import no.nav.helse.kafka.SammenligningsgrunnlagRiver
@@ -100,8 +98,7 @@ class Mediator(
     }
 
     private fun Grunnlagshistorikk.lagre() {
-        val builder = DatabaseDtoBuilder()
-        database.lagreGrunnlagshistorikk(builder.buildAll(grunnlagene()))
+        database.lagreGrunnlagshistorikk(this.grunnlagene())
     }
 
     private fun AvviksvurderingBehov.lagre() {
@@ -116,61 +113,14 @@ class Mediator(
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
     ): Grunnlagshistorikk {
-        val grunnlag = database.finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt)
-            .filterNot { it.kilde == AvviksvurderingDto.KildeDto.INFOTRYGD }
-            .map { it.tilDomene() }
+        val grunnlag = database
+            .finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt)
+            .filterNot { it.kilde == Kilde.INFOTRYGD }
         return Grunnlagshistorikk(fødselsnummer, skjæringstidspunkt, grunnlag)
     }
 
     internal companion object {
         private val logg = LoggerFactory.getLogger(Mediator::class.java)
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
-
-
-        internal fun AvviksvurderingDto.tilDomene(): Avviksvurderingsgrunnlag {
-            val beregningsgrunnlag = beregningsgrunnlag?.let {
-                Beregningsgrunnlag.opprett(it.omregnedeÅrsinntekter)
-            } ?: Ingen
-
-            return Avviksvurderingsgrunnlag(
-                id = id,
-                fødselsnummer = fødselsnummer,
-                skjæringstidspunkt = skjæringstidspunkt,
-                beregningsgrunnlag = beregningsgrunnlag,
-                opprettet = opprettet,
-                kilde = this.kilde.tilDomene(),
-                sammenligningsgrunnlag = Sammenligningsgrunnlag(
-                    sammenligningsgrunnlag.innrapporterteInntekter.map { (organisasjonsnummer, inntekter) ->
-                        ArbeidsgiverInntekt(
-                            arbeidsgiverreferanse = organisasjonsnummer,
-                            inntekter = inntekter.map {
-                                ArbeidsgiverInntekt.MånedligInntekt(
-                                    inntekt = it.inntekt,
-                                    måned = it.måned,
-                                    fordel = it.fordel,
-                                    beskrivelse = it.beskrivelse,
-                                    inntektstype = it.inntektstype.tilDomene()
-                                )
-                            }
-                        )
-                    }
-                )
-            )
-        }
-
-        private fun AvviksvurderingDto.InntektstypeDto.tilDomene(): ArbeidsgiverInntekt.Inntektstype {
-            return when (this) {
-                AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
-                AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT -> ArbeidsgiverInntekt.Inntektstype.NÆRINGSINNTEKT
-                AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD -> ArbeidsgiverInntekt.Inntektstype.PENSJON_ELLER_TRYGD
-                AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE -> ArbeidsgiverInntekt.Inntektstype.YTELSE_FRA_OFFENTLIGE
-            }
-        }
-
-        private fun AvviksvurderingDto.KildeDto.tilDomene() = when (this) {
-            AvviksvurderingDto.KildeDto.SPINNVILL -> Kilde.SPINNVILL
-            AvviksvurderingDto.KildeDto.SPLEIS -> Kilde.SPLEIS
-            AvviksvurderingDto.KildeDto.INFOTRYGD -> Kilde.INFOTRYGD
-        }
     }
 }

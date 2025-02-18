@@ -6,7 +6,6 @@ import no.nav.helse.avviksvurdering.*
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.MånedligInntekt
 import no.nav.helse.db.Database
-import no.nav.helse.dto.AvviksvurderingDto
 import no.nav.helse.helpers.dummyBeregningsgrunnlag
 import no.nav.helse.helpers.januar
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -106,18 +105,18 @@ class MediatorTest {
         override fun finnAvviksvurderingsgrunnlag(
             fødselsnummer: Fødselsnummer,
             skjæringstidspunkt: LocalDate,
-        ): List<AvviksvurderingDto> = listOf(
-            AvviksvurderingDto(
-                UUID.randomUUID(),
-                fødselsnummer,
-                skjæringstidspunkt,
-                LocalDateTime.now(),
-                AvviksvurderingDto.KildeDto.INFOTRYGD,
-                AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()),
-                AvviksvurderingDto.BeregningsgrunnlagDto(emptyMap())
+        ): List<Avviksvurderingsgrunnlag> = listOf(
+            Avviksvurderingsgrunnlag(
+                id = UUID.randomUUID(),
+                fødselsnummer = fødselsnummer,
+                skjæringstidspunkt = skjæringstidspunkt,
+                beregningsgrunnlag = Beregningsgrunnlag.opprett(mapOf(organisasjonsnummer to OmregnetÅrsinntekt(600000.0))),
+                sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
+                opprettet = LocalDateTime.now(),
+                kilde = Kilde.INFOTRYGD,
             )
         )
-        override fun lagreGrunnlagshistorikk(avviksvurderinger: List<AvviksvurderingDto>) {}
+        override fun lagreGrunnlagshistorikk(grunnlagene: List<Avviksvurderingsgrunnlag>) {}
 
         override fun finnUbehandletAvviksvurderingBehov(
             fødselsnummer: Fødselsnummer,
