@@ -16,26 +16,6 @@ class Grunnlagshistorikk(
 
     fun grunnlagene(): List<Avviksvurderingsgrunnlag> = grunnlagene.toList()
 
-    @Deprecated("Tilhører gammel løype")
-    fun håndterNytt(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsresultat {
-        val sisteGrunnlag =
-            sisteGrunnlag
-            ?: return TrengerSammenligningsgrunnlag(behovForSammenligningsgrunnlag())
-        val gjeldendeGrunnlag =
-            if (sisteGrunnlag.trengerNyVurdering(beregningsgrunnlag)) sisteGrunnlag.gjenbrukSammenligningsgrunnlag()
-            else sisteGrunnlag
-
-        if (sisteGrunnlag != gjeldendeGrunnlag) nyttSisteGrunnlag(gjeldendeGrunnlag)
-        return gjeldendeGrunnlag.vurderAvvik(beregningsgrunnlag)
-    }
-
-    @Deprecated("Tilhører gammel løype")
-    fun håndterNytt(sammenligningsgrunnlag: Sammenligningsgrunnlag) {
-        check(grunnlagene.isEmpty()) { "Forventer ikke å hente inn nytt sammenligningsgrunnlag hvis det tidligere er gjort en avviksvurdering" }
-        val ny = Avviksvurderingsgrunnlag.nyttGrunnlag(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag)
-        nyttSisteGrunnlag(ny)
-    }
-
     fun nyttBeregningsgrunnlag(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsresultat {
         val sisteAvviksvurderingsgrunnlag = sisteGrunnlag ?: return TrengerSammenligningsgrunnlag(behovForSammenligningsgrunnlag())
         if (sisteAvviksvurderingsgrunnlag.harLiktBeregningsgrunnlagSom(beregningsgrunnlag)) return TrengerIkkeNyVurdering(sisteAvviksvurderingsgrunnlag)

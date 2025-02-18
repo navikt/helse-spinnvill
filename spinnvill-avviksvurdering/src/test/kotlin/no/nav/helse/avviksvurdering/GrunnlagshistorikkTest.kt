@@ -59,7 +59,7 @@ class GrunnlagshistorikkTest {
         val avviksvurderinger = avviksvurderinger()
         avviksvurderinger.nyttSammenligningsgrunnlag(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0), beregningsgrunnlag(arbeidsgiver to 600000.0))
 
-        val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 500000.0))
+        val resultat = avviksvurderinger.nyttBeregningsgrunnlag(beregningsgrunnlag(arbeidsgiver to 500000.0))
         assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
     }
 
@@ -68,7 +68,7 @@ class GrunnlagshistorikkTest {
         val avviksvurderinger = avviksvurderinger()
         avviksvurderinger.nyttSammenligningsgrunnlag(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0), beregningsgrunnlag(arbeidsgiver to 600000.0))
 
-        val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 0.0))
+        val resultat = avviksvurderinger.nyttBeregningsgrunnlag(beregningsgrunnlag(arbeidsgiver to 0.0))
         assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
     }
 
@@ -97,64 +97,6 @@ class GrunnlagshistorikkTest {
         avviksvurderinger.nyttSammenligningsgrunnlag(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0), beregningsgrunnlag(arbeidsgiver to 600000.0))
 
         assertEquals(1, avviksvurderinger.grunnlagene().size)
-    }
-
-    @Test
-    fun `be om sammenligningsgrunnlag hvis det ikke er gjort noen avviksvurderinger enda - old`() {
-        val avviksvurderinger = avviksvurderinger()
-        val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-        assertIs<Avviksvurderingsresultat.TrengerSammenligningsgrunnlag>(resultat)
-        assertEquals(1.januar, resultat.behov.skjæringstidspunkt)
-        assertEquals(YearMonth.of(2017, 1), resultat.behov.beregningsperiodeFom)
-        assertEquals(YearMonth.of(2017, 12), resultat.behov.beregningsperiodeTom)
-    }
-
-    @Test
-    fun `gjør avviksvurdering når vi kun har sammenligningsgrunnlag - old`() {
-        val avviksvurderinger = avviksvurderinger()
-        avviksvurderinger.håndterNytt(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0))
-        val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-        assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
-    }
-
-    @Test
-    fun `gjør ikke ny avviksvurdering når vi har avviksvurdering fra før og beregningsgrunnlag er likt - old`() {
-        val avviksvurderinger = avviksvurderinger()
-        avviksvurderinger.håndterNytt(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0))
-        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-        val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-        assertIs<Avviksvurderingsresultat.TrengerIkkeNyVurdering>(resultat)
-    }
-
-    @Test
-    fun `gjør ny avviksvurdering når vi har avviksvurdering fra før og mottar beregningsgrunnlag med beløp 0 kr - old`() {
-        val avviksvurderinger = avviksvurderinger()
-        avviksvurderinger.håndterNytt(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0))
-        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-        val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 0.0))
-        assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
-    }
-
-    @Test
-    fun `gjør ny avviksvurdering når vi har avviksvurdering fra før og beregningsgrunnlag er forskjellig - old`() {
-        val avviksvurderinger = avviksvurderinger()
-        avviksvurderinger.håndterNytt(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0))
-        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-        val resultat = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 500000.0))
-        assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
-    }
-
-    @Test
-    fun `gjør ikke ny avviksvurdering når vi har avviksvurdering fra før og beregningsgrunnlag bare er litt forskjellig - old`() {
-        val avviksvurderinger = avviksvurderinger()
-        avviksvurderinger.håndterNytt(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0))
-        avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.0))
-
-        val resultat1 = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 600000.1))
-        assertIs<Avviksvurderingsresultat.TrengerIkkeNyVurdering>(resultat1)
-
-        val resultat2 = avviksvurderinger.håndterNytt(beregningsgrunnlag(arbeidsgiver to 599999.999999994))
-        assertIs<Avviksvurderingsresultat.TrengerIkkeNyVurdering>(resultat2)
     }
 
     private fun avviksvurderinger() = Grunnlagshistorikk(

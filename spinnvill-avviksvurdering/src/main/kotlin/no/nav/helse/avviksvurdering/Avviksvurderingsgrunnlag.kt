@@ -3,7 +3,6 @@ package no.nav.helse.avviksvurdering
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.avviksvurdering.Avviksvurderingsresultat.AvvikVurdert
 import no.nav.helse.avviksvurdering.Avviksvurderingsresultat.TrengerIkkeNyVurdering
-import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -61,58 +60,8 @@ class Avviksvurderingsgrunnlag(
         )
     }
 
-    internal fun trengerNyVurdering(beregningsgrunnlag: Beregningsgrunnlag): Boolean {
-        return when {
-            this.kilde == Kilde.INFOTRYGD -> false
-            this.beregningsgrunnlag is Ingen -> false
-            this.beregningsgrunnlag.erLikt(beregningsgrunnlag) -> {
-                loggGjenbrukAvAvviksvurderingsgrunnlag(beregningsgrunnlag)
-                false
-            }
-
-            else -> true
-        }
-    }
-
     internal fun harLiktBeregningsgrunnlagSom(beregningsgrunnlag: Beregningsgrunnlag): Boolean {
         return this.beregningsgrunnlag.erLikt(beregningsgrunnlag)
-    }
-
-    private fun loggGjenbrukAvAvviksvurderingsgrunnlag(beregningsgrunnlag: Beregningsgrunnlag) {
-        val forrigeGrunnlag = this.beregningsgrunnlag
-        val nyttGrunnlag = beregningsgrunnlag
-        val forrigeÅrsbeløp = finnTotaltOmregnetÅrsinntekt(forrigeGrunnlag)
-        val nåværendeÅrsbeløp = finnTotaltOmregnetÅrsinntekt(nyttGrunnlag)
-        if (forrigeÅrsbeløp != nåværendeÅrsbeløp) sikkerlogg.warn(
-            """
-            Inntekter er like nok til at det ikke er nødvendig med ny avviksvurdering. Fnr: ${fødselsnummer.value}, skjæringstidspunkt: $skjæringstidspunkt 
-            Forrige beløp: $forrigeÅrsbeløp, nåværende beløp: $nåværendeÅrsbeløp
-            """.trimIndent()
-        ) else sikkerlogg.warn(
-            """
-            Inntekter er like, det er ikke nødvendig med ny avviksvurdering. Fnr: ${fødselsnummer.value}, skjæringstidspunkt: $skjæringstidspunkt
-            Beløp: $nåværendeÅrsbeløp
-            """.trimIndent()
-        )
-    }
-
-    /*
-        Skrevet kun for bruk til logging.
-
-        Denne returerer tulleverdi hvis den ikke finner riktig verdi. Det ikke er ønskelig å gjøre noe større nummer ut av
-        det siden dette kun er kode for logging.
-     */
-    private fun finnTotaltOmregnetÅrsinntekt(beregningsgrunnlag: IBeregningsgrunnlag): Double {
-        val beløp: Double? = if (beregningsgrunnlag is Beregningsgrunnlag) beregningsgrunnlag.totalOmregnetÅrsinntekt else null
-
-        return beløp ?: run {
-            sikkerlogg.warn("Forventet å finne totalOmregnetÅrsinntekt for $beregningsgrunnlag - bruker tulleverdi")
-            13371337.13371337
-        }
-    }
-
-    internal fun gjenbrukSammenligningsgrunnlag(): Avviksvurderingsgrunnlag {
-        return nyttGrunnlag(fødselsnummer, skjæringstidspunkt, sammenligningsgrunnlag)
     }
 
     internal fun gjenbrukSammenligningsgrunnlag(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsgrunnlag {
@@ -141,7 +90,5 @@ class Avviksvurderingsgrunnlag(
         )
 
         internal fun Collection<Avviksvurderingsgrunnlag>.siste() = maxByOrNull { it.opprettet }
-
-        private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
     }
 }
