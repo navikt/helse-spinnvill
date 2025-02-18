@@ -106,9 +106,9 @@ internal class Avviksvurdering {
         }
     }
 
-    internal fun upsertAll(avviksvurderinger: List<AvviksvurderingDto>): List<AvviksvurderingDto> {
+    internal fun upsertAll(avviksvurderinger: List<AvviksvurderingDto>) {
         return transaction {
-            avviksvurderinger.map { avviksvurdering ->
+            avviksvurderinger.forEach { avviksvurdering ->
                 EnAvviksvurdering.findById(avviksvurdering.id)?.let {
                     insertBeregningsgrunnlagIfNotExists(it, avviksvurdering.beregningsgrunnlag)
                 } ?: insertAvviksvurdering(
@@ -132,41 +132,41 @@ internal class Avviksvurdering {
         opprettet: LocalDateTime,
         sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
         beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?
-    ): AvviksvurderingDto = this.run {
-        val enAvviksvurdering = EnAvviksvurdering.new(id) {
-            this.fødselsnummer = fødselsnummer.value
-            this.skjæringstidspunkt = skjæringstidspunkt
-            this.opprettet = opprettet
-            this.kilde = kilde.tilDatebase()
-        }
-
-        sammenligningsgrunnlag.innrapporterteInntekter.forEach { (arbeidsgiverreferanse, inntekter) ->
-            val ettSammenligningsgrunnlag = EttSammenligningsgrunnlag.new {
-                this.avviksvurdering = enAvviksvurdering
-                this.arbeidsgiverreferanse = arbeidsgiverreferanse.value
+    ){
+        this.run {
+            val enAvviksvurdering = EnAvviksvurdering.new(id) {
+                this.fødselsnummer = fødselsnummer.value
+                this.skjæringstidspunkt = skjæringstidspunkt
+                this.opprettet = opprettet
+                this.kilde = kilde.tilDatebase()
             }
 
-            Månedsinntekter.batchInsert(inntekter) {
-                this[Månedsinntekter.sammenligningsgrunnlag] = ettSammenligningsgrunnlag.id
-                this[Månedsinntekter.inntekt] = it.inntekt.value
-                this[Månedsinntekter.måned] = it.måned.monthValue
-                this[Månedsinntekter.år] = it.måned.year
-                this[Månedsinntekter.fordel] = it.fordel?.value
-                this[Månedsinntekter.beskrivelse] = it.beskrivelse?.value
-                this[Månedsinntekter.inntektstype] = it.inntektstype.tilDatabase()
-            }
-        }
+            sammenligningsgrunnlag.innrapporterteInntekter.forEach { (arbeidsgiverreferanse, inntekter) ->
+                val ettSammenligningsgrunnlag = EttSammenligningsgrunnlag.new {
+                    this.avviksvurdering = enAvviksvurdering
+                    this.arbeidsgiverreferanse = arbeidsgiverreferanse.value
+                }
 
-        beregningsgrunnlag?.omregnedeÅrsinntekter?.batchInsert(enAvviksvurdering)
-        enAvviksvurdering.dto()
+                Månedsinntekter.batchInsert(inntekter) {
+                    this[Månedsinntekter.sammenligningsgrunnlag] = ettSammenligningsgrunnlag.id
+                    this[Månedsinntekter.inntekt] = it.inntekt.value
+                    this[Månedsinntekter.måned] = it.måned.monthValue
+                    this[Månedsinntekter.år] = it.måned.year
+                    this[Månedsinntekter.fordel] = it.fordel?.value
+                    this[Månedsinntekter.beskrivelse] = it.beskrivelse?.value
+                    this[Månedsinntekter.inntektstype] = it.inntektstype.tilDatabase()
+                }
+            }
+
+            beregningsgrunnlag?.omregnedeÅrsinntekter?.batchInsert(enAvviksvurdering)
+        }
     }
 
     private fun insertBeregningsgrunnlagIfNotExists(
         enAvviksvurdering: EnAvviksvurdering,
         beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?,
-    ): AvviksvurderingDto {
+    ) {
         beregningsgrunnlag?.omregnedeÅrsinntekter?.batchInsert(enAvviksvurdering)
-        return enAvviksvurdering.dto()
     }
 
     private fun Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>.batchInsert(enAvviksvurdering: EnAvviksvurdering) {

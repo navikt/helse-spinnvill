@@ -236,6 +236,7 @@ internal class AvviksvurderingTest {
         beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?,
     ): AvviksvurderingDto {
         val enAvviksvurdering = AvviksvurderingDto(id, fødselsnummer, skjæringstidspunkt, opprettet, kilde, sammenligningsgrunnlag, beregningsgrunnlag)
-        return avviksvurdering.upsertAll(listOf(enAvviksvurdering)).single()
+        avviksvurdering.upsertAll(listOf(enAvviksvurdering))
+        return avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt).last()
     }
 }
