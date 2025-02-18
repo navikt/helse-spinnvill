@@ -20,8 +20,4 @@ class UnleashFeatureToggles(env: Map<String, String>) : FeatureToggles {
 
     private val unleash: Unleash = DefaultUnleash(config)
 
-    override fun skalBenytteNyAvviksvurderingløype(): Boolean =
-        unleash.isEnabled(
-            "skal-bruke-ny-avviksvurdering-loype",
-        )
 }
