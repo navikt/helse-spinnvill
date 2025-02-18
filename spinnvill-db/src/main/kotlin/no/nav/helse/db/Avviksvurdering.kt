@@ -96,17 +96,6 @@ internal class Avviksvurdering {
         }
     }
 
-    internal fun findLatest(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingDto? {
-        return transaction {
-            EnAvviksvurdering.find {
-                Avviksvurderinger.fødselsnummer eq fødselsnummer.value and (Avviksvurderinger.skjæringstidspunkt eq skjæringstidspunkt) and Avviksvurderinger.slettet.isNull()
-            }
-                .orderBy(Avviksvurderinger.opprettet to SortOrder.DESC)
-                .firstOrNull()
-                ?.dto()
-        }
-    }
-
     internal fun findAll(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<AvviksvurderingDto> {
         return transaction {
             EnAvviksvurdering.find {

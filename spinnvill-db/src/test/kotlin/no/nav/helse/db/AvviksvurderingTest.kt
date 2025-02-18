@@ -102,37 +102,6 @@ internal class AvviksvurderingTest {
     }
 
     @Test
-    fun `Finn siste avviksvurdering for fødselsnummer og skjæringstidspunkt`() {
-        val fødselsnummer = Fødselsnummer("12345678910")
-        val skjæringstidspunkt = 1.januar
-
-        opprettEn(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now().minusDays(2), sammenligningsgrunnlag(20000.0), beregningsgrunnlag(200000.0))
-        opprettEn(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now().minusDays(1), sammenligningsgrunnlag(40000.0), beregningsgrunnlag(300000.0))
-        val expectedLatest = opprettEn(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag(60000.0), beregningsgrunnlag(500000.0))
-        val avviksvurdering = avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
-
-        assertNotNull(avviksvurdering)
-        assertEquals(expectedLatest.id, avviksvurdering?.id)
-        assertEquals(expectedLatest.sammenligningsgrunnlag, avviksvurdering?.sammenligningsgrunnlag)
-        assertEquals(expectedLatest.beregningsgrunnlag, avviksvurdering?.beregningsgrunnlag)
-    }
-
-    @Test
-    fun `Finn siste avviksvurdering når siste ikke har beregningsgrunnlag enda`() {
-        val fødselsnummer = Fødselsnummer("12345678910")
-        val skjæringstidspunkt = 1.januar
-
-        opprettEn(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now().minusDays(2), sammenligningsgrunnlag(20000.0), beregningsgrunnlag(200000.0))
-        opprettEn(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now().minusDays(1), sammenligningsgrunnlag(40000.0), beregningsgrunnlag(300000.0))
-        val expectedLatest = opprettEn(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag(60000.0), null)
-        val avviksvurdering = avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
-
-        assertNotNull(avviksvurdering)
-        assertEquals(expectedLatest.id, avviksvurdering?.id)
-        assertNull(avviksvurdering?.beregningsgrunnlag)
-    }
-
-    @Test
     fun `oppretter ikke nytt beregningsgrunnlag om det samme finnes fra før`() {
         val avviksvurderingId = UUID.randomUUID()
         val fødselsnummer = Fødselsnummer("12345678910")
@@ -188,22 +157,6 @@ internal class AvviksvurderingTest {
         assertEquals(1, antallSammenligningsgrunnlag)
     }
 
-    @Test
-    fun `Finn siste avviksvurdering basert på opprettet-tidspunktet`() {
-        val fødselsnummer = Fødselsnummer("12345678910")
-        val skjæringstidspunkt = 1.januar
-
-        val expectedLatest = opprettEn(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag(60000.0), beregningsgrunnlag(500000.0))
-        val expectedNotLatest = opprettEn(UUID.randomUUID(), fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now().minusDays(1), sammenligningsgrunnlag(40000.0), beregningsgrunnlag(300000.0))
-        val avviksvurdering = avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
-
-        assertNotEquals(expectedLatest.id, expectedNotLatest.id)
-        assertNotNull(avviksvurdering)
-        assertEquals(expectedLatest.id, avviksvurdering?.id)
-        assertEquals(expectedLatest.sammenligningsgrunnlag, avviksvurdering?.sammenligningsgrunnlag)
-        assertEquals(expectedLatest.beregningsgrunnlag, avviksvurdering?.beregningsgrunnlag)
-    }
-
     @ParameterizedTest
     @EnumSource(value = AvviksvurderingDto.KildeDto::class)
     fun `kan lagre avviksvurdering med alle kilder`(kildeDto: AvviksvurderingDto.KildeDto) {
@@ -214,26 +167,8 @@ internal class AvviksvurderingTest {
         val sammenligningsgrunnlag = sammenligningsgrunnlag(20000.0)
 
         opprettEn(avviksvurderingId, fødselsnummer, skjæringstidspunkt, kildeDto, LocalDateTime.now(), sammenligningsgrunnlag, beregningsgrunnlag)
-        val avviksvurdering = avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
+        val avviksvurdering = avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt).singleOrNull()
         assertEquals(kildeDto, avviksvurdering?.kilde)
-    }
-
-    @Test
-    fun `finner siste avviksvurdering selv om sammenligningsgrunnlaget er tomt og beregningsgrunnlaget er null`() {
-        val fødselsnummer = Fødselsnummer("12345678910")
-        opprettEn(
-            UUID.randomUUID(),
-            fødselsnummer,
-            1.januar,
-            SPINNVILL,
-            LocalDateTime.now(),
-            AvviksvurderingDto.SammenligningsgrunnlagDto(
-                emptyMap()
-            ),
-            beregningsgrunnlag = null
-        )
-        val siste = avviksvurdering.findLatest(fødselsnummer, 1.januar)
-        assertNotNull(siste)
     }
 
     @Test
