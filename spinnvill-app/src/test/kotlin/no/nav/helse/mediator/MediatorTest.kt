@@ -46,15 +46,24 @@ class MediatorTest {
     @Test
     fun `ignorerer sammenligningsgrunnlag-løsning dersom det ikke finnes noe ubehandlet avviksvurdering-behov`() {
         val database = databaseStub()
+        database.lagreGrunnlagshistorikk(testAvviksvurderingsGrunnlag())
         val testRapid = TestRapid()
         val mediator = Mediator(VersjonAvKode("versjon"), testRapid) { database }
-        mediator.håndter(SammenligningsgrunnlagLøsning(fødselsnummer, skjæringstidspunkt, UUID.randomUUID(), sammenligningsgrunnlag))
+        mediator.håndter(
+            SammenligningsgrunnlagLøsning(
+                fødselsnummer,
+                skjæringstidspunkt,
+                UUID.randomUUID(),
+                sammenligningsgrunnlag
+            )
+        )
         assertEquals(0, testRapid.inspektør.size)
     }
 
     @Test
     fun `filtrerer vekk infotrygdAvviksvurderinger fordi disse skal ikke brukes videre og `() {
         val database = databaseStub()
+        database.lagreGrunnlagshistorikk(testAvviksvurderingsGrunnlag())
         val testRapid = TestRapid()
         val mediator = Mediator(VersjonAvKode("versjon"), testRapid) { database }
 
@@ -71,12 +80,14 @@ class MediatorTest {
             )
         )
         assertEquals(1, testRapid.inspektør.size)
-        assertEquals(listOf("InntekterForSammenligningsgrunnlag"), testRapid.inspektør.message(0)["@behov"].map { it.asText() })
+        assertEquals(
+            listOf("InntekterForSammenligningsgrunnlag"),
+            testRapid.inspektør.message(0)["@behov"].map { it.asText() })
     }
 
     @Test
     fun `Ignorerer avviksvurderingsbehov som ligger ubesvart i databasen`() {
-        val database = realisticDatabaseStub()
+        val database = databaseStub()
         val testRapid = TestRapid()
         val mediator = Mediator(VersjonAvKode("versjon"), testRapid) { database }
 
@@ -95,7 +106,9 @@ class MediatorTest {
         )
         assertTrue(database.avviksvurderingBehovErLagret(behovId1))
         assertEquals(1, testRapid.inspektør.size)
-        assertEquals(listOf("InntekterForSammenligningsgrunnlag"), testRapid.inspektør.message(0)["@behov"].map { it.asText() })
+        assertEquals(
+            listOf("InntekterForSammenligningsgrunnlag"),
+            testRapid.inspektør.message(0)["@behov"].map { it.asText() })
 
         val behovId2 = UUID.randomUUID()
         mediator.håndter(
@@ -116,7 +129,7 @@ class MediatorTest {
 
     @Test
     fun `Sletter avviksvurderingsbehov som ligger ubesvart i databasene i over en time, og fortsetter håndtering`() {
-        val database = realisticDatabaseStub()
+        val database = databaseStub()
         val testRapid = TestRapid()
         val mediator = Mediator(VersjonAvKode("versjon"), testRapid) { database }
 
@@ -137,7 +150,9 @@ class MediatorTest {
         )
         assertTrue(database.avviksvurderingBehovErLagret(behovId1))
         assertEquals(1, testRapid.inspektør.size)
-        assertEquals(listOf("InntekterForSammenligningsgrunnlag"), testRapid.inspektør.message(0)["@behov"].map { it.asText() })
+        assertEquals(
+            listOf("InntekterForSammenligningsgrunnlag"),
+            testRapid.inspektør.message(0)["@behov"].map { it.asText() })
 
         val behovId2 = UUID.randomUUID()
         mediator.håndter(
@@ -155,7 +170,9 @@ class MediatorTest {
         assertTrue(database.avviksvurderingBehovErLagret(behovId2))
         assertFalse(database.avviksvurderingBehovErLagret(behovId1))
         assertEquals(2, testRapid.inspektør.size)
-        assertEquals(listOf("InntekterForSammenligningsgrunnlag"), testRapid.inspektør.message(1)["@behov"].map { it.asText() })
+        assertEquals(
+            listOf("InntekterForSammenligningsgrunnlag"),
+            testRapid.inspektør.message(1)["@behov"].map { it.asText() })
     }
 
     @Test
@@ -163,12 +180,39 @@ class MediatorTest {
         val enBehovId = UUID.randomUUID()
         val enAnnenBehovId = UUID.randomUUID()
         val etUbehandletAvviksvurderingBehov = avviksvurderingBehov(enBehovId)
-        val database = databaseStub(etUbehandletAvviksvurderingBehov)
+        val database = databaseStub()
+        database.lagreAvviksvurderingBehov(etUbehandletAvviksvurderingBehov)
+        database.lagreGrunnlagshistorikk(testAvviksvurderingsGrunnlag())
         val testRapid = TestRapid()
         val mediator = Mediator(VersjonAvKode("versjon"), testRapid) { database }
-        mediator.håndter(SammenligningsgrunnlagLøsning(fødselsnummer, skjæringstidspunkt, enAnnenBehovId, sammenligningsgrunnlag))
+        mediator.håndter(
+            SammenligningsgrunnlagLøsning(
+                fødselsnummer,
+                skjæringstidspunkt,
+                enAnnenBehovId,
+                sammenligningsgrunnlag
+            )
+        )
         assertEquals(0, testRapid.inspektør.size)
     }
+
+    private fun testAvviksvurderingsGrunnlag() = listOf(
+        Avviksvurderingsgrunnlag(
+            id = UUID.randomUUID(),
+            fødselsnummer = fødselsnummer,
+            skjæringstidspunkt = skjæringstidspunkt,
+            beregningsgrunnlag = Beregningsgrunnlag.opprett(
+                mapOf(
+                    organisasjonsnummer to OmregnetÅrsinntekt(
+                        600000.0
+                    )
+                )
+            ),
+            sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
+            opprettet = LocalDateTime.now(),
+            kilde = Kilde.INFOTRYGD,
+        )
+    )
 
     private fun avviksvurderingBehov(behovId: UUID): AvviksvurderingBehov {
         return AvviksvurderingBehov.nyttBehov(
@@ -183,34 +227,8 @@ class MediatorTest {
         )
     }
 
-    private fun databaseStub(returnedAvviksvurderingBehov: AvviksvurderingBehov? = null) = object : Database {
-        override fun datasource(): HikariDataSource = error("Not implemented in test")
-        override fun migrate() = error("Not implemented in test")
-        override fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) {}
-        override fun finnAvviksvurderingsgrunnlag(
-            fødselsnummer: Fødselsnummer,
-            skjæringstidspunkt: LocalDate,
-        ): List<Avviksvurderingsgrunnlag> = listOf(
-            Avviksvurderingsgrunnlag(
-                id = UUID.randomUUID(),
-                fødselsnummer = fødselsnummer,
-                skjæringstidspunkt = skjæringstidspunkt,
-                beregningsgrunnlag = Beregningsgrunnlag.opprett(mapOf(organisasjonsnummer to OmregnetÅrsinntekt(600000.0))),
-                sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
-                opprettet = LocalDateTime.now(),
-                kilde = Kilde.INFOTRYGD,
-            )
-        )
-        override fun lagreGrunnlagshistorikk(grunnlagene: List<Avviksvurderingsgrunnlag>) {}
-        override fun slettAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) = error("Not implemented in test")
 
-        override fun finnUbehandletAvviksvurderingBehov(
-            fødselsnummer: Fødselsnummer,
-            skjæringstidspunkt: LocalDate,
-        ): AvviksvurderingBehov? = returnedAvviksvurderingBehov
-    }
-
-    private fun realisticDatabaseStub() = object : Database {
+    private fun databaseStub() = object : Database {
         private val avviksvurderingBehovMap = mutableMapOf<UUID, AvviksvurderingBehov>()
         private val avviksvurderingGrunnlagMap = mutableMapOf<UUID, Avviksvurderingsgrunnlag>()
         override fun datasource(): HikariDataSource = error("Not implemented in test")
@@ -218,15 +236,20 @@ class MediatorTest {
         override fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) {
             avviksvurderingBehovMap[avviksvurderingBehov.behovId] = avviksvurderingBehov
         }
+
         override fun finnAvviksvurderingsgrunnlag(
             fødselsnummer: Fødselsnummer,
             skjæringstidspunkt: LocalDate,
-        ): List<Avviksvurderingsgrunnlag> = avviksvurderingGrunnlagMap.values.filter { it.fødselsnummer == fødselsnummer && it.skjæringstidspunkt == skjæringstidspunkt }
+        ): List<Avviksvurderingsgrunnlag> =
+            avviksvurderingGrunnlagMap.values.filter { it.fødselsnummer == fødselsnummer && it.skjæringstidspunkt == skjæringstidspunkt }
 
         override fun lagreGrunnlagshistorikk(grunnlagene: List<Avviksvurderingsgrunnlag>) {
             grunnlagene.forEach { grunnlag -> avviksvurderingGrunnlagMap[grunnlag.id] = grunnlag }
         }
-        override fun slettAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) { avviksvurderingBehovMap.remove(avviksvurderingBehov.behovId) }
+
+        override fun slettAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) {
+            avviksvurderingBehovMap.remove(avviksvurderingBehov.behovId)
+        }
 
         override fun finnUbehandletAvviksvurderingBehov(
             fødselsnummer: Fødselsnummer,
