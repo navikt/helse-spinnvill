@@ -3,6 +3,7 @@ package no.nav.helse.avviksvurdering
 import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.Fødselsnummer
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 class AvviksvurderingBehov private constructor(
@@ -14,6 +15,7 @@ class AvviksvurderingBehov private constructor(
     val organisasjonsnummer: Arbeidsgiverreferanse,
     val beregningsgrunnlag : Beregningsgrunnlag,
     val json: Map<String, Any>,
+    val opprettet: LocalDateTime,
     private var løst: Boolean
 ) {
     fun erLøst() = løst
@@ -42,6 +44,7 @@ class AvviksvurderingBehov private constructor(
                 organisasjonsnummer = organisasjonsnummer,
                 beregningsgrunnlag = beregningsgrunnlag,
                 json = json,
+                opprettet = LocalDateTime.now(),
                 løst = false
             )
         }
@@ -55,6 +58,7 @@ class AvviksvurderingBehov private constructor(
             organisasjonsnummer: Arbeidsgiverreferanse,
             beregningsgrunnlag: Beregningsgrunnlag,
             løst: Boolean,
+            opprettet: LocalDateTime,
             json: Map<String, Any>,
         ): AvviksvurderingBehov {
             return AvviksvurderingBehov(
@@ -66,6 +70,7 @@ class AvviksvurderingBehov private constructor(
                 organisasjonsnummer = organisasjonsnummer,
                 beregningsgrunnlag = beregningsgrunnlag,
                 json = json,
+                opprettet = opprettet,
                 løst = løst
             )
         }

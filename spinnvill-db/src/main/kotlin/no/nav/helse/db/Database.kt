@@ -44,6 +44,7 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
                     }
                 ),
                 json = dto.json,
+                opprettet = dto.opprettet,
             )
         }
     }
@@ -53,11 +54,15 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
             avviksvurderingBehov.behovId,
             fødselsnummer = avviksvurderingBehov.fødselsnummer.value,
             skjæringstidspunkt = avviksvurderingBehov.skjæringstidspunkt,
-            opprettet = LocalDateTime.now(),
+            opprettet = avviksvurderingBehov.opprettet,
             løst = if (avviksvurderingBehov.erLøst()) LocalDateTime.now() else null,
             json = avviksvurderingBehov.json
         )
         avviksvurderingBehovDao.lagre(dto)
+    }
+
+    override fun slettAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) {
+        avviksvurderingBehovDao.slett(avviksvurderingBehov.behovId)
     }
 
     override fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<Avviksvurderingsgrunnlag> {
@@ -92,4 +97,5 @@ interface Database {
     fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<Avviksvurderingsgrunnlag>
 
     fun lagreGrunnlagshistorikk(grunnlagene: List<Avviksvurderingsgrunnlag>)
+    fun slettAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov)
 }

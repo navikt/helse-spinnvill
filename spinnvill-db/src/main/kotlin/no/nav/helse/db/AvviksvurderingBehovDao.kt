@@ -68,6 +68,12 @@ internal class AvviksvurderingBehovDao {
         }
     }
 
+    internal fun slett(behovId: UUID) {
+        transaction {
+            EtAvviksvurderingBehov.findById(behovId)?.delete()
+        }
+    }
+
 
     private fun EtAvviksvurderingBehov.dto(): AvviksvurderingBehovDto {
         return AvviksvurderingBehovDto(
