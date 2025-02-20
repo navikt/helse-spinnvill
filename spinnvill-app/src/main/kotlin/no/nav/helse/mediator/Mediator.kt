@@ -29,7 +29,11 @@ class Mediator(
     override fun håndter(behov: AvviksvurderingBehov) {
         val fødselsnummer = behov.fødselsnummer
         val meldingPubliserer = MeldingPubliserer(rapidsConnection, behov, versjonAvKode)
-        if (harUbesvartBehov(fødselsnummer, behov.skjæringstidspunkt)) return
+        if (harUbesvartBehov(fødselsnummer, behov.skjæringstidspunkt)) {
+            logg.info("Ignorerer avviksvurdering-behov, det ble funnet igjen som ubesvart i databasen")
+            sikkerlogg.info("Ignorerer avviksvurdering-behov for {}, det ble funnet igjen som ubesvart i databasen", kv("fødselsnummer", fødselsnummer.value))
+            return
+        }
 
         logg.info("Behandler avviksvurdering-behov")
         sikkerlogg.info("Behandler avviksvurdering-behov for {}", kv("fødselsnummer", fødselsnummer.value))
