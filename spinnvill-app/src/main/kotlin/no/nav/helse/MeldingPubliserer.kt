@@ -4,7 +4,6 @@ import no.nav.helse.avviksvurdering.Avviksvurdering
 import no.nav.helse.avviksvurdering.AvviksvurderingBehov
 import no.nav.helse.avviksvurdering.BehovForSammenligningsgrunnlag
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
-import no.nav.helse.mediator.producer.Message
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import java.time.LocalDate
@@ -17,14 +16,14 @@ class MeldingPubliserer(
     private val versjonAvKode: VersjonAvKode,
 ) {
 
-    private val meldinger = mutableListOf<Message>()
+    private val meldinger = mutableListOf<Melding>()
 
     fun sendMeldinger() {
         meldinger.map { message ->
             when (message) {
-                is Message.Behov -> message to JsonMessage.newNeed(message.behov, message.innhold)
-                is Message.Hendelse -> message to JsonMessage.newMessage(message.navn, message.innhold)
-                is Message.Løsning -> message to JsonMessage.newMessage(message.innhold)
+                is Melding.Behov -> message to JsonMessage.newNeed(message.behov, message.innhold)
+                is Melding.Hendelse -> message to JsonMessage.newMessage(message.navn, message.innhold)
+                is Melding.Løsning -> message to JsonMessage.newMessage(message.innhold)
             }
         }.onEach { (_, json) ->
             json["fødselsnummer"] = avviksvurderingBehov.fødselsnummer.value
@@ -36,9 +35,9 @@ class MeldingPubliserer(
         }
     }
 
-    private fun SubsumsjonsmeldingDto.tilMelding(): Message.Hendelse {
+    private fun SubsumsjonsmeldingDto.tilMelding(): Melding.Hendelse {
         val dto = this
-        return Message.Hendelse(
+        return Melding.Hendelse(
             navn = "subsumsjon",
             innhold = mapOf(
                 "subsumsjon" to buildMap {
@@ -79,7 +78,7 @@ class MeldingPubliserer(
                 )
             )
         }
-        meldinger.add(Message.Løsning(løsningMap))
+        meldinger.add(Melding.Løsning(løsningMap))
     }
 
     fun behovløsningMedVurdering(vurdering: Avviksvurdering) {
@@ -118,13 +117,13 @@ class MeldingPubliserer(
                 )
             )
         }
-        meldinger.add(Message.Løsning(løsningMap))
+        meldinger.add(Melding.Løsning(løsningMap))
     }
 
     fun behovForSammenligningsgrunnlag(behov: BehovForSammenligningsgrunnlag) {
         val behovNavn = "InntekterForSammenligningsgrunnlag"
         meldinger.add(
-            Message.Behov(
+            Melding.Behov(
                 setOf(behovNavn),
                 mapOf(
                     behovNavn to (mapOf("avviksvurderingBehovId" to avviksvurderingBehov.behovId) + behov.toMap())
