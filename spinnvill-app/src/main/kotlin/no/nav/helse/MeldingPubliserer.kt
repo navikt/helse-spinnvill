@@ -32,7 +32,7 @@ class MeldingPubliserer(
             json["skjæringstidspunkt"] = avviksvurderingBehov.skjæringstidspunkt
             json["vedtaksperiodeId"] = avviksvurderingBehov.vedtaksperiodeId
         }.forEach {
-            rapidsConnection.publish(it.second.toJson())
+            rapidsConnection.publish(avviksvurderingBehov.fødselsnummer.value, it.second.toJson())
         }
     }
 
