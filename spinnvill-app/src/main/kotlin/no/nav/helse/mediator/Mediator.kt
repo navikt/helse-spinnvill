@@ -30,7 +30,14 @@ class Mediator(
     override fun håndter(behov: AvviksvurderingBehov) {
         val fødselsnummer = behov.fødselsnummer
         val meldingPubliserer = MeldingPubliserer(rapidsConnection, behov, versjonAvKode)
-        if (avgjørOmAvviksvurderingBehovSkalHoppesOver(fødselsnummer, behov)) return
+        if (skalHoppesOver(fødselsnummer, behov)) {
+            logg.info("Ignorerer avviksvurdering-behov, det ble funnet igjen som ubesvart i databasen")
+            sikkerlogg.info(
+                "Ignorerer avviksvurdering-behov for {}, det ble funnet igjen som ubesvart i databasen",
+                kv("fødselsnummer", fødselsnummer.value)
+            )
+            return
+        }
 
         logg.info("Behandler avviksvurdering-behov")
         sikkerlogg.info("Behandler avviksvurdering-behov for {}", kv("fødselsnummer", fødselsnummer.value))
@@ -58,32 +65,17 @@ class Mediator(
         meldingPubliserer.sendMeldinger()
     }
 
-    private fun avgjørOmAvviksvurderingBehovSkalHoppesOver(
-        fødselsnummer: Fødselsnummer,
-        behov: AvviksvurderingBehov,
-    ): Boolean {
-        val ubehandletAvviksvurderingBehov =
-            database.finnUbehandletAvviksvurderingBehov(fødselsnummer, behov.skjæringstidspunkt)
-        return if (ubehandletAvviksvurderingBehov !== null) {
-            if (ubehandletAvviksvurderingBehov.opprettet.isBefore(LocalDateTime.now().minusHours(1))) {
-                logg.info("Sletter ubehandlet avviksvurdering-behov ${ubehandletAvviksvurderingBehov.behovId} som er eldre enn en time")
-                sikkerlogg.info(
-                    "Sletter ubehandlet avviksvurdering-behov ${ubehandletAvviksvurderingBehov.behovId} for {} som er eldre enn en time",
-                    kv("fødselsnummer", fødselsnummer.value)
-                )
-                database.slettAvviksvurderingBehov(ubehandletAvviksvurderingBehov)
-                false
-            } else {
-                logg.info("Ignorerer avviksvurdering-behov, det ble funnet igjen som ubesvart i databasen")
-                sikkerlogg.info(
-                    "Ignorerer avviksvurdering-behov for {}, det ble funnet igjen som ubesvart i databasen",
-                    kv("fødselsnummer", fødselsnummer.value)
-                )
-                true
-            }
-        } else {
-            false
-        }
+    private fun skalHoppesOver(fødselsnummer: Fødselsnummer, behov: AvviksvurderingBehov): Boolean {
+        val ubehandletBehov =
+            database.finnUbehandletAvviksvurderingBehov(fødselsnummer, behov.skjæringstidspunkt) ?: return false
+        if (!ubehandletBehov.opprettet.isBefore(LocalDateTime.now().minusHours(1))) return true
+        logg.info("Sletter ubehandlet avviksvurdering-behov ${ubehandletBehov.behovId} som er eldre enn en time")
+        sikkerlogg.info(
+            "Sletter ubehandlet avviksvurdering-behov ${ubehandletBehov.behovId} for {} som er eldre enn en time",
+            kv("fødselsnummer", fødselsnummer.value)
+        )
+        database.slettAvviksvurderingBehov(ubehandletBehov)
+        return false
     }
 
     override fun håndter(løsning: SammenligningsgrunnlagLøsning) {
