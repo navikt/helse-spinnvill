@@ -27,11 +27,11 @@ class GrunnlagshistorikkTest {
     @Test
     fun `gjør avviksvurdering når vi mottar sammenligningsgrunnlag`() {
         val avviksvurderinger = avviksvurderinger()
-        val resultat = avviksvurderinger.nyttSammenligningsgrunnlag(
+        val avviksvurdering = avviksvurderinger.nyttSammenligningsgrunnlag(
             sammenligningsgrunnlag = sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0),
             beregningsgrunnlag = beregningsgrunnlag(arbeidsgiver to 600000.0)
         )
-        assertTrue(resultat.vurdering.harAkseptabeltAvvik)
+        assertTrue(avviksvurdering.harAkseptabeltAvvik)
     }
 
     @Test
@@ -77,7 +77,7 @@ class GrunnlagshistorikkTest {
         val avviksvurderinger = avviksvurderinger()
         val avviksvurdering = avviksvurderinger.nyttSammenligningsgrunnlag(sammenligningsgrunnlag(1.januar, arbeidsgiver to 600000.0), beregningsgrunnlag(arbeidsgiver to 600000.0))
 
-        assertTrue(avviksvurdering.vurdering.harAkseptabeltAvvik)
+        assertTrue(avviksvurdering.harAkseptabeltAvvik)
     }
 
     @Test

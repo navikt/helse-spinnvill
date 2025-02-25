@@ -24,14 +24,14 @@ class Avviksvurderingsgrunnlag(
         private set
     private val MAKSIMALT_TILLATT_AVVIK = Avviksprosent(25.0)
 
-    internal fun vurderAvvik(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsresultat {
+    @Deprecated("Kun brukt i test, skal dø")
+    internal fun avviksvurdering(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsresultat {
         if (kilde == Kilde.INFOTRYGD || this.beregningsgrunnlag.erLikt(beregningsgrunnlag))
             return TrengerIkkeNyVurdering(this)
 
         this.beregningsgrunnlag = beregningsgrunnlag
         val avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
         return AvvikVurdert(
-            grunnlag = this,
             vurdering = Avviksvurdering(
                 id = this.id,
                 harAkseptabeltAvvik = avviksprosent <= MAKSIMALT_TILLATT_AVVIK,
@@ -43,20 +43,17 @@ class Avviksvurderingsgrunnlag(
         )
     }
 
-    internal fun vurderAvvik(): AvvikVurdert {
+    fun avviksvurdering(): Avviksvurdering {
         val beregningsgrunnlag = this.beregningsgrunnlag
         check(beregningsgrunnlag is Beregningsgrunnlag)
         val avviksprosent = sammenligningsgrunnlag.beregnAvvik(beregningsgrunnlag)
-        return AvvikVurdert(
-            grunnlag = this,
-            vurdering = Avviksvurdering(
-                id = this.id,
-                harAkseptabeltAvvik = avviksprosent <= MAKSIMALT_TILLATT_AVVIK,
-                avviksprosent = avviksprosent.avrundetTilFireDesimaler,
-                beregningsgrunnlag = beregningsgrunnlag,
-                sammenligningsgrunnlag = sammenligningsgrunnlag,
-                maksimaltTillattAvvik = MAKSIMALT_TILLATT_AVVIK.avrundetTilFireDesimaler
-            ),
+        return Avviksvurdering(
+            id = this.id,
+            harAkseptabeltAvvik = avviksprosent <= MAKSIMALT_TILLATT_AVVIK,
+            avviksprosent = avviksprosent.avrundetTilFireDesimaler,
+            beregningsgrunnlag = beregningsgrunnlag,
+            sammenligningsgrunnlag = sammenligningsgrunnlag,
+            maksimaltTillattAvvik = MAKSIMALT_TILLATT_AVVIK.avrundetTilFireDesimaler
         )
     }
 

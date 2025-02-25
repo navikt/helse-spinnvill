@@ -21,11 +21,11 @@ class Grunnlagshistorikk(
         if (sisteAvviksvurderingsgrunnlag.harLiktBeregningsgrunnlagSom(beregningsgrunnlag)) return TrengerIkkeNyVurdering(sisteAvviksvurderingsgrunnlag)
 
         val nyttGrunnlag = sisteAvviksvurderingsgrunnlag.gjenbrukSammenligningsgrunnlag(beregningsgrunnlag)
-        return nyttGrunnlag.utførNyAvviksvurdering()
+        return AvvikVurdert(nyttGrunnlag.utførNyAvviksvurdering())
     }
 
 
-    fun nyttSammenligningsgrunnlag(sammenligningsgrunnlag: Sammenligningsgrunnlag, beregningsgrunnlag: Beregningsgrunnlag): AvvikVurdert {
+    fun nyttSammenligningsgrunnlag(sammenligningsgrunnlag: Sammenligningsgrunnlag, beregningsgrunnlag: Beregningsgrunnlag): Avviksvurdering {
         check(grunnlagene.isEmpty()) { "Forventer ikke å hente inn nytt sammenligningsgrunnlag hvis det tidligere er gjort en avviksvurdering" }
         val nyttGrunnlag = Avviksvurderingsgrunnlag.nyttGrunnlag(
             fødselsnummer = fødselsnummer,
@@ -36,9 +36,9 @@ class Grunnlagshistorikk(
         return nyttGrunnlag.utførNyAvviksvurdering()
     }
 
-    private fun Avviksvurderingsgrunnlag.utførNyAvviksvurdering(): AvvikVurdert {
+    private fun Avviksvurderingsgrunnlag.utførNyAvviksvurdering(): Avviksvurdering {
         nyttSisteGrunnlag(this)
-        return this.vurderAvvik()
+        return this.avviksvurdering()
     }
 
     private fun nyttSisteGrunnlag(avviksvurderingsgrunnlag: Avviksvurderingsgrunnlag) {

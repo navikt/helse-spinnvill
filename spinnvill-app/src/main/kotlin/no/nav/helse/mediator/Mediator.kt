@@ -53,12 +53,12 @@ class Mediator(
 
             is Avviksvurderingsresultat.TrengerIkkeNyVurdering -> {
                 logg.info("Trenger ikke foreta ny vurdering")
-                meldingPubliserer.behovløsningUtenVurdering(resultat.gjeldendeGrunnlag.id)
+                meldingPubliserer.behovløsningUtenVurdering(resultat.gjeldendeGrunnlag.avviksvurdering())
                 markerBehovSomLøst(behov)
             }
 
             is Avviksvurderingsresultat.AvvikVurdert -> {
-                subsummerOgSvarPåBehov(resultat, meldingPubliserer, behov)
+                subsummerOgSvarPåBehov(resultat.vurdering, meldingPubliserer, behov)
             }
         }
         avviksvurderinger.lagre()
@@ -101,14 +101,13 @@ class Mediator(
     }
 
     private fun subsummerOgSvarPåBehov(
-        resultat: Avviksvurderingsresultat.AvvikVurdert,
+        resultat: Avviksvurdering,
         meldingPubliserer: MeldingPubliserer,
         avviksvurderingBehov: AvviksvurderingBehov,
     ) {
-        val avviksvurdering = resultat.vurdering
-        meldingPubliserer.`8-30 ledd 2 punktum 1`(avviksvurdering)
-        if (avviksvurdering.harAkseptabeltAvvik) meldingPubliserer.`8-30 ledd 1`(avviksvurdering.beregningsgrunnlag)
-        meldingPubliserer.behovløsningMedVurdering(avviksvurdering)
+        meldingPubliserer.`8-30 ledd 2 punktum 1`(resultat)
+        if (resultat.harAkseptabeltAvvik) meldingPubliserer.`8-30 ledd 1`(resultat.beregningsgrunnlag)
+        meldingPubliserer.behovløsningMedVurdering(resultat)
         logg.info("Ny vurdering foretatt")
         markerBehovSomLøst(avviksvurderingBehov)
     }

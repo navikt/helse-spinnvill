@@ -18,7 +18,6 @@ sealed interface Avviksvurderingsresultat {
     data class TrengerSammenligningsgrunnlag(val behov: BehovForSammenligningsgrunnlag) :
         Avviksvurderingsresultat
     data class AvvikVurdert(
-        val grunnlag: Avviksvurderingsgrunnlag,
         val vurdering: Avviksvurdering,
     ): Avviksvurderingsresultat
 

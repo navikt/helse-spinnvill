@@ -169,23 +169,56 @@ class MeldingPublisererTest {
 
     @Test
     fun `svarer ut behov med løsning uten vurdering`() {
-        val avviksvurderingId = UUID.randomUUID()
-        meldingPubliserer.behovløsningUtenVurdering(avviksvurderingId)
+        meldingPubliserer.behovløsningUtenVurdering(
+            vurdering = avviksvurdering(
+                false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0
+            )
+        )
         meldingPubliserer.sendMeldinger()
 
         assertEquals(1, testRapid.inspektør.behov("Avviksvurdering").size)
         val behovNode = testRapid.inspektør.behov("Avviksvurdering").single()
 
         val løsningNode = behovNode.path("@løsning").path("Avviksvurdering")
+        assertNotNull(løsningNode.get("avviksvurderingId").asUUID())
         assertEquals("TrengerIkkeNyVurdering", løsningNode.path("utfall").asText())
         assertNotNull(løsningNode.get("avviksvurderingId").asUUID())
+        assertNotNull(løsningNode.get("harAkseptabeltAvvik").asBoolean())
+        assertNotNull(løsningNode.get("maksimaltTillattAvvik").asDouble())
+        assertNotNull(løsningNode.get("avviksprosent").asDouble())
+        assertNotNull(løsningNode.get("opprettet").asLocalDateTime())
+
+        val beregningsgrunnlagNode = løsningNode.path("beregningsgrunnlag")
+        assertNotNull(beregningsgrunnlagNode.get("totalbeløp").asDouble())
+        val omregnedeÅrsinntekter = beregningsgrunnlagNode.path("omregnedeÅrsinntekter") as ArrayNode
+        assertFalse(omregnedeÅrsinntekter.isEmpty)
+        omregnedeÅrsinntekter.forEach {
+            assertNotNull(it.get("arbeidsgiverreferanse").asText().somArbeidsgiverref())
+            assertNotNull(it.get("beløp").asDouble())
+        }
+
+        val sammenligningsgrunnlagNode = løsningNode.path("sammenligningsgrunnlag")
+        assertNotNull(sammenligningsgrunnlagNode.get("totalbeløp").asDouble())
+        val innrapporterteInntekterNode = sammenligningsgrunnlagNode.path("innrapporterteInntekter") as ArrayNode
+        assertFalse(innrapporterteInntekterNode.isEmpty)
+        innrapporterteInntekterNode.forEach { innrapportertInntekt ->
+            assertNotNull(innrapportertInntekt.get("arbeidsgiverreferanse").asText().somArbeidsgiverref())
+            val inntekterNode = innrapportertInntekt.path("inntekter") as ArrayNode
+            assertFalse(inntekterNode.isEmpty)
+            inntekterNode.forEach { inntekt ->
+                assertNotNull(inntekt.get("årMåned").asYearMonth())
+                assertNotNull(inntekt.get("beløp").asDouble())
+            }
+        }
     }
 
     @Test
     fun `svarer ut behov med løsning med vurdering`() {
-        meldingPubliserer.behovløsningMedVurdering(vurdering = avviksvurdering(
-            false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0
-        ))
+        meldingPubliserer.behovløsningMedVurdering(
+            vurdering = avviksvurdering(
+                false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0
+            )
+        )
         meldingPubliserer.sendMeldinger()
 
         assertEquals(1, testRapid.inspektør.behov("Avviksvurdering").size)

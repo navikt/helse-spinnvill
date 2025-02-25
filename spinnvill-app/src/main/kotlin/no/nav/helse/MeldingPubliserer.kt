@@ -69,13 +69,13 @@ class MeldingPubliserer(
         )
     }
 
-    fun behovløsningUtenVurdering(avviksvurderingId: UUID) {
+    fun behovløsningUtenVurdering(vurdering: Avviksvurdering) {
         val løsningMap = avviksvurderingBehov.json.toMutableMap().apply {
             this["@løsning"] = mapOf(
-                "Avviksvurdering" to mapOf(
-                    "utfall" to "TrengerIkkeNyVurdering",
-                    "avviksvurderingId" to avviksvurderingId
-                )
+                "Avviksvurdering" to buildMap {
+                        put("utfall", "TrengerIkkeNyVurdering")
+                        putAll(behovløsning(vurdering))
+                },
             )
         }
         meldinger.add(Melding.Løsning(løsningMap))
@@ -84,40 +84,46 @@ class MeldingPubliserer(
     fun behovløsningMedVurdering(vurdering: Avviksvurdering) {
         val løsningMap = avviksvurderingBehov.json.toMutableMap().apply {
             this["@løsning"] = mapOf(
-                "Avviksvurdering" to mapOf(
-                    "utfall" to "NyVurderingForetatt",
-                    "avviksvurderingId" to vurdering.id,
-                    "avviksprosent" to vurdering.avviksprosent,
-                    "harAkseptabeltAvvik" to vurdering.harAkseptabeltAvvik,
-                    "maksimaltTillattAvvik" to vurdering.maksimaltTillattAvvik,
-                    "opprettet" to vurdering.vurderingstidspunkt,
-                    "beregningsgrunnlag" to mapOf(
-                        "totalbeløp" to vurdering.beregningsgrunnlag.totalOmregnetÅrsinntekt,
-                        "omregnedeÅrsinntekter" to vurdering.beregningsgrunnlag.omregnedeÅrsinntekter.map { (arbeidsgiverreferanse, beløp) ->
-                            mapOf(
-                                "arbeidsgiverreferanse" to arbeidsgiverreferanse,
-                                "beløp" to beløp
-                            )
-                        }
-                    ),
-                    "sammenligningsgrunnlag" to mapOf(
-                        "totalbeløp" to vurdering.sammenligningsgrunnlag.totaltInnrapportertÅrsinntekt,
-                        "innrapporterteInntekter" to vurdering.sammenligningsgrunnlag.inntekter.map { (arbeidsgiverreferanse, inntekter) ->
-                            mapOf(
-                                "arbeidsgiverreferanse" to arbeidsgiverreferanse,
-                                "inntekter" to inntekter.map { (beløp, årMåned) ->
-                                    mapOf(
-                                        "årMåned" to årMåned,
-                                        "beløp" to beløp
-                                    )
-                                }
-                            )
-                        }
-                    )
-                )
+                "Avviksvurdering" to buildMap {
+                    put("utfall", "NyVurderingForetatt")
+                    putAll(behovløsning(vurdering))
+                }
             )
         }
         meldinger.add(Melding.Løsning(løsningMap))
+    }
+
+    private fun behovløsning(vurdering: Avviksvurdering): Map<String, Any> {
+        return mapOf(
+            "avviksvurderingId" to vurdering.id,
+            "avviksprosent" to vurdering.avviksprosent,
+            "harAkseptabeltAvvik" to vurdering.harAkseptabeltAvvik,
+            "maksimaltTillattAvvik" to vurdering.maksimaltTillattAvvik,
+            "opprettet" to vurdering.vurderingstidspunkt,
+            "beregningsgrunnlag" to mapOf(
+                "totalbeløp" to vurdering.beregningsgrunnlag.totalOmregnetÅrsinntekt,
+                "omregnedeÅrsinntekter" to vurdering.beregningsgrunnlag.omregnedeÅrsinntekter.map { (arbeidsgiverreferanse, beløp) ->
+                    mapOf(
+                        "arbeidsgiverreferanse" to arbeidsgiverreferanse,
+                        "beløp" to beløp
+                    )
+                }
+            ),
+            "sammenligningsgrunnlag" to mapOf(
+                "totalbeløp" to vurdering.sammenligningsgrunnlag.totaltInnrapportertÅrsinntekt,
+                "innrapporterteInntekter" to vurdering.sammenligningsgrunnlag.inntekter.map { (arbeidsgiverreferanse, inntekter) ->
+                    mapOf(
+                        "arbeidsgiverreferanse" to arbeidsgiverreferanse,
+                        "inntekter" to inntekter.map { (beløp, årMåned) ->
+                            mapOf(
+                                "årMåned" to årMåned,
+                                "beløp" to beløp
+                            )
+                        }
+                    )
+                }
+            )
+        )
     }
 
     fun behovForSammenligningsgrunnlag(behov: BehovForSammenligningsgrunnlag) {
