@@ -7,7 +7,7 @@ dependencies {
     implementation(project(":spinnvill-avviksvurdering"))
     implementation(project(":spinnvill-felles"))
 
-    implementation("io.getunleash:unleash-client-java:10.0.0")
+    implementation("io.getunleash:unleash-client-java:10.2.0")
     implementation("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
 
     testImplementation(testFixtures(project(":spinnvill-db")))
