@@ -1,6 +1,6 @@
 private val rapidsAndRiversVersion = "2025030709111741335066.dc4411f7bc29"
 private val postgresqlVersion = "42.7.4"
-private val hikariCPVersion = "5.1.0"
+private val hikariCPVersion = "6.2.1"
 private val flywayCoreVersion = "11.3.1"
 private val kotliqueryVersion = "1.9.0"
 private val cloudSqlVersion = "1.20.0"
