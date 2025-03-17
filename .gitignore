@@ -1,7 +1,5 @@
+.DS_Store
+.gradle
 .idea/*
 !/.idea/vcs.xml
-.gradle
-.kotlin
 build
-out
-.DS_Store
