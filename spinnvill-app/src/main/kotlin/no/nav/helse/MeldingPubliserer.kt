@@ -1,11 +1,11 @@
 package no.nav.helse
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import no.nav.helse.avviksvurdering.Avviksvurdering
 import no.nav.helse.avviksvurdering.AvviksvurderingBehov
 import no.nav.helse.avviksvurdering.BehovForSammenligningsgrunnlag
 import no.nav.helse.avviksvurdering.Beregningsgrunnlag
-import no.nav.helse.rapids_rivers.JsonMessage
-import no.nav.helse.rapids_rivers.RapidsConnection
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*

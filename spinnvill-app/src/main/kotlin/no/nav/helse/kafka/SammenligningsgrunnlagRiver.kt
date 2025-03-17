@@ -2,6 +2,14 @@ package no.nav.helse.kafka
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
+import com.github.navikt.tbd_libs.rapids_and_rivers.asYearMonth
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.micrometer.core.instrument.MeterRegistry
 import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.*
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
@@ -9,7 +17,6 @@ import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.Inntektstype
 import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.MånedligInntekt
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import no.nav.helse.avviksvurdering.SammenligningsgrunnlagLøsning
-import no.nav.helse.rapids_rivers.*
 import org.slf4j.LoggerFactory
 
 internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, private val messageHandler: MessageHandler) : River.PacketListener {
@@ -31,7 +38,7 @@ internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, p
         }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext) {
+    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
         val skjæringstidspunkt = packet["InntekterForSammenligningsgrunnlag.skjæringstidspunkt"].asLocalDate()
         val fødselsnummer = packet["fødselsnummer"].asText().somFnr()
         val avviksvurderingBehovId = packet["InntekterForSammenligningsgrunnlag.avviksvurderingBehovId"].asUUID()

@@ -1,5 +1,6 @@
 package no.nav.helse.mediator
 
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import net.logstash.logback.argument.StructuredArguments.kv
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.MeldingPubliserer
@@ -9,7 +10,6 @@ import no.nav.helse.db.Database
 import no.nav.helse.kafka.AvviksvurderingbehovRiver
 import no.nav.helse.kafka.MessageHandler
 import no.nav.helse.kafka.SammenligningsgrunnlagRiver
-import no.nav.helse.rapids_rivers.RapidsConnection
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime

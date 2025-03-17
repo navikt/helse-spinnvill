@@ -1,5 +1,6 @@
 package no.nav.helse.mediator
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.helse.*
 import no.nav.helse.avviksvurdering.*
@@ -8,7 +9,6 @@ import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.MånedligInntekt
 import no.nav.helse.db.Database
 import no.nav.helse.helpers.dummyBeregningsgrunnlag
 import no.nav.helse.helpers.januar
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

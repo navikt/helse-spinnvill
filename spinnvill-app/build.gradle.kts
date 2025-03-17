@@ -11,6 +11,7 @@ dependencies {
     implementation("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
 
     testImplementation(testFixtures(project(":spinnvill-db")))
+    testImplementation("com.github.navikt.tbd-libs:rapids-and-rivers-test:2025.02.25-08.21-6205bbfb")
 }
 
 tasks {

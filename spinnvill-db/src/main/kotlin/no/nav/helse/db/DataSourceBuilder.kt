@@ -2,10 +2,8 @@ package no.nav.helse.db
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.micrometer.core.instrument.Clock
-import io.micrometer.prometheus.PrometheusConfig
-import io.micrometer.prometheus.PrometheusMeterRegistry
-import io.prometheus.client.CollectorRegistry
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import org.flywaydb.core.Flyway
 import java.time.Duration
 import javax.sql.DataSource
@@ -29,11 +27,7 @@ internal class DataSourceBuilder(env: Map<String, String>) {
         maxLifetime = idleTimeout * 5
         initializationFailTimeout = Duration.ofMinutes(1).toMillis()
         connectionTimeout = Duration.ofSeconds(30).toMillis()
-        metricRegistry = PrometheusMeterRegistry(
-            PrometheusConfig.DEFAULT,
-            CollectorRegistry.defaultRegistry,
-            Clock.SYSTEM
-        )
+        metricRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     }
 
     private val hikariMigrationConfig = HikariConfig().apply {

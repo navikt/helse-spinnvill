@@ -1,5 +1,6 @@
 package no.nav.helse.kafka
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import no.nav.helse.Beskrivelse
 import no.nav.helse.Fordel
 import no.nav.helse.InntektPerMåned
@@ -8,7 +9,6 @@ import no.nav.helse.avviksvurdering.AvviksvurderingBehov
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import no.nav.helse.avviksvurdering.SammenligningsgrunnlagLøsning
 import no.nav.helse.helpers.januar
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import no.nav.helse.somArbeidsgiverref
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
