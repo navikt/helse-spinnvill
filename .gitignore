@@ -1,7 +1,7 @@
-.idea
+.idea/*
+!/.idea/vcs.xml
 .gradle
 .kotlin
 build
 out
-!/.idea/codeStyles/*.xml
 .DS_Store
