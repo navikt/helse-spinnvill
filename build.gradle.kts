@@ -1,13 +1,10 @@
-private val logbackVersion = "1.5.7"
-private val logstashVersion = "8.0"
-private val mockkVersion = "1.13.12"
-private val junitJupiterVersion = "5.11.3"
-
 plugins {
     kotlin("jvm") version "2.1.10"
 }
 
 allprojects {
+    group = "no.nav.helse"
+
     apply(plugin = "org.jetbrains.kotlin.jvm")
     repositories {
         val githubPassword: String? by project
@@ -27,15 +24,12 @@ allprojects {
     }
 
     dependencies {
-        implementation("ch.qos.logback:logback-classic:$logbackVersion")
-        implementation("net.logstash.logback:logstash-logback-encoder:$logstashVersion") {
-            exclude("com.fasterxml.jackson.core")
-            exclude("com.fasterxml.jackson.dataformat")
-        }
+        implementation("org.slf4j:slf4j-api:2.0.17")
 
+        testImplementation(platform("org.junit:junit-bom:5.12.0"))
+        testImplementation("org.junit.jupiter:junit-jupiter")
         testImplementation(kotlin("test"))
-        testImplementation("io.mockk:mockk:$mockkVersion")
-        testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
+        testImplementation("io.mockk:mockk:1.13.17")
     }
 
     tasks {

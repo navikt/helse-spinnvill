@@ -1,27 +1,16 @@
-private val rapidsAndRiversVersion = "2025030709111741335066.dc4411f7bc29"
-private val postgresqlVersion = "42.7.4"
-private val hikariCPVersion = "5.1.0"
-private val flywayCoreVersion = "11.3.1"
-private val kotliqueryVersion = "1.9.0"
-private val cloudSqlVersion = "1.20.0"
-private val testcontainersPostgresqlVersion = "1.19.6"
-
-group = "no.nav.helse"
-
-private val mainClass = "no.nav.helse.AppKt"
-
-
 dependencies {
     implementation(project(":spinnvill-felles"))
-    implementation("com.google.cloud.sql:postgres-socket-factory:$cloudSqlVersion")
-    implementation("org.postgresql:postgresql:$postgresqlVersion")
-    implementation("com.zaxxer:HikariCP:$hikariCPVersion")
-    implementation("org.flywaydb:flyway-core:$flywayCoreVersion")
-    implementation("org.flywaydb:flyway-database-postgresql:$flywayCoreVersion")
-    implementation("com.github.navikt:rapids-and-rivers:$rapidsAndRiversVersion")
-    implementation("com.github.seratch:kotliquery:$kotliqueryVersion")
 
-    testImplementation("org.testcontainers:postgresql:$testcontainersPostgresqlVersion")
+    implementation(libs.bundles.logback)
+
+    implementation(libs.postgresSocketFactory)
+    implementation(libs.postgresJdbcDriver)
+    implementation(libs.hikari)
+    implementation(libs.bundles.flyway.postgres)
+    implementation(libs.rapidsAndRivers)
+    implementation(libs.kotliquery)
+
+    testImplementation(libs.testcontainers.postgres)
 }
 
 tasks {
