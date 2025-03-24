@@ -33,7 +33,7 @@ tbdLibs-rapidsAndRiversTest = { module = "com.github.navikt.tbd-libs:rapids-and-
 
 testcontainers-postgres = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 
-unleash-client = "io.getunleash:unleash-client-java:10.2.0"
+unleash-client = "io.getunleash:unleash-client-java:10.2.1"
 
 [bundles]
 exposed = [
