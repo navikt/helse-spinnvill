@@ -15,7 +15,7 @@ exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref= "ex
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-postgres = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
 
-hikari = "com.zaxxer:HikariCP:6.2.1"
+hikari = "com.zaxxer:HikariCP:6.3.0"
 
 jackson-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
