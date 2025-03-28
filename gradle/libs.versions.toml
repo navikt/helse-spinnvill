@@ -27,7 +27,7 @@ logback-logstashEncoder = "net.logstash.logback:logstash-logback-encoder:8.0"
 micrometer-prometheus = "io.micrometer:micrometer-registry-prometheus:1.14.5"
 postgresJdbcDriver = "org.postgresql:postgresql:42.7.5"
 postgresSocketFactory = "com.google.cloud.sql:postgres-socket-factory:1.24.0"
-rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2025030709111741335066.dc4411f7bc29"
+rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2025032719521743101565.4abbf0c3af65"
 
 tbdLibs-rapidsAndRiversTest = { module = "com.github.navikt.tbd-libs:rapids-and-rivers-test", version.ref = "tbdLibs" }
 
