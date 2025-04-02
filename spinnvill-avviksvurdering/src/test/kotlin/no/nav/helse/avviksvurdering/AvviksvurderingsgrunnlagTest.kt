@@ -102,6 +102,18 @@ internal class AvviksvurderingsgrunnlagTest {
         assertTrue(harAkseptabeltAvvik) {"Forventet at $avviksprosent er et akseptabelt avvik"}
     }
 
+    // tilfelle fra produksjon (en biarbeidsgiver som trakk tilbake tidligere utbetalt bonus)
+    // https://nav-it.slack.com/archives/C014X6VBFPV/p1743586076621489
+    @Test
+    fun `man får et positivt avvikstall også når sammenligningsgrunnlaget er negativt`() {
+        val grunnlag = Avviksvurderingsgrunnlag.nyttGrunnlag("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(-103.1225))
+
+        val resultat = grunnlag.avviksvurdering(beregningsgrunnlag("a1" to 67_680.0))
+        assertIs<Avviksvurderingsresultat.AvvikVurdert>(resultat)
+        val avviksprosent = resultat.vurdering.avviksprosent
+        assertTrue(avviksprosent > 0) { "Forventet at $avviksprosent er et positivt prosenttall" }
+    }
+
     @Test
     fun `finn siste avviksvurdering fra liste`() {
         val grunnlag1 = Avviksvurderingsgrunnlag.nyttGrunnlag("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0))

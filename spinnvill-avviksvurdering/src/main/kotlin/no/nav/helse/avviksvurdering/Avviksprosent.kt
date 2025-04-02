@@ -26,7 +26,7 @@ class Avviksprosent internal constructor(prosent: Double): Comparable<Avvikspros
             if (sammenligningsgrunnlag == 0.0) {
                 Avviksprosent(100.0)
             } else {
-                Avviksprosent(((beregningsgrunnlag - sammenligningsgrunnlag).absoluteValue / sammenligningsgrunnlag) * 100)
+                Avviksprosent(((beregningsgrunnlag - sammenligningsgrunnlag) / sammenligningsgrunnlag).absoluteValue * 100)
             }
     }
 }
