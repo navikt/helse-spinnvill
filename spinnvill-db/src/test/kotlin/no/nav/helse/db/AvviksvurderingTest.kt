@@ -2,19 +2,21 @@ package no.nav.helse.db
 
 import no.nav.helse.*
 import no.nav.helse.dto.AvviksvurderingDto
+import no.nav.helse.dto.AvviksvurderingDto.KildeDto.INFOTRYGD
 import no.nav.helse.dto.AvviksvurderingDto.KildeDto.SPINNVILL
 import no.nav.helse.helpers.februar
 import no.nav.helse.helpers.januar
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 import java.util.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 internal class AvviksvurderingTest {
 
@@ -35,6 +37,7 @@ internal class AvviksvurderingTest {
 
         val id = UUID.randomUUID()
         val avviksvurdering = opprettEn(id, fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag, beregningsgrunnlag)
+        assertNotNull(avviksvurdering)
 
         assertEquals(id, avviksvurdering.id)
         assertEquals(fødselsnummer, avviksvurdering.fødselsnummer)
@@ -94,6 +97,7 @@ internal class AvviksvurderingTest {
 
         opprettEn(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now().minusDays(1), sammenligningsgrunnlag, beregningsgrunnlag1)
         val upsert = opprettEn(avviksvurderingId, fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag, beregningsgrunnlag2)
+        assertNotNull(upsert)
 
         val antallBeregningsgrunnlag = transaction {
             Avviksvurdering.Companion.EttBeregningsgrunnlag.find { Avviksvurdering.Companion.Beregningsgrunnlag.avviksvurdering eq avviksvurderingId}.count()
@@ -119,20 +123,6 @@ internal class AvviksvurderingTest {
         }
 
         assertEquals(1, antallSammenligningsgrunnlag)
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = AvviksvurderingDto.KildeDto::class)
-    fun `kan lagre avviksvurdering med alle kilder`(kildeDto: AvviksvurderingDto.KildeDto) {
-        val avviksvurderingId = UUID.randomUUID()
-        val fødselsnummer = Fødselsnummer("12345678910")
-        val skjæringstidspunkt = 1.januar
-        val beregningsgrunnlag = beregningsgrunnlag(200000.0)
-        val sammenligningsgrunnlag = sammenligningsgrunnlag(20000.0)
-
-        opprettEn(avviksvurderingId, fødselsnummer, skjæringstidspunkt, kildeDto, LocalDateTime.now(), sammenligningsgrunnlag, beregningsgrunnlag)
-        val avviksvurdering = avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt).singleOrNull()
-        assertEquals(kildeDto, avviksvurdering?.kilde)
     }
 
     @Test
@@ -168,6 +158,15 @@ internal class AvviksvurderingTest {
         assertFalse(avviksvurderinger.contains(avviksvurdering2))
     }
 
+    @Test
+    fun `hvis nyeste avviksvurdering ble gjort i Infotrygd er all historikk irrelevant, for da skal det gjøres ny avviksvurdering uansett`() {
+        val fødselsnummer = Fødselsnummer("12345678910")
+        opprettEn(UUID.randomUUID(), fødselsnummer, 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), beregningsgrunnlag())
+        opprettEn(UUID.randomUUID(), fødselsnummer, 1.januar, INFOTRYGD, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), beregningsgrunnlag())
+        val avviksvurderinger = avviksvurdering.findAll(fødselsnummer, 1.januar)
+        assertEquals(0, avviksvurderinger.size)
+    }
+
     private fun beregningsgrunnlag(omregnetÅrsinntekt: Double = 20000.0): AvviksvurderingDto.BeregningsgrunnlagDto {
         return AvviksvurderingDto.BeregningsgrunnlagDto(
             mapOf(Arbeidsgiverreferanse("123456789") to OmregnetÅrsinntekt(omregnetÅrsinntekt))
@@ -198,9 +197,9 @@ internal class AvviksvurderingTest {
         opprettet: LocalDateTime,
         sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
         beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto,
-    ): AvviksvurderingDto {
+    ): AvviksvurderingDto? {
         val enAvviksvurdering = AvviksvurderingDto(id, fødselsnummer, skjæringstidspunkt, opprettet, kilde, sammenligningsgrunnlag, beregningsgrunnlag)
         avviksvurdering.upsertAll(listOf(enAvviksvurdering))
-        return avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt).last()
+        return avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt).lastOrNull()
     }
 }

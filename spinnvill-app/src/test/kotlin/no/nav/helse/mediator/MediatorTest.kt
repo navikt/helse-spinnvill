@@ -61,31 +61,6 @@ class MediatorTest {
     }
 
     @Test
-    fun `filtrerer vekk infotrygdAvviksvurderinger fordi disse skal ikke brukes videre og `() {
-        val database = databaseStub()
-        database.lagreGrunnlagshistorikk(testAvviksvurderingsGrunnlag())
-        val testRapid = TestRapid()
-        val mediator = Mediator(VersjonAvKode("versjon"), testRapid) { database }
-
-        mediator.håndter(
-            AvviksvurderingBehov.nyttBehov(
-                vilkårsgrunnlagId = UUID.randomUUID(),
-                behovId = UUID.randomUUID(),
-                skjæringstidspunkt = skjæringstidspunkt,
-                fødselsnummer = fødselsnummer,
-                vedtaksperiodeId = UUID.randomUUID(),
-                organisasjonsnummer = organisasjonsnummer,
-                beregningsgrunnlag = dummyBeregningsgrunnlag,
-                json = emptyMap()
-            )
-        )
-        assertEquals(1, testRapid.inspektør.size)
-        assertEquals(
-            listOf("InntekterForSammenligningsgrunnlag"),
-            testRapid.inspektør.message(0)["@behov"].map { it.asText() })
-    }
-
-    @Test
     fun `Ignorerer avviksvurderingsbehov som ligger ubesvart i databasen`() {
         val database = databaseStub()
         val testRapid = TestRapid()

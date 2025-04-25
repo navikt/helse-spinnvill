@@ -103,6 +103,8 @@ internal class Avviksvurdering {
             }
                 .orderBy(Avviksvurderinger.opprettet to SortOrder.ASC)
                 .map { it.dto() }
+                .takeUnless { it.isNotEmpty() && it.last().kilde === INFOTRYGD }
+                ?: emptyList()
         }
     }
 
