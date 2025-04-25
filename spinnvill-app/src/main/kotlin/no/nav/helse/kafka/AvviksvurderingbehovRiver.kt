@@ -26,10 +26,12 @@ internal class AvviksvurderingbehovRiver(rapidsConnection: RapidsConnection, pri
         .registerModule(JavaTimeModule())
     init {
         River(rapidsConnection).apply {
+            precondition {
+                it.requireValue("@event_name", "behov")
+                it.requireAll("@behov", listOf("Avviksvurdering"))
+                it.forbid("@løsning")
+            }
             validate {
-                it.demandValue("@event_name", "behov")
-                it.demandAll("@behov", listOf("Avviksvurdering"))
-                it.rejectKey("@løsning")
                 it.requireKey("fødselsnummer", "@behovId")
                 it.requireKey("Avviksvurdering.vilkårsgrunnlagId", "Avviksvurdering.skjæringstidspunkt", "Avviksvurdering.organisasjonsnummer", "Avviksvurdering.vedtaksperiodeId")
                 it.requireArray("Avviksvurdering.omregnedeÅrsinntekter") {
