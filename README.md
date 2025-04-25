@@ -17,59 +17,75 @@ I dette repoet skal det commites på dette formatet:
 NB: Husk å bytte til å bruke unicode characters i stedet for `:<emote>:` notasjon
 
 ## Avviksvurdering
-### Konsept
+### Beslutningstre for avviksvurdering
 ```mermaid
----
-title: Prosessflyt for avviksvurdering
----
 flowchart TD
-    start(Melding om utkast til vedtak)
-    utkast(Håndter utkast til vedtak)
-    avviksvurdering_finnes{{Finnes avviksvurdering?}}
-    ny_avviksvurdering(Opprett ufullstendig avviksvurdering)
-    avviksvurdering_gjort{{Er avviksvurdering gjort med <br> beregningsgrunnlag fra utkast til vedtak?}}
+    start((Nytt 
+    avviksvurdering-
+    behov))
+    finnes_ubesvart_behov{Finnes et 
+    ubesvart behov 
+    for fnr og 
+    skjæringstidspunkt?}
+    ubesvart_behov_finnes(Ignorer nytt behov)
+    finnes_tidligere_avviksvurdering{Lagre behov
+    Er det 
+    avviksvurdert 
+    tidligere?
+    }
     hent_sammenligningsgrunnlag(Hent sammenligningsgrunnlag)
+    finn_riktig_avviksvurdering(Finn avviksvurdering med riktig ID)
+    forskjellige_beregningsgrunnlag{
+    Er
+beregningsgrunnlagene
+forskjellige?
+}
     gjør_avviksvurdering(Gjør avviksvurdering)
     ikke_gjør_avviksvurdering(Ikke gjør en ny avviksvurdering)
-    har_ufulstendig_avviksvurdering{{Har ufullstendig avviksvurdering?}}
-    gjennbruk_avviksvurdering(Gjennbruk ufullstendig avviksvurdering)
-    opprett_avviksvurdering(Opprett ny avviksvurdering)
     
-    start --> utkast --> avviksvurdering_finnes
-    avviksvurdering_finnes -- ja --> avviksvurdering_gjort
-    avviksvurdering_finnes -- nei --> hent_sammenligningsgrunnlag --> ny_avviksvurdering --> utkast
-    avviksvurdering_gjort -- ja --> ikke_gjør_avviksvurdering
-    avviksvurdering_gjort -- nei --> har_ufulstendig_avviksvurdering
-    har_ufulstendig_avviksvurdering -- ja --> gjennbruk_avviksvurdering
-    har_ufulstendig_avviksvurdering -- nei --> opprett_avviksvurdering
-    gjennbruk_avviksvurdering & opprett_avviksvurdering --> gjør_avviksvurdering
+    start --> finnes_ubesvart_behov
+    finnes_ubesvart_behov -- ja --> ubesvart_behov_finnes
+    finnes_ubesvart_behov -- nei --> finnes_tidligere_avviksvurdering
+    finnes_tidligere_avviksvurdering -- nei --> hent_sammenligningsgrunnlag
+    finnes_tidligere_avviksvurdering -- ja --> forskjellige_beregningsgrunnlag
+    forskjellige_beregningsgrunnlag -- nei --> ikke_gjør_avviksvurdering
+    forskjellige_beregningsgrunnlag -- ja --> gjør_avviksvurdering
+    hent_sammenligningsgrunnlag -. Løsning på behov .-> finn_riktig_avviksvurdering --> gjør_avviksvurdering
 ```
 
+### Kommunikasjonsflyt for avviksvurdering
 ```mermaid
----
-title: Meldingsflyt
----
 sequenceDiagram
-  participant Spleis
+  participant Spes as Spesialist
   participant Spinn as Spinnvill
   participant Kafka
-  participant Spes as Spesialist
+  participant Db as DB
   
-  Spleis ->> Spinn: Utkast til vedtak
-  Spinn -->> Kafka: Be om sammenligningsgrunnlag
-  Kafka -->> Spinn: Sammenligningsgrunnlag
-  Spinn ->> Spinn: Vurder avvik 
-  Spinn -->> Kafka: Subsumsjon
-  Spinn -->> Kafka: Varsel
-  Spinn ->> Spes: Avviksvurdering
-  Spinn ->> Spes: Utkast til vedtak (med avviksvurderingId)
+  Spes ->> Spinn: Avviksvurdering-behov
+  alt har ubesvart behov
+  Spinn ->> Spinn: ignorer nytt behov
+  else har ikke ubesvart behov
+    Spinn ->> Db: lagre nytt behov
+    alt har gjort avviksvurdering før
+      alt har forskjellig beregningsgrunnlag
+        Spinn ->> Spinn: Vurder avvik
+        Spinn ->> Spes: Løs behov: ny avviksvurdering foretatt
+      else har ikke forskjellig beregningsgrunnlag
+       Spinn ->> Spes: Løs behov: ny avviksvurdering ikke foretatt
+      end
+    else har ikke gjort avviksvurdering før
+      Spinn -->> Kafka: Hent sammenligningsgrunnlag
+      Kafka -->> Spinn: Sammenligningsgrunnlag
+      Spinn ->> Db: Hent behov for gitt ID
+      Db ->> Spinn: Avviksvurdering-behov
+      Spinn ->> Spinn: Vurder avvik
+      Spinn ->> Spes: Løs behov: ny avviksvurdering foretatt
+    end
+  end
 ```
 
-### Datamodell
+### Datamodell for avviksvurdering
 ```mermaid
----
-title: Avviksvurdering
----
 erDiagram
     AVVIKSVURDERING ||--o{ BEREGNINGSGRUNNLAG: har
     AVVIKSVURDERING ||--|{ SAMMENLIGNINGSGRUNNLAG: har
