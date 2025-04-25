@@ -1,6 +1,5 @@
 package no.nav.helse.helpers
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -42,8 +41,6 @@ internal fun sammenligningsgrunnlag(
         }
     )
 }
-
-internal fun Map<String, Any>.toJson() = objectMapper.convertValue(this, JsonNode::class.java)
 
 internal val objectMapper = jacksonObjectMapper()
     .registerModule(JavaTimeModule())
