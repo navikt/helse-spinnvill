@@ -13,7 +13,7 @@ import java.time.YearMonth
 internal val dummyBeregningsgrunnlag = beregningsgrunnlag("a1" to 600000.0)
 internal val dummySammenligningsgrunnlag = sammenligningsgrunnlag("a1" to 50000.0)
 
-internal fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) = Beregningsgrunnlag.opprett(
+internal fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) = Beregningsgrunnlag(
     arbeidsgivere.toMap().entries.associate { Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value) }
 )
 

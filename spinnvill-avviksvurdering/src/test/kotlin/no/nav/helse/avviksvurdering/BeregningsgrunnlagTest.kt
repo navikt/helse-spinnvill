@@ -9,24 +9,6 @@ import org.junit.jupiter.api.assertThrows
 class BeregningsgrunnlagTest {
 
     @Test
-    fun `beregningsgrunnlag er ulike når de er forskjellige typer`() {
-        val beregningsgrunnlag = beregningsgrunnlag("a1" to 400000.0)
-        val annetBeregningsgrunnlag = object : IBeregningsgrunnlag {
-            override fun erLikt(other: IBeregningsgrunnlag): Boolean = TODO("Not yet implemented")
-        }
-
-        assertFalse(beregningsgrunnlag.erLikt(annetBeregningsgrunnlag))
-    }
-
-    @Test
-    fun `beregningsgrunnlag er like når de er samme type og ikke har diff`() {
-        val beregningsgrunnlag1 = beregningsgrunnlag("a1" to 400000.0)
-        val beregningsgrunnlag2 = beregningsgrunnlag("a1" to 400000.0)
-
-        assertTrue(beregningsgrunnlag1.erLikt(beregningsgrunnlag2))
-    }
-
-    @Test
     fun `referential equals`() {
         val omregnedeÅrsinntekter = beregningsgrunnlag("a1" to 400000.0)
         assertEquals(omregnedeÅrsinntekter, omregnedeÅrsinntekter)
@@ -59,10 +41,10 @@ class BeregningsgrunnlagTest {
     @Test
     fun `kan bare opprette gyldige beregningsgrunnlag`() {
         val omregnedeÅrsinntekter = emptyMap<Arbeidsgiverreferanse, OmregnetÅrsinntekt>()
-        assertThrows<IllegalArgumentException> { Beregningsgrunnlag.opprett(omregnedeÅrsinntekter) }
+        assertThrows<IllegalArgumentException> { Beregningsgrunnlag(omregnedeÅrsinntekter) }
     }
 
-    private fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) = Beregningsgrunnlag.opprett(
+    private fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) = Beregningsgrunnlag(
         arbeidsgivere.toMap().entries.associate { Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value) }
     )
 }

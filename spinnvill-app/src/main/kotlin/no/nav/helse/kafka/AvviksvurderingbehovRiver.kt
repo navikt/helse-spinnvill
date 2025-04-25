@@ -53,7 +53,7 @@ internal class AvviksvurderingbehovRiver(rapidsConnection: RapidsConnection, pri
                 fødselsnummer = packet["fødselsnummer"].asText().somFnr(),
                 vedtaksperiodeId = packet["Avviksvurdering.vedtaksperiodeId"].asUUID(),
                 organisasjonsnummer = packet["Avviksvurdering.organisasjonsnummer"].asText().somArbeidsgiverref(),
-                beregningsgrunnlag = Beregningsgrunnlag.opprett(packet["Avviksvurdering.omregnedeÅrsinntekter"].associate {
+                beregningsgrunnlag = Beregningsgrunnlag(packet["Avviksvurdering.omregnedeÅrsinntekter"].associate {
                     Arbeidsgiverreferanse(it["organisasjonsnummer"].asText()) to OmregnetÅrsinntekt(it["beløp"].asDouble())
                 }),
                 json = mapper.readValue(packet.toJson())

@@ -13,7 +13,7 @@ data class AvviksvurderingDto(
     val opprettet: LocalDateTime,
     val kilde: KildeDto = KildeDto.SPINNVILL,
     val sammenligningsgrunnlag: SammenligningsgrunnlagDto,
-    val beregningsgrunnlag: BeregningsgrunnlagDto?
+    val beregningsgrunnlag: BeregningsgrunnlagDto
 ) {
     data class SammenligningsgrunnlagDto(
         val innrapporterteInntekter: Map<Arbeidsgiverreferanse, List<MånedligInntektDto>>
@@ -42,27 +42,5 @@ data class AvviksvurderingDto(
         SPINNVILL,
         SPLEIS,
         INFOTRYGD,
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return this === other || (other is AvviksvurderingDto
-            && id == other.id
-            && fødselsnummer == other.fødselsnummer
-            && skjæringstidspunkt == other.skjæringstidspunkt
-            && opprettet.withNano(0) == other.opprettet.withNano(0)
-            && kilde == other.kilde
-            && sammenligningsgrunnlag == other.sammenligningsgrunnlag
-            && beregningsgrunnlag == other.beregningsgrunnlag)
-    }
-
-    override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + fødselsnummer.hashCode()
-        result = 31 * result + skjæringstidspunkt.hashCode()
-        result = 31 * result + opprettet.hashCode()
-        result = 31 * result + kilde.hashCode()
-        result = 31 * result + sammenligningsgrunnlag.hashCode()
-        result = 31 * result + (beregningsgrunnlag?.hashCode() ?: 0)
-        return result
     }
 }

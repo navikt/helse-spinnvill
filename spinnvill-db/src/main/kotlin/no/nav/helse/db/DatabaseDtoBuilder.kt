@@ -18,9 +18,7 @@ class DatabaseDtoBuilder {
             opprettet = grunnlag.opprettet,
             kilde = grunnlag.kilde.tilDto(),
             sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(innrapporterteInntekter),
-            beregningsgrunnlag =
-                if (beregningsgrunnlag is Beregningsgrunnlag) AvviksvurderingDto.BeregningsgrunnlagDto(beregningsgrunnlag.omregnedeÅrsinntekter)
-                else null
+            beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(beregningsgrunnlag.omregnedeÅrsinntekter)
         )
     }
 
@@ -53,15 +51,11 @@ class DatabaseDtoBuilder {
 
     internal companion object {
         internal fun AvviksvurderingDto.tilDomene(): Avviksvurderingsgrunnlag {
-            val beregningsgrunnlag = beregningsgrunnlag?.let {
-                Beregningsgrunnlag.opprett(it.omregnedeÅrsinntekter)
-            } ?: Ingen
-
             return Avviksvurderingsgrunnlag(
                 id = id,
                 fødselsnummer = fødselsnummer,
                 skjæringstidspunkt = skjæringstidspunkt,
-                beregningsgrunnlag = beregningsgrunnlag,
+                beregningsgrunnlag = Beregningsgrunnlag(beregningsgrunnlag.omregnedeÅrsinntekter),
                 opprettet = opprettet,
                 kilde = this.kilde.tilDomene(),
                 sammenligningsgrunnlag = Sammenligningsgrunnlag(

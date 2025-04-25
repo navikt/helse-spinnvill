@@ -31,9 +31,10 @@ internal class AvviksvurderingTest {
         val fødselsnummer = Fødselsnummer("12345678910")
         val skjæringstidspunkt = 1.januar
         val sammenligningsgrunnlag = sammenligningsgrunnlag()
+        val beregningsgrunnlag = beregningsgrunnlag()
 
         val id = UUID.randomUUID()
-        val avviksvurdering = opprettEn(id, fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag, null)
+        val avviksvurdering = opprettEn(id, fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag, beregningsgrunnlag)
 
         assertEquals(id, avviksvurdering.id)
         assertEquals(fødselsnummer, avviksvurdering.fødselsnummer)
@@ -41,7 +42,7 @@ internal class AvviksvurderingTest {
         assertEquals(SPINNVILL, avviksvurdering.kilde)
         assertEquals(sammenligningsgrunnlag.innrapporterteInntekter.entries.first().key, avviksvurdering.sammenligningsgrunnlag.innrapporterteInntekter.entries.first().key)
         assertEquals(sammenligningsgrunnlag.innrapporterteInntekter.entries.first().value, avviksvurdering.sammenligningsgrunnlag.innrapporterteInntekter.entries.first().value)
-        assertNull(avviksvurdering.beregningsgrunnlag)
+        assertEquals(beregningsgrunnlag, avviksvurdering.beregningsgrunnlag)
     }
 
     @Test
@@ -49,11 +50,12 @@ internal class AvviksvurderingTest {
         val fødselsnummer = Fødselsnummer("12345678910")
         val skjæringstidspunkt = 1.januar
         val sammenligningsgrunnlag = sammenligningsgrunnlag()
+        val beregningsgrunnlag = beregningsgrunnlag()
 
         val id1 = UUID.randomUUID()
         val id2 = UUID.randomUUID()
-        val avviksvurdering1 = AvviksvurderingDto(id1, fødselsnummer, skjæringstidspunkt, LocalDateTime.now(), SPINNVILL, sammenligningsgrunnlag, null)
-        val avviksvurdering2 = AvviksvurderingDto(id2, fødselsnummer, skjæringstidspunkt, LocalDateTime.now(), SPINNVILL, sammenligningsgrunnlag, null)
+        val avviksvurdering1 = AvviksvurderingDto(id1, fødselsnummer, skjæringstidspunkt, LocalDateTime.now(), SPINNVILL, sammenligningsgrunnlag, beregningsgrunnlag)
+        val avviksvurdering2 = AvviksvurderingDto(id2, fødselsnummer, skjæringstidspunkt, LocalDateTime.now(), SPINNVILL, sammenligningsgrunnlag, beregningsgrunnlag)
         avviksvurdering.upsertAll(listOf(avviksvurdering1, avviksvurdering2))
 
         val avviksvurderinger = avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt)
@@ -61,44 +63,6 @@ internal class AvviksvurderingTest {
         assertEquals(2, avviksvurderinger.size)
         assertTrue(avviksvurderinger.contains(avviksvurdering1))
         assertTrue(avviksvurderinger.contains(avviksvurdering2))
-    }
-
-    @Test
-    fun `Kan oppdatere flere avviksvurderinger samtidig`() {
-        val fødselsnummer = Fødselsnummer("12345678910")
-        val skjæringstidspunkt = 1.januar
-
-        val id1 = UUID.randomUUID()
-        val nyAvviksvurdering = AvviksvurderingDto(id1, fødselsnummer, skjæringstidspunkt, LocalDateTime.now(), SPINNVILL, sammenligningsgrunnlag(), null)
-        val oppdatertAvviksvurdering = AvviksvurderingDto(id1, fødselsnummer, skjæringstidspunkt, LocalDateTime.now(), SPINNVILL, sammenligningsgrunnlag(), beregningsgrunnlag())
-        avviksvurdering.upsertAll(listOf(nyAvviksvurdering))
-        avviksvurdering.upsertAll(listOf(oppdatertAvviksvurdering))
-
-        val avviksvurderinger = avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt)
-
-        assertEquals(1, avviksvurderinger.size)
-        val avviksvurderingen = avviksvurderinger.single()
-        assertEquals(nyAvviksvurdering.id, avviksvurderingen.id)
-        assertEquals(oppdatertAvviksvurdering.id, avviksvurderingen.id)
-        assertNotEquals(nyAvviksvurdering.beregningsgrunnlag, avviksvurderingen.beregningsgrunnlag)
-        assertEquals(oppdatertAvviksvurdering.beregningsgrunnlag, avviksvurderingen.beregningsgrunnlag)
-    }
-
-    @Test
-    fun `Oppdater eksisterende avviksvurdering`() {
-        val fødselsnummer = Fødselsnummer("12345678910")
-        val skjæringstidspunkt = 1.januar
-        val sammenligningsgrunnlag = sammenligningsgrunnlag()
-        val beregningsgrunnlag = beregningsgrunnlag()
-
-        val id = UUID.randomUUID()
-
-        val nyAvviksvurdering = opprettEn(id, fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag, null)
-        val modifisertAvviksvurdering = opprettEn(id, fødselsnummer, skjæringstidspunkt, SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag, beregningsgrunnlag)
-
-        assertEquals(nyAvviksvurdering.id, modifisertAvviksvurdering.id)
-        assertEquals(beregningsgrunnlag.omregnedeÅrsinntekter.keys.first(), modifisertAvviksvurdering.beregningsgrunnlag?.omregnedeÅrsinntekter?.keys?.first())
-        assertEquals(beregningsgrunnlag.omregnedeÅrsinntekter.values.first(), modifisertAvviksvurdering.beregningsgrunnlag?.omregnedeÅrsinntekter?.values?.first())
     }
 
     @Test
@@ -174,8 +138,8 @@ internal class AvviksvurderingTest {
     @Test
     fun `henter liste av avviksvurderinger`() {
         val fødselsnummer = Fødselsnummer("12345678910")
-        val avviksvurdering1 = opprettEn(UUID.randomUUID(), fødselsnummer, 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), null)
-        val avviksvurdering2 = opprettEn(UUID.randomUUID(), fødselsnummer, 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), null)
+        val avviksvurdering1 = opprettEn(UUID.randomUUID(), fødselsnummer, 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), beregningsgrunnlag())
+        val avviksvurdering2 = opprettEn(UUID.randomUUID(), fødselsnummer, 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), beregningsgrunnlag())
         val avviksvurderinger = avviksvurdering.findAll(fødselsnummer, 1.januar)
         assertEquals(2, avviksvurderinger.size)
         assertTrue(avviksvurderinger.contains(avviksvurdering1))
@@ -185,8 +149,8 @@ internal class AvviksvurderingTest {
     @Test
     fun `henter ikke avviksvurderinger med annet skjæringstidspunkt`() {
         val fødselsnummer = Fødselsnummer("12345678910")
-        val avviksvurdering1 = opprettEn(UUID.randomUUID(), fødselsnummer, 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), null)
-        val avviksvurdering2 = opprettEn(UUID.randomUUID(), fødselsnummer, 2.februar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), null)
+        val avviksvurdering1 = opprettEn(UUID.randomUUID(), fødselsnummer, 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), beregningsgrunnlag())
+        val avviksvurdering2 = opprettEn(UUID.randomUUID(), fødselsnummer, 2.februar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), beregningsgrunnlag())
         val avviksvurderinger = avviksvurdering.findAll(fødselsnummer, 1.januar)
         assertEquals(1, avviksvurderinger.size)
         assertTrue(avviksvurderinger.contains(avviksvurdering1))
@@ -196,8 +160,8 @@ internal class AvviksvurderingTest {
     @Test
     fun `henter ikke avviksvurderinger med annet fødselsnummer`() {
         val fødselsnummer = Fødselsnummer("12345678910")
-        val avviksvurdering1 = opprettEn(UUID.randomUUID(), fødselsnummer, 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), null)
-        val avviksvurdering2 = opprettEn(UUID.randomUUID(), Fødselsnummer("0101010101"), 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), null)
+        val avviksvurdering1 = opprettEn(UUID.randomUUID(), fødselsnummer, 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), beregningsgrunnlag())
+        val avviksvurdering2 = opprettEn(UUID.randomUUID(), Fødselsnummer("0101010101"), 1.januar, SPINNVILL, LocalDateTime.now(), AvviksvurderingDto.SammenligningsgrunnlagDto(emptyMap()), beregningsgrunnlag())
         val avviksvurderinger = avviksvurdering.findAll(fødselsnummer, 1.januar)
         assertEquals(1, avviksvurderinger.size)
         assertTrue(avviksvurderinger.contains(avviksvurdering1))
@@ -233,7 +197,7 @@ internal class AvviksvurderingTest {
         kilde: AvviksvurderingDto.KildeDto,
         opprettet: LocalDateTime,
         sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
-        beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?,
+        beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto,
     ): AvviksvurderingDto {
         val enAvviksvurdering = AvviksvurderingDto(id, fødselsnummer, skjæringstidspunkt, opprettet, kilde, sammenligningsgrunnlag, beregningsgrunnlag)
         avviksvurdering.upsertAll(listOf(enAvviksvurdering))

@@ -106,7 +106,7 @@ class GrunnlagshistorikkTest {
     )
 
     private fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) =
-        Beregningsgrunnlag.opprett(arbeidsgivere.toMap().entries.associate { Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value) })
+        Beregningsgrunnlag(arbeidsgivere.toMap().entries.associate { Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value) })
 
     private fun sammenligningsgrunnlag(
         skjæringstidspunkt: LocalDate,

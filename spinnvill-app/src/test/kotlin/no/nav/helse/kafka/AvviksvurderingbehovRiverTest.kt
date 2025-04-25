@@ -45,7 +45,7 @@ class AvviksvurderingbehovRiverTest {
         assertEquals(FØDSELSNUMMER, behov.fødselsnummer.value)
         assertEquals(skjæringstidspunkt, behov.skjæringstidspunkt)
         assertEquals(
-            Beregningsgrunnlag.opprett(
+            Beregningsgrunnlag(
                 mapOf(
                     Arbeidsgiverreferanse(ORGANISASJONSNUMMER) to OmregnetÅrsinntekt(
                         500000.0

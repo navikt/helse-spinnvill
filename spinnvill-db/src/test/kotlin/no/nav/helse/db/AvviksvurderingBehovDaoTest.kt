@@ -138,7 +138,7 @@ internal class AvviksvurderingBehovDaoTest {
             vilkårsgrunnlagId = vilkårsgrunnlagId,
             vedtaksperiodeId = vedtaksperiodeId,
             organisasjonsnummer = organisasjonsnummer,
-            beregningsgrunnlag = Beregningsgrunnlag.opprett(
+            beregningsgrunnlag = Beregningsgrunnlag(
                 mapOf(
                     pair = organisasjonsnummer to OmregnetÅrsinntekt(
                         beløp,

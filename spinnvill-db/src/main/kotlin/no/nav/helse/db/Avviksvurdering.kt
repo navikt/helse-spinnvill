@@ -199,16 +199,12 @@ internal class Avviksvurdering {
             ),
             kilde = this.kilde.tilKilde(),
             opprettet = opprettet,
-            beregningsgrunnlag = this.beregningsgrunnlag
-                .takeUnless { beregningsgrunnlag -> beregningsgrunnlag.empty() }
-                ?.let { ettBeregningsgrunnlag ->
-                    AvviksvurderingDto.BeregningsgrunnlagDto(
-                        omregnedeÅrsinntekter = ettBeregningsgrunnlag
-                            .associate { beregningsgrunnlag ->
-                                Arbeidsgiverreferanse(beregningsgrunnlag.organisasjonsnummer) to OmregnetÅrsinntekt(beregningsgrunnlag.inntekt)
-                            }
-                    )
-                }
+            beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
+                omregnedeÅrsinntekter = this.beregningsgrunnlag
+                    .associate { beregningsgrunnlag ->
+                        Arbeidsgiverreferanse(beregningsgrunnlag.organisasjonsnummer) to OmregnetÅrsinntekt(beregningsgrunnlag.inntekt)
+                    }
+            )
         )
     }
 

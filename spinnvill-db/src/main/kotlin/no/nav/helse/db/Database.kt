@@ -38,7 +38,7 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
                 vedtaksperiodeId = jsonNode["Avviksvurdering"].get("vedtaksperiodeId").asUUID(),
                 organisasjonsnummer = jsonNode["Avviksvurdering"].get("organisasjonsnummer").asText().somArbeidsgiverref(),
                 løst = dto.løst != null,
-                beregningsgrunnlag = Beregningsgrunnlag.opprett(
+                beregningsgrunnlag = Beregningsgrunnlag(
                     jsonNode["Avviksvurdering"].get("omregnedeÅrsinntekter").associate {
                         Arbeidsgiverreferanse(it["organisasjonsnummer"].asText()) to OmregnetÅrsinntekt(it["beløp"].asDouble())
                     }

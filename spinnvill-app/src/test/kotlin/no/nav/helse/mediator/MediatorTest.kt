@@ -21,7 +21,7 @@ class MediatorTest {
     private val fødselsnummer = "12345678910".somFnr()
     private val organisasjonsnummer = "987654321".somArbeidsgiverref()
     private val skjæringstidspunkt = 1.januar
-    private val beregningsgrunnlag = Beregningsgrunnlag.opprett(
+    private val beregningsgrunnlag = Beregningsgrunnlag(
         mapOf(
             organisasjonsnummer to OmregnetÅrsinntekt(600000.0),
         )
@@ -201,7 +201,7 @@ class MediatorTest {
             id = UUID.randomUUID(),
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = skjæringstidspunkt,
-            beregningsgrunnlag = Beregningsgrunnlag.opprett(
+            beregningsgrunnlag = Beregningsgrunnlag(
                 mapOf(
                     organisasjonsnummer to OmregnetÅrsinntekt(
                         600000.0
