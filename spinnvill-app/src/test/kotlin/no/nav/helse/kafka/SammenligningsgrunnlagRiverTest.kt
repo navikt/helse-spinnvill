@@ -93,29 +93,33 @@ class SammenligningsgrunnlagRiverTest {
 
     @Test
     fun `Leser ikke inn sammenligningsgrunnlag som mangler årMåned`() {
-        testRapid.sendTestMessage(
-            sammenligningsgrunnlagJsonMed(
-                fødselsnummer = FØDSELSNUMMER,
-                organisasjonsnummer = ORGANISASJONSNUMMER,
-                skjæringstidspunkt = 1.januar,
-                avviksvurderingBehovId = UUID.randomUUID(),
-                inntekterForSammenligningsgrunnlag(null to emptyList())
+        assertThrows<IllegalStateException> {
+            testRapid.sendTestMessage(
+                sammenligningsgrunnlagJsonMed(
+                    fødselsnummer = FØDSELSNUMMER,
+                    organisasjonsnummer = ORGANISASJONSNUMMER,
+                    skjæringstidspunkt = 1.januar,
+                    avviksvurderingBehovId = UUID.randomUUID(),
+                    inntekterForSammenligningsgrunnlag(null to emptyList())
+                )
             )
-        )
+        }
         assertEquals(0, messageHandler.messages.size)
     }
 
     @Test
     fun `Leser ikke inn sammenligningsgrunnlag som mangler inntektsliste`() {
-        testRapid.sendTestMessage(
-            sammenligningsgrunnlagJsonMed(
-                fødselsnummer = FØDSELSNUMMER,
-                organisasjonsnummer = ORGANISASJONSNUMMER,
-                skjæringstidspunkt = 1.januar,
-                avviksvurderingBehovId = UUID.randomUUID(),
-                inntekter = inntekterForSammenligningsgrunnlag(YearMonth.of(2023, 1) to null)
+        assertThrows<IllegalStateException> {
+            testRapid.sendTestMessage(
+                sammenligningsgrunnlagJsonMed(
+                    fødselsnummer = FØDSELSNUMMER,
+                    organisasjonsnummer = ORGANISASJONSNUMMER,
+                    skjæringstidspunkt = 1.januar,
+                    avviksvurderingBehovId = UUID.randomUUID(),
+                    inntekter = inntekterForSammenligningsgrunnlag(YearMonth.of(2023, 1) to null)
+                )
             )
-        )
+        }
         assertEquals(0, messageHandler.messages.size)
     }
 
@@ -137,17 +141,19 @@ class SammenligningsgrunnlagRiverTest {
 
     @Test
     fun `Leser ikke inn sammenligningsgrunnlag uten inntektstype`() {
-        testRapid.sendTestMessage(
-            sammenligningsgrunnlagJsonMed(
-                fødselsnummer = FØDSELSNUMMER,
-                organisasjonsnummer = ORGANISASJONSNUMMER,
-                skjæringstidspunkt = 1.januar,
-                avviksvurderingBehovId = UUID.randomUUID(),
-                inntekterForSammenligningsgrunnlag(
-                    YearMonth.of(2023, 1) to listOf(inntekt(inntektstype = null))
+        assertThrows<IllegalStateException> {
+            testRapid.sendTestMessage(
+                sammenligningsgrunnlagJsonMed(
+                    fødselsnummer = FØDSELSNUMMER,
+                    organisasjonsnummer = ORGANISASJONSNUMMER,
+                    skjæringstidspunkt = 1.januar,
+                    avviksvurderingBehovId = UUID.randomUUID(),
+                    inntekterForSammenligningsgrunnlag(
+                        YearMonth.of(2023, 1) to listOf(inntekt(inntektstype = null))
+                    )
                 )
             )
-        )
+        }
         assertEquals(0, messageHandler.messages.size)
     }
 
@@ -171,33 +177,37 @@ class SammenligningsgrunnlagRiverTest {
 
     @Test
     fun `Leser ikke inn sammenligningsgrunnlag uten beløp`() {
-        testRapid.sendTestMessage(
-            sammenligningsgrunnlagJsonMed(
-                fødselsnummer = FØDSELSNUMMER,
-                organisasjonsnummer = ORGANISASJONSNUMMER,
-                skjæringstidspunkt = 1.januar,
-                avviksvurderingBehovId = UUID.randomUUID(),
-                inntekterForSammenligningsgrunnlag(
-                    YearMonth.of(2023, 1) to listOf(inntekt(beløp = null))
+        assertThrows<IllegalStateException> {
+            testRapid.sendTestMessage(
+                sammenligningsgrunnlagJsonMed(
+                    fødselsnummer = FØDSELSNUMMER,
+                    organisasjonsnummer = ORGANISASJONSNUMMER,
+                    skjæringstidspunkt = 1.januar,
+                    avviksvurderingBehovId = UUID.randomUUID(),
+                    inntekterForSammenligningsgrunnlag(
+                        YearMonth.of(2023, 1) to listOf(inntekt(beløp = null))
+                    )
                 )
             )
-        )
+        }
         assertEquals(0, messageHandler.messages.size)
     }
 
     @Test
     fun `Leser ikke inn sammenligningsgrunnlag hvis inntektstype ikke er gyldig`() {
-        testRapid.sendTestMessage(
-            sammenligningsgrunnlagJsonMed(
-                fødselsnummer = FØDSELSNUMMER,
-                organisasjonsnummer = ORGANISASJONSNUMMER,
-                skjæringstidspunkt = 1.januar,
-                avviksvurderingBehovId = UUID.randomUUID(),
-                inntekterForSammenligningsgrunnlag(
-                    YearMonth.of(2023, 1) to listOf(inntekt(inntektstype = "NOE ANNET"))
+        assertThrows<IllegalStateException> {
+            testRapid.sendTestMessage(
+                sammenligningsgrunnlagJsonMed(
+                    fødselsnummer = FØDSELSNUMMER,
+                    organisasjonsnummer = ORGANISASJONSNUMMER,
+                    skjæringstidspunkt = 1.januar,
+                    avviksvurderingBehovId = UUID.randomUUID(),
+                    inntekterForSammenligningsgrunnlag(
+                        YearMonth.of(2023, 1) to listOf(inntekt(inntektstype = "NOE ANNET"))
+                    )
                 )
             )
-        )
+        }
         assertEquals(0, messageHandler.messages.size)
     }
 

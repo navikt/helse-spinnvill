@@ -60,6 +60,12 @@ internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, p
         )
     }
 
+    override fun onError(problems: MessageProblems, context: MessageContext, metadata: MessageMetadata) {
+        logg.error("Melding passerte ikke validering i river {}. Se sikkerlogg for mer informasjon", this::class.simpleName)
+        sikkerlogg.error("Meldingen passerte ikke validering i river {}. {}", this::class.simpleName, problems.toExtendedReport())
+        error("Melding passerte ikke validering i river ${this::class.simpleName}, ${problems.toExtendedReport()}")
+    }
+
     private fun mapSammenligningsgrunnlag(opplysninger: JsonNode) =
         opplysninger
             .flatMap { måned ->

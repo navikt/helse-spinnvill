@@ -9,6 +9,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import net.logstash.logback.argument.StructuredArguments.kv
@@ -61,6 +62,12 @@ internal class AvviksvurderingbehovRiver(rapidsConnection: RapidsConnection, pri
                 json = mapper.readValue(packet.toJson())
             )
         )
+    }
+
+    override fun onError(problems: MessageProblems, context: MessageContext, metadata: MessageMetadata) {
+        logg.error("Melding passerte ikke validering i river {}. Se sikkerlogg for mer informasjon", this::class.simpleName)
+        sikkerlogg.error("Meldingen passerte ikke validering i river {}. {}", this::class.simpleName, problems.toExtendedReport())
+        error("Melding passerte ikke validering i river ${this::class.simpleName}, ${problems.toExtendedReport()}")
     }
 
     private companion object {
