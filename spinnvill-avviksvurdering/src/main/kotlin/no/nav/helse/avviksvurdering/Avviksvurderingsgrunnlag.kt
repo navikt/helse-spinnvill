@@ -5,10 +5,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-enum class Kilde {
-    SPLEIS, SPINNVILL, INFOTRYGD
-}
-
 class Avviksvurderingsgrunnlag(
     val id: UUID,
     val fødselsnummer: Fødselsnummer,
@@ -16,7 +12,6 @@ class Avviksvurderingsgrunnlag(
     val beregningsgrunnlag: Beregningsgrunnlag,
     val sammenligningsgrunnlag: Sammenligningsgrunnlag,
     val opprettet: LocalDateTime,
-    val kilde: Kilde,
 ) {
     private val MAKSIMALT_TILLATT_AVVIK = Avviksprosent(25.0)
 
@@ -57,8 +52,7 @@ class Avviksvurderingsgrunnlag(
             skjæringstidspunkt = skjæringstidspunkt,
             beregningsgrunnlag = beregningsgrunnlag,
             sammenligningsgrunnlag = sammenligningsgrunnlag,
-            opprettet = LocalDateTime.now(),
-            kilde = Kilde.SPINNVILL
+            opprettet = LocalDateTime.now()
         )
     }
 }

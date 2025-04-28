@@ -185,7 +185,6 @@ class MediatorTest {
             ),
             sammenligningsgrunnlag = Sammenligningsgrunnlag(emptyList()),
             opprettet = LocalDateTime.now(),
-            kilde = Kilde.INFOTRYGD,
         )
 
     private fun avviksvurderingBehov(behovId: UUID): AvviksvurderingBehov {

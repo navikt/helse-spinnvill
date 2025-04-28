@@ -53,7 +53,7 @@ internal class IntegrationTest {
     fun `ignorerer historikk og foretar dermed ny avviksvurdering dersom gjeldende avviksvurderingsgrunnlag er av type Infotrygd`() = medTestContext(1 jan 2018) {
         mottaAvviksvurderingBehov(600_000.0)
         mottaSammenligningsgrunnlag(600_000.0)
-        fakeGammeltInfotrygdAvviksvurderinggrunnlag()
+        fakeInfotrygdAvviksvurderingsgrunnlag()
         testRapid.reset()
         mottaAvviksvurderingBehov(600_000.0)
 
@@ -252,7 +252,7 @@ internal class IntegrationTest {
         })
     }
 
-    private fun TestContext.fakeGammeltInfotrygdAvviksvurderinggrunnlag() {
+    private fun TestContext.fakeInfotrygdAvviksvurderingsgrunnlag() {
         val conn = database.datasource().connection
         val stmt = conn.prepareStatement("""
             INSERT INTO avviksvurdering(id, fødselsnummer, skjæringstidspunkt, opprettet, kilde) 

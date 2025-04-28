@@ -33,13 +33,19 @@ internal class AvviksvurderingTest {
         val beregningsgrunnlag = beregningsgrunnlag()
 
         val id = UUID.randomUUID()
-        val avviksvurdering = opprettEn(id, fødselsnummer, skjæringstidspunkt, Kilde.SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag, beregningsgrunnlag)
+        val avviksvurdering = opprettEn(
+            id,
+            fødselsnummer,
+            skjæringstidspunkt,
+            LocalDateTime.now(),
+            sammenligningsgrunnlag,
+            beregningsgrunnlag
+        )
         assertNotNull(avviksvurdering)
 
         assertEquals(id, avviksvurdering.id)
         assertEquals(fødselsnummer, avviksvurdering.fødselsnummer)
         assertEquals(skjæringstidspunkt, avviksvurdering.skjæringstidspunkt)
-        assertEquals(Kilde.SPINNVILL, avviksvurdering.kilde)
         assertEquals(sammenligningsgrunnlag.inntekter, avviksvurdering.sammenligningsgrunnlag.inntekter)
         assertEquals(beregningsgrunnlag, avviksvurdering.beregningsgrunnlag)
     }
@@ -54,9 +60,9 @@ internal class AvviksvurderingTest {
         val sammenligningsgrunnlag1 = sammenligningsgrunnlag(20000.0)
         val sammenligningsgrunnlag2 = sammenligningsgrunnlag(30000.0)
 
-        val avviksvurderingsgrunnlag1 = Avviksvurderingsgrunnlag(avviksvurderingId, fødselsnummer, skjæringstidspunkt, beregningsgrunnlag1, sammenligningsgrunnlag1, LocalDateTime.now().minusDays(1), Kilde.SPINNVILL)
+        val avviksvurderingsgrunnlag1 = Avviksvurderingsgrunnlag(avviksvurderingId, fødselsnummer, skjæringstidspunkt, beregningsgrunnlag1, sammenligningsgrunnlag1, LocalDateTime.now().minusDays(1))
         avviksvurdering.insertOne(avviksvurderingsgrunnlag1)
-        val avviksvurderingsgrunnlag2 = Avviksvurderingsgrunnlag(avviksvurderingId, fødselsnummer, skjæringstidspunkt, beregningsgrunnlag2, sammenligningsgrunnlag2, LocalDateTime.now(), Kilde.SPLEIS)
+        val avviksvurderingsgrunnlag2 = Avviksvurderingsgrunnlag(avviksvurderingId, fødselsnummer, skjæringstidspunkt, beregningsgrunnlag2, sammenligningsgrunnlag2, LocalDateTime.now())
         avviksvurdering.insertOne(avviksvurderingsgrunnlag2)
 
         val funnetAvviksvurderingsgrunnlag = database.finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt)
@@ -72,8 +78,22 @@ internal class AvviksvurderingTest {
         val beregningsgrunnlag = beregningsgrunnlag(200000.0)
         val sammenligningsgrunnlag = sammenligningsgrunnlag(20000.0)
 
-        opprettEn(avviksvurderingId, fødselsnummer, skjæringstidspunkt, Kilde.SPINNVILL, LocalDateTime.now().minusDays(1), sammenligningsgrunnlag, beregningsgrunnlag)
-        opprettEn(avviksvurderingId, fødselsnummer, skjæringstidspunkt, Kilde.SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag, beregningsgrunnlag)
+        opprettEn(
+            avviksvurderingId,
+            fødselsnummer,
+            skjæringstidspunkt,
+            LocalDateTime.now().minusDays(1),
+            sammenligningsgrunnlag,
+            beregningsgrunnlag
+        )
+        opprettEn(
+            avviksvurderingId,
+            fødselsnummer,
+            skjæringstidspunkt,
+            LocalDateTime.now(),
+            sammenligningsgrunnlag,
+            beregningsgrunnlag
+        )
 
         val antallSammenligningsgrunnlag = transaction {
             Avviksvurdering.Companion.EttSammenligningsgrunnlag.find { Avviksvurdering.Companion.Sammenligningsgrunnlag.avviksvurdering eq avviksvurderingId}.count()
@@ -85,8 +105,22 @@ internal class AvviksvurderingTest {
     @Test
     fun `henter ikke grunnlag med annet skjæringstidspunkt`() {
         val fødselsnummer = Fødselsnummer("12345678910")
-        val grunnlag1 = opprettEn(UUID.randomUUID(), fødselsnummer, 1.januar, Kilde.SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag(), beregningsgrunnlag())
-        opprettEn(UUID.randomUUID(), fødselsnummer, 2.februar, Kilde.SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag(), beregningsgrunnlag())
+        val grunnlag1 = opprettEn(
+            UUID.randomUUID(),
+            fødselsnummer,
+            1.januar,
+            LocalDateTime.now(),
+            sammenligningsgrunnlag(),
+            beregningsgrunnlag()
+        )
+        opprettEn(
+            UUID.randomUUID(),
+            fødselsnummer,
+            2.februar,
+            LocalDateTime.now(),
+            sammenligningsgrunnlag(),
+            beregningsgrunnlag()
+        )
         val funnetGrunnlag = avviksvurdering.findLatest(fødselsnummer, 1.januar)
         assertLike(grunnlag1, funnetGrunnlag)
     }
@@ -94,8 +128,22 @@ internal class AvviksvurderingTest {
     @Test
     fun `henter ikke avviksvurderinger med annet fødselsnummer`() {
         val fødselsnummer = Fødselsnummer("12345678910")
-        val grunnlag1 = opprettEn(UUID.randomUUID(), fødselsnummer, 1.januar, Kilde.SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag(), beregningsgrunnlag())
-        opprettEn(UUID.randomUUID(), Fødselsnummer("0101010101"), 1.januar, Kilde.SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag(), beregningsgrunnlag())
+        val grunnlag1 = opprettEn(
+            UUID.randomUUID(),
+            fødselsnummer,
+            1.januar,
+            LocalDateTime.now(),
+            sammenligningsgrunnlag(),
+            beregningsgrunnlag()
+        )
+        opprettEn(
+            UUID.randomUUID(),
+            Fødselsnummer("0101010101"),
+            1.januar,
+            LocalDateTime.now(),
+            sammenligningsgrunnlag(),
+            beregningsgrunnlag()
+        )
         val funnetGrunnlag = avviksvurdering.findLatest(fødselsnummer, 1.januar)
         assertLike(grunnlag1, funnetGrunnlag)
     }
@@ -103,8 +151,15 @@ internal class AvviksvurderingTest {
     @Test
     fun `hvis nyeste avviksvurdering ble gjort i Infotrygd er all historikk irrelevant, for da skal det gjøres ny avviksvurdering uansett`() {
         val fødselsnummer = Fødselsnummer("12345678910")
-        opprettEn(UUID.randomUUID(), fødselsnummer, 1.januar, Kilde.SPINNVILL, LocalDateTime.now(), sammenligningsgrunnlag(), beregningsgrunnlag())
-        opprettEn(UUID.randomUUID(), fødselsnummer, 1.januar, Kilde.INFOTRYGD, LocalDateTime.now(), sammenligningsgrunnlag(), beregningsgrunnlag())
+        opprettEn(
+            UUID.randomUUID(),
+            fødselsnummer,
+            1.januar,
+            LocalDateTime.now(),
+            sammenligningsgrunnlag(),
+            beregningsgrunnlag()
+        )
+        fakeInfotrygdAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt = 1.januar)
         val funnetGrunnlag = avviksvurdering.findLatest(fødselsnummer, 1.januar)
         assertNull(funnetGrunnlag)
     }
@@ -138,7 +193,6 @@ internal class AvviksvurderingTest {
     private fun assertLike(expected: Avviksvurderingsgrunnlag?, actual: Avviksvurderingsgrunnlag?) {
         assertEquals(expected?.id, actual?.id)
         assertEquals(expected?.fødselsnummer, actual?.fødselsnummer)
-        assertEquals(expected?.kilde, actual?.kilde)
         assertEquals(expected?.beregningsgrunnlag, actual?.beregningsgrunnlag)
         assertEquals(expected?.sammenligningsgrunnlag, actual?.sammenligningsgrunnlag)
         assertEquals(expected?.skjæringstidspunkt, actual?.skjæringstidspunkt)
@@ -149,13 +203,29 @@ internal class AvviksvurderingTest {
         id: UUID,
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
-        kilde: Kilde,
         opprettet: LocalDateTime,
         sammenligningsgrunnlag: Sammenligningsgrunnlag,
         beregningsgrunnlag: Beregningsgrunnlag,
     ): Avviksvurderingsgrunnlag? {
-        val etAvviksvurderingsgrunnlag = Avviksvurderingsgrunnlag(id, fødselsnummer, skjæringstidspunkt, beregningsgrunnlag, sammenligningsgrunnlag, opprettet, kilde)
+        val etAvviksvurderingsgrunnlag = Avviksvurderingsgrunnlag(id, fødselsnummer, skjæringstidspunkt, beregningsgrunnlag, sammenligningsgrunnlag, opprettet)
         avviksvurdering.insertOne(etAvviksvurderingsgrunnlag)
         return avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
     }
+
+    private fun fakeInfotrygdAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate) {
+        val conn = database.datasource().connection
+        val stmt = conn.prepareStatement("""
+            INSERT INTO avviksvurdering(id, fødselsnummer, skjæringstidspunkt, opprettet, kilde) 
+            VALUES (?::uuid, ?, ?::timestamp, ?::timestamp, ?)
+            """
+        )
+        stmt.setString(1, java.util.UUID.randomUUID().toString())
+        stmt.setString(2, fødselsnummer.value)
+        stmt.setString(3, skjæringstidspunkt.toString())
+        stmt.setString(4, java.time.LocalDateTime.now().toString())
+        stmt.setString(5, "INFOTRYGD")
+        stmt.executeUpdate()
+        conn.close()
+    }
+
 }

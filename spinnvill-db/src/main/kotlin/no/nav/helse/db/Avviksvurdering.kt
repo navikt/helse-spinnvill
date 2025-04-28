@@ -113,7 +113,6 @@ internal class Avviksvurdering {
                 avviksvurderingsgrunnlag.id,
                 avviksvurderingsgrunnlag.fødselsnummer,
                 avviksvurderingsgrunnlag.skjæringstidspunkt,
-                avviksvurderingsgrunnlag.kilde.name,
                 avviksvurderingsgrunnlag.opprettet,
                 avviksvurderingsgrunnlag.sammenligningsgrunnlag,
                 avviksvurderingsgrunnlag.beregningsgrunnlag
@@ -125,7 +124,6 @@ internal class Avviksvurdering {
         id: UUID,
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
-        kilde: String,
         opprettet: LocalDateTime,
         sammenligningsgrunnlag: no.nav.helse.avviksvurdering.Sammenligningsgrunnlag,
         beregningsgrunnlag: no.nav.helse.avviksvurdering.Beregningsgrunnlag,
@@ -135,7 +133,7 @@ internal class Avviksvurdering {
                 this.fødselsnummer = fødselsnummer.value
                 this.skjæringstidspunkt = skjæringstidspunkt
                 this.opprettet = opprettet
-                this.kilde = kilde
+                this.kilde = "SPINNVILL"
             }
 
             sammenligningsgrunnlag.inntekter.forEach { (arbeidsgiverreferanse, inntekter) ->
@@ -188,7 +186,6 @@ internal class Avviksvurdering {
                     )
                 }
             ),
-            kilde = this.kilde.tilKilde(),
             opprettet = opprettet,
             beregningsgrunnlag = Beregningsgrunnlag(
                 omregnedeÅrsinntekter = this.beregningsgrunnlag
@@ -206,15 +203,6 @@ internal class Avviksvurdering {
             "PENSJON_ELLER_TRYGD" -> ArbeidsgiverInntekt.Inntektstype.PENSJON_ELLER_TRYGD
             "YTELSE_FRA_OFFENTLIGE" -> ArbeidsgiverInntekt.Inntektstype.YTELSE_FRA_OFFENTLIGE
             else -> error("Kunne ikke mappe til Inntektstype, $this er ikke en gyldig Inntektstype")
-        }
-    }
-
-    private fun String.tilKilde(): Kilde {
-        return when (this) {
-            "SPINNVILL" -> Kilde.SPINNVILL
-            "SPLEIS" -> Kilde.SPLEIS
-            "INFOTRYGD" -> Kilde.INFOTRYGD
-            else -> error("Kunne ikke mappe til Kilde, $this er ikke en gyldig Kilde")
         }
     }
 
