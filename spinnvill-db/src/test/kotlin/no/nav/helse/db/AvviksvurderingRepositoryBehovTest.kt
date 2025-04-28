@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.*
 
-internal class AvviksvurderingBehovDaoTest {
+internal class AvviksvurderingRepositoryBehovTest {
 
     private val database = TestDatabase.database()
 

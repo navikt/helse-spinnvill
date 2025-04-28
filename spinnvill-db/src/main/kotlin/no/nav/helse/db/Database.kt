@@ -13,7 +13,7 @@ import java.util.*
 
 class PgDatabase private constructor(env: Map<String, String>): Database {
     private val dataSourceBuilder = DataSourceBuilder(env)
-    private val avviksvurdering = Avviksvurdering()
+    private val avviksvurderingRepository = AvviksvurderingRepository()
     private val avviksvurderingBehovDao = AvviksvurderingBehovDao()
 
     init {
@@ -65,11 +65,11 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
     }
 
     override fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurderingsgrunnlag? {
-        return avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
+        return avviksvurderingRepository.findLatest(fødselsnummer, skjæringstidspunkt)
     }
 
     override fun lagreAvviksvurderinggrunnlag(grunnlag: Avviksvurderingsgrunnlag) {
-        avviksvurdering.insertOne(grunnlag)
+        avviksvurderingRepository.insertOne(grunnlag)
     }
 
     companion object {

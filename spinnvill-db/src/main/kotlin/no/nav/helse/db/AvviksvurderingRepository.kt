@@ -15,9 +15,9 @@ import java.time.LocalDateTime
 import java.time.YearMonth
 import java.util.*
 
-internal class Avviksvurdering {
+internal class AvviksvurderingRepository {
     internal companion object {
-        private object Avviksvurderinger : UUIDTable(name = "avviksvurdering") {
+        private object AvviksvurderingTable : UUIDTable(name = "avviksvurdering") {
             val fødselsnummer: Column<String> = varchar("fødselsnummer", 11)
             val skjæringstidspunkt: Column<LocalDate> = date("skjæringstidspunkt")
             val opprettet: Column<LocalDateTime> = datetime("opprettet")
@@ -25,51 +25,51 @@ internal class Avviksvurdering {
             val slettet: Column<LocalDateTime?> = datetime("slettet").nullable()
         }
 
-        class EnAvviksvurdering(id: EntityID<UUID>) : UUIDEntity(id) {
-            companion object : UUIDEntityClass<EnAvviksvurdering>(Avviksvurderinger)
+        class AvviksvurderingRow(id: EntityID<UUID>) : UUIDEntity(id) {
+            companion object : UUIDEntityClass<AvviksvurderingRow>(AvviksvurderingTable)
 
-            val beregningsgrunnlag by EttBeregningsgrunnlag referrersOn Beregningsgrunnlag.avviksvurdering
-            val sammenligningsgrunnlag by EttSammenligningsgrunnlag referrersOn Sammenligningsgrunnlag.avviksvurdering
+            val beregningsgrunnlag by BeregningsgrunnlagRow referrersOn BeregningsgrunnlagTable.avviksvurdering
+            val sammenligningsgrunnlag by SammenligningsgrunnlagRow referrersOn SammenligningsgrunnlagTable.avviksvurdering
 
-            var fødselsnummer by Avviksvurderinger.fødselsnummer
-            var skjæringstidspunkt by Avviksvurderinger.skjæringstidspunkt
-            var opprettet by Avviksvurderinger.opprettet
-            var kilde by Avviksvurderinger.kilde
+            var fødselsnummer by AvviksvurderingTable.fødselsnummer
+            var skjæringstidspunkt by AvviksvurderingTable.skjæringstidspunkt
+            var opprettet by AvviksvurderingTable.opprettet
+            var kilde by AvviksvurderingTable.kilde
         }
 
-        internal object Beregningsgrunnlag : UUIDTable(name = "beregningsgrunnlag") {
-            val avviksvurdering = reference("avviksvurdering_ref", Avviksvurderinger)
+        internal object BeregningsgrunnlagTable : UUIDTable(name = "beregningsgrunnlag") {
+            val avviksvurdering = reference("avviksvurdering_ref", AvviksvurderingTable)
 
             val organisasjonsnummer: Column<String> = varchar("organisasjonsnummer", 9)
             val inntekt: Column<Double> = double("inntekt")
         }
 
-        class EttBeregningsgrunnlag(id: EntityID<UUID>) : UUIDEntity(id) {
-            companion object : UUIDEntityClass<EttBeregningsgrunnlag>(Beregningsgrunnlag)
+        class BeregningsgrunnlagRow(id: EntityID<UUID>) : UUIDEntity(id) {
+            companion object : UUIDEntityClass<BeregningsgrunnlagRow>(BeregningsgrunnlagTable)
 
-            var avviksvurdering by EnAvviksvurdering referencedOn Beregningsgrunnlag.avviksvurdering
+            var avviksvurdering by AvviksvurderingRow referencedOn BeregningsgrunnlagTable.avviksvurdering
 
-            var organisasjonsnummer by Beregningsgrunnlag.organisasjonsnummer
-            var inntekt by Beregningsgrunnlag.inntekt
+            var organisasjonsnummer by BeregningsgrunnlagTable.organisasjonsnummer
+            var inntekt by BeregningsgrunnlagTable.inntekt
         }
 
-        internal object Sammenligningsgrunnlag : UUIDTable(name = "sammenligningsgrunnlag") {
-            val avviksvurdering = reference("avviksvurdering_ref", Avviksvurderinger)
+        internal object SammenligningsgrunnlagTable : UUIDTable(name = "sammenligningsgrunnlag") {
+            val avviksvurdering = reference("avviksvurdering_ref", AvviksvurderingTable)
 
             val arbeidsgiverreferanse: Column<String> = varchar("arbeidsgiverreferanse", 16)
         }
 
-        class EttSammenligningsgrunnlag(id: EntityID<UUID>) : UUIDEntity(id) {
-            companion object : UUIDEntityClass<EttSammenligningsgrunnlag>(Sammenligningsgrunnlag)
+        class SammenligningsgrunnlagRow(id: EntityID<UUID>) : UUIDEntity(id) {
+            companion object : UUIDEntityClass<SammenligningsgrunnlagRow>(SammenligningsgrunnlagTable)
 
-            val inntekter by EnMånedsinntekt referrersOn Månedsinntekter.sammenligningsgrunnlag
-            var avviksvurdering by EnAvviksvurdering referencedOn Sammenligningsgrunnlag.avviksvurdering
+            val inntekter by MånedsinntektRow referrersOn MånedsinntektTable.sammenligningsgrunnlag
+            var avviksvurdering by AvviksvurderingRow referencedOn SammenligningsgrunnlagTable.avviksvurdering
 
-            var arbeidsgiverreferanse by Sammenligningsgrunnlag.arbeidsgiverreferanse
+            var arbeidsgiverreferanse by SammenligningsgrunnlagTable.arbeidsgiverreferanse
         }
 
-        private object Månedsinntekter : UUIDTable(name = "manedsinntekt") {
-            val sammenligningsgrunnlag = reference("sammenligningsgrunnlag_ref", Sammenligningsgrunnlag)
+        private object MånedsinntektTable : UUIDTable(name = "manedsinntekt") {
+            val sammenligningsgrunnlag = reference("sammenligningsgrunnlag_ref", SammenligningsgrunnlagTable)
 
             val inntekt: Column<Double> = double("inntekt")
             val år: Column<Int> = integer("år")
@@ -79,17 +79,17 @@ internal class Avviksvurdering {
             val beskrivelse: Column<String?> = varchar("beskrivelse", 255).nullable()
         }
 
-        class EnMånedsinntekt(id: EntityID<UUID>) : UUIDEntity(id) {
-            companion object : UUIDEntityClass<EnMånedsinntekt>(Månedsinntekter)
+        class MånedsinntektRow(id: EntityID<UUID>) : UUIDEntity(id) {
+            companion object : UUIDEntityClass<MånedsinntektRow>(MånedsinntektTable)
 
-            var sammenligningsgrunnlag by EttSammenligningsgrunnlag referencedOn Månedsinntekter.sammenligningsgrunnlag
+            var sammenligningsgrunnlag by SammenligningsgrunnlagRow referencedOn MånedsinntektTable.sammenligningsgrunnlag
 
-            var inntekt by Månedsinntekter.inntekt
-            private var år by Månedsinntekter.år
-            private var måned by Månedsinntekter.måned
-            var inntektstype by Månedsinntekter.inntektstype
-            var fordel by Månedsinntekter.fordel
-            var beskrivelse by Månedsinntekter.beskrivelse
+            var inntekt by MånedsinntektTable.inntekt
+            private var år by MånedsinntektTable.år
+            private var måned by MånedsinntektTable.måned
+            var inntektstype by MånedsinntektTable.inntektstype
+            var fordel by MånedsinntektTable.fordel
+            var beskrivelse by MånedsinntektTable.beskrivelse
 
             internal val yearMonth: YearMonth get() = YearMonth.of(år, måned)
         }
@@ -97,10 +97,10 @@ internal class Avviksvurdering {
 
     internal fun findLatest(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurderingsgrunnlag? {
         return transaction {
-            EnAvviksvurdering.find {
-                Avviksvurderinger.fødselsnummer eq fødselsnummer.value and (Avviksvurderinger.skjæringstidspunkt eq skjæringstidspunkt) and Avviksvurderinger.slettet.isNull()
+            AvviksvurderingRow.find {
+                AvviksvurderingTable.fødselsnummer eq fødselsnummer.value and (AvviksvurderingTable.skjæringstidspunkt eq skjæringstidspunkt) and AvviksvurderingTable.slettet.isNull()
             }
-                .orderBy(Avviksvurderinger.opprettet to SortOrder.DESC)
+                .orderBy(AvviksvurderingTable.opprettet to SortOrder.DESC)
                 .limit(1)
                 .singleOrNull { it.kilde != "INFOTRYGD" }
                 ?.toDomain()
@@ -109,7 +109,7 @@ internal class Avviksvurdering {
 
     internal fun insertOne(avviksvurderingsgrunnlag: Avviksvurderingsgrunnlag) {
         return transaction {
-            EnAvviksvurdering.findById(avviksvurderingsgrunnlag.id) ?: insertAvviksvurdering(
+            AvviksvurderingRow.findById(avviksvurderingsgrunnlag.id) ?: insertAvviksvurdering(
                 avviksvurderingsgrunnlag.id,
                 avviksvurderingsgrunnlag.fødselsnummer,
                 avviksvurderingsgrunnlag.skjæringstidspunkt,
@@ -125,11 +125,11 @@ internal class Avviksvurdering {
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
         opprettet: LocalDateTime,
-        sammenligningsgrunnlag: no.nav.helse.avviksvurdering.Sammenligningsgrunnlag,
-        beregningsgrunnlag: no.nav.helse.avviksvurdering.Beregningsgrunnlag,
+        sammenligningsgrunnlag: Sammenligningsgrunnlag,
+        beregningsgrunnlag: Beregningsgrunnlag,
     ){
         this.run {
-            val enAvviksvurdering = EnAvviksvurdering.new(id) {
+            val avviksvurderingRow = AvviksvurderingRow.new(id) {
                 this.fødselsnummer = fødselsnummer.value
                 this.skjæringstidspunkt = skjæringstidspunkt
                 this.opprettet = opprettet
@@ -137,35 +137,35 @@ internal class Avviksvurdering {
             }
 
             sammenligningsgrunnlag.inntekter.forEach { (arbeidsgiverreferanse, inntekter) ->
-                val ettSammenligningsgrunnlag = EttSammenligningsgrunnlag.new {
-                    this.avviksvurdering = enAvviksvurdering
+                val sammenligningsgrunnlagRow = SammenligningsgrunnlagRow.new {
+                    this.avviksvurdering = avviksvurderingRow
                     this.arbeidsgiverreferanse = arbeidsgiverreferanse.value
                 }
 
-                Månedsinntekter.batchInsert(inntekter) {
-                    this[Månedsinntekter.sammenligningsgrunnlag] = ettSammenligningsgrunnlag.id
-                    this[Månedsinntekter.inntekt] = it.inntekt.value
-                    this[Månedsinntekter.måned] = it.måned.monthValue
-                    this[Månedsinntekter.år] = it.måned.year
-                    this[Månedsinntekter.fordel] = it.fordel?.value
-                    this[Månedsinntekter.beskrivelse] = it.beskrivelse?.value
-                    this[Månedsinntekter.inntektstype] = it.inntektstype.tilDatabase()
+                MånedsinntektTable.batchInsert(inntekter) {
+                    this[MånedsinntektTable.sammenligningsgrunnlag] = sammenligningsgrunnlagRow.id
+                    this[MånedsinntektTable.inntekt] = it.inntekt.value
+                    this[MånedsinntektTable.måned] = it.måned.monthValue
+                    this[MånedsinntektTable.år] = it.måned.year
+                    this[MånedsinntektTable.fordel] = it.fordel?.value
+                    this[MånedsinntektTable.beskrivelse] = it.beskrivelse?.value
+                    this[MånedsinntektTable.inntektstype] = it.inntektstype.tilDatabase()
                 }
             }
 
-            beregningsgrunnlag.omregnedeÅrsinntekter.batchInsert(enAvviksvurdering)
+            beregningsgrunnlag.omregnedeÅrsinntekter.batchInsert(avviksvurderingRow)
         }
     }
 
-    private fun Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>.batchInsert(enAvviksvurdering: EnAvviksvurdering) {
-        Beregningsgrunnlag.batchInsert(this.toList(), ignore = true) { (organisasjonsnummer, inntekt) ->
-            this[Beregningsgrunnlag.organisasjonsnummer] = organisasjonsnummer.value
-            this[Beregningsgrunnlag.inntekt] = inntekt.value
-            this[Beregningsgrunnlag.avviksvurdering] = enAvviksvurdering.id
+    private fun Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>.batchInsert(avviksvurderingRow: AvviksvurderingRow) {
+        BeregningsgrunnlagTable.batchInsert(this.toList(), ignore = true) { (organisasjonsnummer, inntekt) ->
+            this[BeregningsgrunnlagTable.organisasjonsnummer] = organisasjonsnummer.value
+            this[BeregningsgrunnlagTable.inntekt] = inntekt.value
+            this[BeregningsgrunnlagTable.avviksvurdering] = avviksvurderingRow.id
         }
     }
 
-    private fun EnAvviksvurdering.toDomain(): Avviksvurderingsgrunnlag {
+    private fun AvviksvurderingRow.toDomain(): Avviksvurderingsgrunnlag {
         return Avviksvurderingsgrunnlag(
             id = this.id.value,
             fødselsnummer = Fødselsnummer(this.fødselsnummer),

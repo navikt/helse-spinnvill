@@ -15,10 +15,10 @@ import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class AvviksvurderingTest {
+internal class AvviksvurderingRepositoryTest {
 
     private val database = TestDatabase.database()
-    private val avviksvurdering = Avviksvurdering()
+    private val avviksvurderingRepository = AvviksvurderingRepository()
 
     @BeforeEach
     fun beforeEach() {
@@ -61,9 +61,9 @@ internal class AvviksvurderingTest {
         val sammenligningsgrunnlag2 = sammenligningsgrunnlag(30000.0)
 
         val avviksvurderingsgrunnlag1 = Avviksvurderingsgrunnlag(avviksvurderingId, fødselsnummer, skjæringstidspunkt, beregningsgrunnlag1, sammenligningsgrunnlag1, LocalDateTime.now().minusDays(1))
-        avviksvurdering.insertOne(avviksvurderingsgrunnlag1)
+        avviksvurderingRepository.insertOne(avviksvurderingsgrunnlag1)
         val avviksvurderingsgrunnlag2 = Avviksvurderingsgrunnlag(avviksvurderingId, fødselsnummer, skjæringstidspunkt, beregningsgrunnlag2, sammenligningsgrunnlag2, LocalDateTime.now())
-        avviksvurdering.insertOne(avviksvurderingsgrunnlag2)
+        avviksvurderingRepository.insertOne(avviksvurderingsgrunnlag2)
 
         val funnetAvviksvurderingsgrunnlag = database.finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt)
 
@@ -96,7 +96,7 @@ internal class AvviksvurderingTest {
         )
 
         val antallSammenligningsgrunnlag = transaction {
-            Avviksvurdering.Companion.EttSammenligningsgrunnlag.find { Avviksvurdering.Companion.Sammenligningsgrunnlag.avviksvurdering eq avviksvurderingId}.count()
+            AvviksvurderingRepository.Companion.SammenligningsgrunnlagRow.find { AvviksvurderingRepository.Companion.SammenligningsgrunnlagTable.avviksvurdering eq avviksvurderingId}.count()
         }
 
         assertEquals(1, antallSammenligningsgrunnlag)
@@ -121,7 +121,7 @@ internal class AvviksvurderingTest {
             sammenligningsgrunnlag(),
             beregningsgrunnlag()
         )
-        val funnetGrunnlag = avviksvurdering.findLatest(fødselsnummer, 1.januar)
+        val funnetGrunnlag = avviksvurderingRepository.findLatest(fødselsnummer, 1.januar)
         assertLike(grunnlag1, funnetGrunnlag)
     }
 
@@ -144,7 +144,7 @@ internal class AvviksvurderingTest {
             sammenligningsgrunnlag(),
             beregningsgrunnlag()
         )
-        val funnetGrunnlag = avviksvurdering.findLatest(fødselsnummer, 1.januar)
+        val funnetGrunnlag = avviksvurderingRepository.findLatest(fødselsnummer, 1.januar)
         assertLike(grunnlag1, funnetGrunnlag)
     }
 
@@ -160,7 +160,7 @@ internal class AvviksvurderingTest {
             beregningsgrunnlag()
         )
         fakeInfotrygdAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt = 1.januar)
-        val funnetGrunnlag = avviksvurdering.findLatest(fødselsnummer, 1.januar)
+        val funnetGrunnlag = avviksvurderingRepository.findLatest(fødselsnummer, 1.januar)
         assertNull(funnetGrunnlag)
     }
 
@@ -208,8 +208,8 @@ internal class AvviksvurderingTest {
         beregningsgrunnlag: Beregningsgrunnlag,
     ): Avviksvurderingsgrunnlag? {
         val etAvviksvurderingsgrunnlag = Avviksvurderingsgrunnlag(id, fødselsnummer, skjæringstidspunkt, beregningsgrunnlag, sammenligningsgrunnlag, opprettet)
-        avviksvurdering.insertOne(etAvviksvurderingsgrunnlag)
-        return avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
+        avviksvurderingRepository.insertOne(etAvviksvurderingsgrunnlag)
+        return avviksvurderingRepository.findLatest(fødselsnummer, skjæringstidspunkt)
     }
 
     private fun fakeInfotrygdAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate) {
