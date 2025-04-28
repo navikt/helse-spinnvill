@@ -1,7 +1,6 @@
 package no.nav.helse.avviksvurdering
 
 import no.nav.helse.*
-import no.nav.helse.avviksvurdering.Avviksvurderingsgrunnlag.Companion.siste
 import no.nav.helse.helpers.januar
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -55,19 +54,11 @@ internal class AvviksvurderingsgrunnlagTest {
     }
 
     @Test
-    fun `finn siste avviksvurdering fra liste`() {
-        val grunnlag1 = Avviksvurderingsgrunnlag.nyttGrunnlag("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0), beregningsgrunnlag("a1" to 50000.0))
-        val grunnlag2 = Avviksvurderingsgrunnlag.nyttGrunnlag("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0), beregningsgrunnlag("a1" to 50000.0))
-        val grunnlagene = listOf(grunnlag1, grunnlag2)
-        assertEquals(grunnlag2, grunnlagene.siste())
-    }
-
-    @Test
     fun `sammenlign beregningsgrunnlaget i avviksvurderingsgrunnlag med et beregningsgrunnlag når de er like`() {
         val avviksvurderingsgrunnlag = Avviksvurderingsgrunnlag.nyttGrunnlag("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0), beregningsgrunnlag("a1" to 600000.0))
         val beregningsgrunnlag = beregningsgrunnlag("a1" to 600000.0)
 
-        assertTrue(avviksvurderingsgrunnlag.harLiktBeregningsgrunnlagSom(beregningsgrunnlag))
+        assertTrue(avviksvurderingsgrunnlag.beregningsgrunnlagLiktSom(beregningsgrunnlag))
     }
 
     @Test
@@ -75,7 +66,7 @@ internal class AvviksvurderingsgrunnlagTest {
         val avviksvurderingsgrunnlag = Avviksvurderingsgrunnlag.nyttGrunnlag("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0), beregningsgrunnlag("a1" to 600000.0))
         val beregningsgrunnlag = beregningsgrunnlag("a1" to 600001.0)
 
-        assertFalse(avviksvurderingsgrunnlag.harLiktBeregningsgrunnlagSom(beregningsgrunnlag))
+        assertFalse(avviksvurderingsgrunnlag.beregningsgrunnlagLiktSom(beregningsgrunnlag))
     }
 
     private fun sammenligningsgrunnlag(inntekt: Double) = Sammenligningsgrunnlag(

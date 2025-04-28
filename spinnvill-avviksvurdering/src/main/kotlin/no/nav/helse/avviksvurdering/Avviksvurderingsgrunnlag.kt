@@ -32,11 +32,11 @@ class Avviksvurderingsgrunnlag(
         )
     }
 
-    internal fun harLiktBeregningsgrunnlagSom(beregningsgrunnlag: Beregningsgrunnlag): Boolean {
+    fun beregningsgrunnlagLiktSom(beregningsgrunnlag: Beregningsgrunnlag): Boolean {
         return this.beregningsgrunnlag.erLikt(beregningsgrunnlag)
     }
 
-    internal fun gjenbrukSammenligningsgrunnlag(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsgrunnlag {
+    fun kopierMedNyttBeregningsgrunnlag(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsgrunnlag {
         return nyttGrunnlag(
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = skjæringstidspunkt,
@@ -45,8 +45,8 @@ class Avviksvurderingsgrunnlag(
         )
     }
 
-    internal companion object {
-        internal fun nyttGrunnlag(
+    companion object {
+        fun nyttGrunnlag(
             fødselsnummer: Fødselsnummer,
             skjæringstidspunkt: LocalDate,
             sammenligningsgrunnlag: Sammenligningsgrunnlag,
@@ -60,7 +60,5 @@ class Avviksvurderingsgrunnlag(
             opprettet = LocalDateTime.now(),
             kilde = Kilde.SPINNVILL
         )
-
-        internal fun Collection<Avviksvurderingsgrunnlag>.siste() = maxByOrNull { it.opprettet }
     }
 }
