@@ -133,7 +133,7 @@ internal class Avviksvurdering {
         kilde: AvviksvurderingDto.KildeDto,
         opprettet: LocalDateTime,
         sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
-        beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?
+        beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto
     ){
         this.run {
             val enAvviksvurdering = EnAvviksvurdering.new(id) {
@@ -160,7 +160,7 @@ internal class Avviksvurdering {
                 }
             }
 
-            beregningsgrunnlag?.omregnedeÅrsinntekter?.batchInsert(enAvviksvurdering)
+            beregningsgrunnlag.omregnedeÅrsinntekter.batchInsert(enAvviksvurdering)
         }
     }
 
