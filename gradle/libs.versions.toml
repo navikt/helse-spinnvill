@@ -1,5 +1,5 @@
 [versions]
-exposed = "0.59.0"
+exposed = "0.60.0"
 flyway = "11.4.1"
 jackson = "2.18.3"
 tbdLibs = "2025.03.10-19.50-d556269c"
