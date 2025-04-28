@@ -8,6 +8,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
 import com.github.navikt.tbd_libs.rapids_and_rivers.asYearMonth
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import net.logstash.logback.argument.StructuredArguments.kv
@@ -22,10 +23,14 @@ import org.slf4j.LoggerFactory
 internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, private val messageHandler: MessageHandler) : River.PacketListener {
     init {
         River(rapidsConnection).apply {
-            validate {
-                it.demandAll("@behov", listOf("InntekterForSammenligningsgrunnlag"))
-                it.requireKey("@løsning", "fødselsnummer", "InntekterForSammenligningsgrunnlag.skjæringstidspunkt", "InntekterForSammenligningsgrunnlag.avviksvurderingBehovId")
+            precondition {
+                it.requireValue("@event_name", "behov")
+                it.requireAll("@behov", listOf("InntekterForSammenligningsgrunnlag"))
+                it.requireKey("@løsning")
                 it.requireValue("@final", true)
+            }
+            validate {
+                it.requireKey("fødselsnummer", "InntekterForSammenligningsgrunnlag.skjæringstidspunkt", "InntekterForSammenligningsgrunnlag.avviksvurderingBehovId")
                 it.requireArray("@løsning.InntekterForSammenligningsgrunnlag") {
                     require("årMåned", JsonNode::asYearMonth)
                     requireArray("inntektsliste") {
