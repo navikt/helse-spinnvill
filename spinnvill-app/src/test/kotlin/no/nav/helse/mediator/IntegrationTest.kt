@@ -7,14 +7,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import no.nav.helse.*
-import no.nav.helse.avviksvurdering.Avviksvurderingsresultat
+import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt
+import no.nav.helse.avviksvurdering.Beregningsgrunnlag
+import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import no.nav.helse.db.TestDatabase
-import no.nav.helse.dto.AvviksvurderingDto
-import no.nav.helse.helpers.januar
-import no.nav.helse.helpers.objectMapper
-import no.nav.helse.spesialist.domain.testfixtures.jan
 import no.nav.helse.helpers.lagFødselsnummer
 import no.nav.helse.helpers.lagOrganisasjonsnummer
+import no.nav.helse.helpers.objectMapper
+import no.nav.helse.spesialist.domain.testfixtures.jan
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -22,7 +22,10 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 import java.util.*
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 internal class IntegrationTest {
     private val testRapid = TestRapid()
@@ -174,7 +177,7 @@ internal class IntegrationTest {
                 organisasjonsnummer = organisasjonsnummer,
                 skjæringstidspunkt = skjæringstidspunkt,
                 vedtaksperiodeId = UUID.randomUUID(),
-                beregningsgrunnlagDto = nyttBeregningsgrunnlag(omregnetÅrsinntekt)
+                beregningsgrunnlag = nyttBeregningsgrunnlag(omregnetÅrsinntekt)
             )
         )
     }
@@ -183,7 +186,7 @@ internal class IntegrationTest {
         val behov = testRapid.inspektør.sisteBehovAvType("InntekterForSammenligningsgrunnlag") as? ObjectNode
         assertNotNull(behov)
 
-        val gruppertPåÅrMåned = this.nyttSammenligningsgrunnlag(innrapportertÅrsinntektÅrlig).innrapporterteInntekter
+        val gruppertPåÅrMåned = this.nyttSammenligningsgrunnlag(innrapportertÅrsinntektÅrlig).inntekter
             .flatMap { (key, values) ->
                 values.map { key to it }
             }
@@ -215,7 +218,7 @@ internal class IntegrationTest {
         organisasjonsnummer: String,
         skjæringstidspunkt: LocalDate,
         vedtaksperiodeId: UUID,
-        beregningsgrunnlagDto: AvviksvurderingDto.BeregningsgrunnlagDto
+        beregningsgrunnlag: Beregningsgrunnlag
     ): String {
         @Language("JSON")
         val json = """
@@ -231,7 +234,7 @@ internal class IntegrationTest {
                     "vedtaksperiodeId": "$vedtaksperiodeId",
                     "skjæringstidspunkt": "$skjæringstidspunkt",
                     "vilkårsgrunnlagId": "87b9339d-a67d-49b0-af36-c93d6f9249ae",
-                    "omregnedeÅrsinntekter": ${beregningsgrunnlagDto.toJson()} 
+                    "omregnedeÅrsinntekter": ${beregningsgrunnlag.toJson()} 
                 },
                 "@id": "ba376523-62b1-49d7-8647-f902c739b634",
                 "@opprettet": "2018-01-01T00:00:00.000"
@@ -240,7 +243,7 @@ internal class IntegrationTest {
         return json
     }
 
-    private fun AvviksvurderingDto.BeregningsgrunnlagDto.toJson(): String {
+    private fun Beregningsgrunnlag.toJson(): String {
         return objectMapper.writeValueAsString(this.omregnedeÅrsinntekter.map {
             mapOf(
                 "organisasjonsnummer" to it.key,
@@ -272,14 +275,14 @@ internal class IntegrationTest {
         val fødselsnummer = lagFødselsnummer()
         val organisasjonsnummer = lagOrganisasjonsnummer()
 
-        lateinit var beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto
+        lateinit var beregningsgrunnlag: Beregningsgrunnlag
             private set
 
-        lateinit var sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto
+        lateinit var sammenligningsgrunnlag: Sammenligningsgrunnlag
             private set
 
-        fun nyttBeregningsgrunnlag(omregnetÅrsinntekt: Double): AvviksvurderingDto.BeregningsgrunnlagDto {
-            beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
+        fun nyttBeregningsgrunnlag(omregnetÅrsinntekt: Double): Beregningsgrunnlag {
+            beregningsgrunnlag = Beregningsgrunnlag(
                 arbeidsgivere.map {
                     it to OmregnetÅrsinntekt(omregnetÅrsinntekt)
                 }.toMap()
@@ -287,23 +290,27 @@ internal class IntegrationTest {
             return beregningsgrunnlag
         }
 
-        fun nyttSammenligningsgrunnlag(innrapportertÅrsinntekt: Double): AvviksvurderingDto.SammenligningsgrunnlagDto {
+        fun nyttSammenligningsgrunnlag(innrapportertÅrsinntekt: Double): Sammenligningsgrunnlag {
             val sluttmåned = YearMonth.from(skjæringstidspunkt.minusMonths(1))
             val startmåned = YearMonth.from(sluttmåned.minusMonths(12))
             val yearMonthRange = yearMonthRange(startmåned, sluttmåned)
-            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
+            sammenligningsgrunnlag = Sammenligningsgrunnlag(
+                inntekter =
                 arbeidsgivere.map {
                     val månedligBeløp = innrapportertÅrsinntekt / yearMonthRange.size
-                    it to yearMonthRange.map { årMåned ->
-                        AvviksvurderingDto.MånedligInntektDto(
-                            InntektPerMåned(månedligBeløp),
-                            årMåned,
-                            fordel = null,
-                            beskrivelse = null,
-                            AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
-                        )
-                    }
-                }.toMap()
+                    ArbeidsgiverInntekt(
+                        arbeidsgiverreferanse = it,
+                        inntekter = yearMonthRange.map { årMåned ->
+                            ArbeidsgiverInntekt.MånedligInntekt(
+                                InntektPerMåned(månedligBeløp),
+                                årMåned,
+                                fordel = null,
+                                beskrivelse = null,
+                                ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+                            )
+                        }
+                    )
+                }
             )
             return sammenligningsgrunnlag
         }

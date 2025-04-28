@@ -141,7 +141,7 @@ class Mediator(
     }
 
     private fun Avviksvurderingsgrunnlag.lagre() {
-        database.lagreGrunnlagshistorikk(listOf(this))
+        database.lagreAvviksvurderinggrunnlag(this)
     }
 
     private fun AvviksvurderingBehov.lagre() {
@@ -154,7 +154,6 @@ class Mediator(
     ): Avviksvurderingsgrunnlag? {
         return database
             .finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt)
-            .lastOrNull()
     }
 
     internal companion object {

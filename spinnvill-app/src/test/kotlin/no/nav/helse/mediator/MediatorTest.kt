@@ -46,7 +46,7 @@ class MediatorTest {
     @Test
     fun `ignorerer sammenligningsgrunnlag-løsning dersom det ikke finnes noe ubehandlet avviksvurdering-behov`() {
         val database = databaseStub()
-        database.lagreGrunnlagshistorikk(testAvviksvurderingsGrunnlag())
+        database.lagreAvviksvurderinggrunnlag(testAvviksvurderingsGrunnlag())
         val testRapid = TestRapid()
         val mediator = Mediator(VersjonAvKode("versjon"), testRapid) { database }
         mediator.håndter(
@@ -157,7 +157,7 @@ class MediatorTest {
         val etUbehandletAvviksvurderingBehov = avviksvurderingBehov(enBehovId)
         val database = databaseStub()
         database.lagreAvviksvurderingBehov(etUbehandletAvviksvurderingBehov)
-        database.lagreGrunnlagshistorikk(testAvviksvurderingsGrunnlag())
+        database.lagreAvviksvurderinggrunnlag(testAvviksvurderingsGrunnlag())
         val testRapid = TestRapid()
         val mediator = Mediator(VersjonAvKode("versjon"), testRapid) { database }
         mediator.håndter(
@@ -171,7 +171,7 @@ class MediatorTest {
         assertEquals(0, testRapid.inspektør.size)
     }
 
-    private fun testAvviksvurderingsGrunnlag() = listOf(
+    private fun testAvviksvurderingsGrunnlag() =
         Avviksvurderingsgrunnlag(
             id = UUID.randomUUID(),
             fødselsnummer = fødselsnummer,
@@ -187,7 +187,6 @@ class MediatorTest {
             opprettet = LocalDateTime.now(),
             kilde = Kilde.INFOTRYGD,
         )
-    )
 
     private fun avviksvurderingBehov(behovId: UUID): AvviksvurderingBehov {
         return AvviksvurderingBehov.nyttBehov(
@@ -215,11 +214,11 @@ class MediatorTest {
         override fun finnAvviksvurderingsgrunnlag(
             fødselsnummer: Fødselsnummer,
             skjæringstidspunkt: LocalDate,
-        ): List<Avviksvurderingsgrunnlag> =
-            avviksvurderingGrunnlagMap.values.filter { it.fødselsnummer == fødselsnummer && it.skjæringstidspunkt == skjæringstidspunkt }
+        ): Avviksvurderingsgrunnlag? =
+            avviksvurderingGrunnlagMap.values.findLast { it.fødselsnummer == fødselsnummer && it.skjæringstidspunkt == skjæringstidspunkt }
 
-        override fun lagreGrunnlagshistorikk(grunnlagene: List<Avviksvurderingsgrunnlag>) {
-            grunnlagene.forEach { grunnlag -> avviksvurderingGrunnlagMap[grunnlag.id] = grunnlag }
+        override fun lagreAvviksvurderinggrunnlag(grunnlag: Avviksvurderingsgrunnlag) {
+            avviksvurderingGrunnlagMap[grunnlag.id] = grunnlag
         }
 
         override fun slettAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) {

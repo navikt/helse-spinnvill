@@ -6,7 +6,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.helse.*
 import no.nav.helse.avviksvurdering.*
-import no.nav.helse.db.DatabaseDtoBuilder.Companion.tilDomene
 import no.nav.helse.dto.AvviksvurderingBehovDto
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -65,13 +64,12 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
         avviksvurderingBehovDao.slett(avviksvurderingBehov.behovId)
     }
 
-    override fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<Avviksvurderingsgrunnlag> {
-        return avviksvurdering.findAll(fødselsnummer, skjæringstidspunkt).map { it.tilDomene() }
+    override fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurderingsgrunnlag? {
+        return avviksvurdering.findLatest(fødselsnummer, skjæringstidspunkt)
     }
 
-    override fun lagreGrunnlagshistorikk(grunnlagene: List<Avviksvurderingsgrunnlag>) {
-        val builder = DatabaseDtoBuilder()
-        avviksvurdering.upsertAll(builder.buildAll(grunnlagene))
+    override fun lagreAvviksvurderinggrunnlag(grunnlag: Avviksvurderingsgrunnlag) {
+        avviksvurdering.insertOne(grunnlag)
     }
 
     companion object {
@@ -94,8 +92,8 @@ interface Database {
 
     fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov)
 
-    fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<Avviksvurderingsgrunnlag>
+    fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurderingsgrunnlag?
 
-    fun lagreGrunnlagshistorikk(grunnlagene: List<Avviksvurderingsgrunnlag>)
+    fun lagreAvviksvurderinggrunnlag(grunnlag: Avviksvurderingsgrunnlag)
     fun slettAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov)
 }

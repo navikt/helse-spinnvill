@@ -1,8 +1,7 @@
 package no.nav.helse.db
 
 import no.nav.helse.*
-import no.nav.helse.dto.AvviksvurderingDto
-import no.nav.helse.dto.AvviksvurderingDto.KildeDto.*
+import no.nav.helse.avviksvurdering.*
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -96,33 +95,29 @@ internal class Avviksvurdering {
         }
     }
 
-    internal fun findAll(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): List<AvviksvurderingDto> {
+    internal fun findLatest(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurderingsgrunnlag? {
         return transaction {
             EnAvviksvurdering.find {
                 Avviksvurderinger.fødselsnummer eq fødselsnummer.value and (Avviksvurderinger.skjæringstidspunkt eq skjæringstidspunkt) and Avviksvurderinger.slettet.isNull()
             }
-                .orderBy(Avviksvurderinger.opprettet to SortOrder.ASC)
-                .map { it.dto() }
-                .takeUnless { it.isNotEmpty() && it.last().kilde === INFOTRYGD }
-                ?: emptyList()
+                .orderBy(Avviksvurderinger.opprettet to SortOrder.DESC)
+                .limit(1)
+                .singleOrNull { it.kilde != "INFOTRYGD" }
+                ?.toDomain()
         }
     }
 
-    internal fun upsertAll(avviksvurderinger: List<AvviksvurderingDto>) {
+    internal fun insertOne(avviksvurderingsgrunnlag: Avviksvurderingsgrunnlag) {
         return transaction {
-            avviksvurderinger.forEach { avviksvurdering ->
-                EnAvviksvurdering.findById(avviksvurdering.id)?.let {
-                    insertBeregningsgrunnlagIfNotExists(it, avviksvurdering.beregningsgrunnlag)
-                } ?: insertAvviksvurdering(
-                    avviksvurdering.id,
-                    avviksvurdering.fødselsnummer,
-                    avviksvurdering.skjæringstidspunkt,
-                    avviksvurdering.kilde,
-                    avviksvurdering.opprettet,
-                    avviksvurdering.sammenligningsgrunnlag,
-                    avviksvurdering.beregningsgrunnlag
-                )
-            }
+            EnAvviksvurdering.findById(avviksvurderingsgrunnlag.id) ?: insertAvviksvurdering(
+                avviksvurderingsgrunnlag.id,
+                avviksvurderingsgrunnlag.fødselsnummer,
+                avviksvurderingsgrunnlag.skjæringstidspunkt,
+                avviksvurderingsgrunnlag.kilde.name,
+                avviksvurderingsgrunnlag.opprettet,
+                avviksvurderingsgrunnlag.sammenligningsgrunnlag,
+                avviksvurderingsgrunnlag.beregningsgrunnlag
+            )
         }
     }
 
@@ -130,20 +125,20 @@ internal class Avviksvurdering {
         id: UUID,
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,
-        kilde: AvviksvurderingDto.KildeDto,
+        kilde: String,
         opprettet: LocalDateTime,
-        sammenligningsgrunnlag: AvviksvurderingDto.SammenligningsgrunnlagDto,
-        beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto
+        sammenligningsgrunnlag: no.nav.helse.avviksvurdering.Sammenligningsgrunnlag,
+        beregningsgrunnlag: no.nav.helse.avviksvurdering.Beregningsgrunnlag,
     ){
         this.run {
             val enAvviksvurdering = EnAvviksvurdering.new(id) {
                 this.fødselsnummer = fødselsnummer.value
                 this.skjæringstidspunkt = skjæringstidspunkt
                 this.opprettet = opprettet
-                this.kilde = kilde.tilDatebase()
+                this.kilde = kilde
             }
 
-            sammenligningsgrunnlag.innrapporterteInntekter.forEach { (arbeidsgiverreferanse, inntekter) ->
+            sammenligningsgrunnlag.inntekter.forEach { (arbeidsgiverreferanse, inntekter) ->
                 val ettSammenligningsgrunnlag = EttSammenligningsgrunnlag.new {
                     this.avviksvurdering = enAvviksvurdering
                     this.arbeidsgiverreferanse = arbeidsgiverreferanse.value
@@ -164,13 +159,6 @@ internal class Avviksvurdering {
         }
     }
 
-    private fun insertBeregningsgrunnlagIfNotExists(
-        enAvviksvurdering: EnAvviksvurdering,
-        beregningsgrunnlag: AvviksvurderingDto.BeregningsgrunnlagDto?,
-    ) {
-        beregningsgrunnlag?.omregnedeÅrsinntekter?.batchInsert(enAvviksvurdering)
-    }
-
     private fun Map<Arbeidsgiverreferanse, OmregnetÅrsinntekt>.batchInsert(enAvviksvurdering: EnAvviksvurdering) {
         Beregningsgrunnlag.batchInsert(this.toList(), ignore = true) { (organisasjonsnummer, inntekt) ->
             this[Beregningsgrunnlag.organisasjonsnummer] = organisasjonsnummer.value
@@ -179,29 +167,30 @@ internal class Avviksvurdering {
         }
     }
 
-    private fun EnAvviksvurdering.dto(): AvviksvurderingDto {
-        return AvviksvurderingDto(
+    private fun EnAvviksvurdering.toDomain(): Avviksvurderingsgrunnlag {
+        return Avviksvurderingsgrunnlag(
             id = this.id.value,
             fødselsnummer = Fødselsnummer(this.fødselsnummer),
             skjæringstidspunkt = this.skjæringstidspunkt,
-            sammenligningsgrunnlag = AvviksvurderingDto.SammenligningsgrunnlagDto(
-                innrapporterteInntekter = this.sammenligningsgrunnlag
-                    .associate { ettSammenligningsgrunnlag ->
-                        Arbeidsgiverreferanse(ettSammenligningsgrunnlag.arbeidsgiverreferanse) to ettSammenligningsgrunnlag.inntekter
-                            .map { enMånedsinntekt ->
-                                AvviksvurderingDto.MånedligInntektDto(
-                                    inntekt = InntektPerMåned(enMånedsinntekt.inntekt),
-                                    måned = enMånedsinntekt.yearMonth,
-                                    fordel = enMånedsinntekt.fordel?.let { Fordel(it) },
-                                    beskrivelse = enMånedsinntekt.beskrivelse?.let { Beskrivelse(it) },
-                                    inntektstype = enMånedsinntekt.inntektstype.tilInntektstype()
-                                )
-                            }
-                    }
+            sammenligningsgrunnlag = Sammenligningsgrunnlag(
+                inntekter = this.sammenligningsgrunnlag.map {
+                    ArbeidsgiverInntekt(
+                        arbeidsgiverreferanse = Arbeidsgiverreferanse(it.arbeidsgiverreferanse),
+                        inntekter = it.inntekter.map { enMånedsinntekt ->
+                            ArbeidsgiverInntekt.MånedligInntekt(
+                                inntekt = InntektPerMåned(enMånedsinntekt.inntekt),
+                                måned = enMånedsinntekt.yearMonth,
+                                fordel = enMånedsinntekt.fordel?.let { Fordel(it) },
+                                beskrivelse = enMånedsinntekt.beskrivelse?.let { Beskrivelse(it) },
+                                inntektstype = enMånedsinntekt.inntektstype.tilInntektstype()
+                            )
+                        }
+                    )
+                }
             ),
             kilde = this.kilde.tilKilde(),
             opprettet = opprettet,
-            beregningsgrunnlag = AvviksvurderingDto.BeregningsgrunnlagDto(
+            beregningsgrunnlag = Beregningsgrunnlag(
                 omregnedeÅrsinntekter = this.beregningsgrunnlag
                     .associate { beregningsgrunnlag ->
                         Arbeidsgiverreferanse(beregningsgrunnlag.organisasjonsnummer) to OmregnetÅrsinntekt(beregningsgrunnlag.inntekt)
@@ -210,39 +199,31 @@ internal class Avviksvurdering {
         )
     }
 
-    private fun String.tilInntektstype(): AvviksvurderingDto.InntektstypeDto {
+    private fun String.tilInntektstype(): ArbeidsgiverInntekt.Inntektstype {
         return when (this) {
-            "LØNNSINNTEKT" -> AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT
-            "NÆRINGSINNTEKT" -> AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT
-            "PENSJON_ELLER_TRYGD" -> AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD
-            "YTELSE_FRA_OFFENTLIGE" -> AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE
-            else -> error("Kunne ikke mappe til InntektstypeDto, $this er ikke en gyldig InntektstypeDto")
+            "LØNNSINNTEKT" -> ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
+            "NÆRINGSINNTEKT" -> ArbeidsgiverInntekt.Inntektstype.NÆRINGSINNTEKT
+            "PENSJON_ELLER_TRYGD" -> ArbeidsgiverInntekt.Inntektstype.PENSJON_ELLER_TRYGD
+            "YTELSE_FRA_OFFENTLIGE" -> ArbeidsgiverInntekt.Inntektstype.YTELSE_FRA_OFFENTLIGE
+            else -> error("Kunne ikke mappe til Inntektstype, $this er ikke en gyldig Inntektstype")
         }
     }
 
-    private fun String.tilKilde(): AvviksvurderingDto.KildeDto {
+    private fun String.tilKilde(): Kilde {
         return when (this) {
-            "SPINNVILL" -> SPINNVILL
-            "SPLEIS" -> SPLEIS
-            "INFOTRYGD" -> INFOTRYGD
-            else -> error("Kunne ikke mappe til KildeDto, $this er ikke en gyldig KildeDto")
+            "SPINNVILL" -> Kilde.SPINNVILL
+            "SPLEIS" -> Kilde.SPLEIS
+            "INFOTRYGD" -> Kilde.INFOTRYGD
+            else -> error("Kunne ikke mappe til Kilde, $this er ikke en gyldig Kilde")
         }
     }
 
-    private fun AvviksvurderingDto.KildeDto.tilDatebase(): String {
+    private fun ArbeidsgiverInntekt.Inntektstype.tilDatabase(): String {
         return when (this) {
-            SPINNVILL -> "SPINNVILL"
-            SPLEIS -> "SPLEIS"
-            INFOTRYGD -> "INFOTRYGD"
-        }
-    }
-
-    private fun AvviksvurderingDto.InntektstypeDto.tilDatabase(): String {
-        return when (this) {
-            AvviksvurderingDto.InntektstypeDto.LØNNSINNTEKT -> "LØNNSINNTEKT"
-            AvviksvurderingDto.InntektstypeDto.NÆRINGSINNTEKT -> "NÆRINGSINNTEKT"
-            AvviksvurderingDto.InntektstypeDto.PENSJON_ELLER_TRYGD -> "PENSJON_ELLER_TRYGD"
-            AvviksvurderingDto.InntektstypeDto.YTELSE_FRA_OFFENTLIGE -> "YTELSE_FRA_OFFENTLIGE"
+            ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT -> "LØNNSINNTEKT"
+            ArbeidsgiverInntekt.Inntektstype.NÆRINGSINNTEKT -> "NÆRINGSINNTEKT"
+            ArbeidsgiverInntekt.Inntektstype.PENSJON_ELLER_TRYGD -> "PENSJON_ELLER_TRYGD"
+            ArbeidsgiverInntekt.Inntektstype.YTELSE_FRA_OFFENTLIGE -> "YTELSE_FRA_OFFENTLIGE"
         }
     }
 }
