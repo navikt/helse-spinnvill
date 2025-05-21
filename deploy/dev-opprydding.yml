@@ -52,6 +52,10 @@ spec:
     - name: KAFKA_RESET_POLICY
       value: latest
     - name: DATABASE_REGION
-      value: "europe-north1"
+      value: europe-north1
     - name: DATABASE_INSTANCE
-      value: "spinnvill"
+      value: spinnvill
+  observability:
+    logging:
+      destinations:
+        - id: elastic

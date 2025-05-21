@@ -21,6 +21,9 @@ spec:
     autoInstrumentation:
       enabled: true
       runtime: java
+    logging:
+      destinations:
+        - id: elastic
   kafka:
     pool: nav-dev
   secureLogs:
@@ -35,9 +38,9 @@ spec:
         tier: db-f1-micro
         flags:
           - name: cloudsql.enable_pgaudit
-            value: "true"
+            value: 'true'
           - name: pgaudit.log
-            value: "write"
+            value: write
         databases:
           - name: spinnvill
             envVarPrefix: DATABASE
