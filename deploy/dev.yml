@@ -24,6 +24,7 @@ spec:
     logging:
       destinations:
         - id: elastic
+        - id: loki
   kafka:
     pool: nav-dev
   secureLogs:
