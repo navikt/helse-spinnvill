@@ -28,7 +28,7 @@ dependencies {
 tasks {
     compileTestKotlin {
         compilerOptions {
-            freeCompilerArgs.add("-Xcontext-receivers")
+            freeCompilerArgs.add("-Xcontext-parameters")
         }
     }
 }

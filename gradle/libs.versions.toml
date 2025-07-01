@@ -1,6 +1,6 @@
 [versions]
 exposed = "0.60.0"
-flyway = "11.4.1"
+flyway = "11.5.0"
 jackson = "2.18.3"
 tbdLibs = "2025.03.10-19.50-d556269c"
 testcontainers = "1.20.6"
@@ -15,7 +15,7 @@ exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref= "ex
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-postgres = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
 
-hikari = "com.zaxxer:HikariCP:6.2.1"
+hikari = "com.zaxxer:HikariCP:6.3.0"
 
 jackson-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
@@ -25,15 +25,15 @@ kotliquery = "com.github.seratch:kotliquery:1.9.1"
 logback-classic = "ch.qos.logback:logback-classic:1.5.18"
 logback-logstashEncoder = "net.logstash.logback:logstash-logback-encoder:8.0"
 micrometer-prometheus = "io.micrometer:micrometer-registry-prometheus:1.14.5"
-postgresJdbcDriver = "org.postgresql:postgresql:42.7.5"
-postgresSocketFactory = "com.google.cloud.sql:postgres-socket-factory:1.24.0"
-rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2025030709111741335066.dc4411f7bc29"
+postgresJdbcDriver = "org.postgresql:postgresql:42.7.7"
+postgresSocketFactory = "com.google.cloud.sql:postgres-socket-factory:1.25.1"
+rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2025061811051750237542.df739400e55e"
 
 tbdLibs-rapidsAndRiversTest = { module = "com.github.navikt.tbd-libs:rapids-and-rivers-test", version.ref = "tbdLibs" }
 
 testcontainers-postgres = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 
-unleash-client = "io.getunleash:unleash-client-java:10.2.0"
+unleash-client = "io.getunleash:unleash-client-java:11.0.1"
 
 [bundles]
 exposed = [

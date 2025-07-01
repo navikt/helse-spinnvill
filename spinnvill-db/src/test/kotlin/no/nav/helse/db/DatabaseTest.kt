@@ -24,7 +24,7 @@ internal class DatabaseTest {
     }
 
     private fun asSQL(@Language("SQL") sql: String, argMap: Map<String, Any?> = emptyMap()) = queryOf(sql, argMap)
-    context (DataSource)
-    private fun <T> Query.list(mapping: (Row) -> T?) =
-        sessionOf(this@DataSource, strict = true).use { session -> session.run(this.map { mapping(it) }.asList) }
+
+    context(dataSource: DataSource) private fun <T> Query.list(mapping: (Row) -> T?) =
+        sessionOf(dataSource, strict = true).use { session -> session.run(this.map { mapping(it) }.asList) }
 }
