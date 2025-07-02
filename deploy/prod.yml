@@ -57,6 +57,9 @@ spec:
     outbound:
       external:
         - host: tbd-unleash-api.nav.cloud.nais.io
+      rules:
+        - application: logging
+          namespace: nais-system
   envFrom:
     - secret: spinnvill-unleash-api-token
   env:
