@@ -1,6 +1,6 @@
 [versions]
-exposed = "0.60.0"
-flyway = "11.5.0"
+exposed = "0.61.0"
+flyway = "11.10.0"
 jackson = "2.18.3"
 tbdLibs = "2025.03.10-19.50-d556269c"
 testcontainers = "1.20.6"
@@ -23,7 +23,7 @@ jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin"
 kotliquery = "com.github.seratch:kotliquery:1.9.1"
 
 logback-classic = "ch.qos.logback:logback-classic:1.5.18"
-logback-logstashEncoder = "net.logstash.logback:logstash-logback-encoder:8.0"
+logback-logstashEncoder = "net.logstash.logback:logstash-logback-encoder:8.1"
 micrometer-prometheus = "io.micrometer:micrometer-registry-prometheus:1.14.5"
 postgresJdbcDriver = "org.postgresql:postgresql:42.7.7"
 postgresSocketFactory = "com.google.cloud.sql:postgres-socket-factory:1.25.1"

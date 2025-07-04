@@ -47,4 +47,7 @@ tasks {
     jar {
         enabled = false
     }
+    wrapper {
+        gradleVersion = "8.14.3"
+    }
 }
