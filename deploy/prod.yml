@@ -30,8 +30,9 @@ spec:
   secureLogs:
     enabled: true
   replicas:
-    min: 3
-    max: 24
+    min: 0
+    max: 0
+    disableAutoScaling: true
     scalingStrategy:
       kafka:
         topic: tbd.rapid.v1
