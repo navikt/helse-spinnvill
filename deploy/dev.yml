@@ -37,7 +37,7 @@ spec:
     sqlInstances:
       - type: POSTGRES_17
         diskAutoresize: true
-        tier: db-custom-16-52480
+        tier: db-f1-micro
         flags:
           - name: cloudsql.enable_pgaudit
             value: 'true'
