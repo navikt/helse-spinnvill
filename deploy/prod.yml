@@ -43,7 +43,7 @@ spec:
       - type: POSTGRES_15
         diskAutoresize: true
         pointInTimeRecovery: true
-        tier: db-custom-1-3840
+        tier: db-custom-16-52480
         databases:
           - name: spinnvill
             envVarPrefix: DATABASE
