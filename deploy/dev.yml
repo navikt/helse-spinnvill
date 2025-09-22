@@ -35,7 +35,7 @@ spec:
     disableAutoScaling: true
   gcp:
     sqlInstances:
-      - type: POSTGRES_16
+      - type: POSTGRES_17
         diskAutoresize: true
         tier: db-custom-16-52480
         flags:
