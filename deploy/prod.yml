@@ -48,11 +48,13 @@ spec:
             envVarPrefix: DATABASE
         flags:
           - name: max_connections
-            value: '300'
+            value: "300"
           - name: cloudsql.enable_pgaudit
-            value: 'true'
+            value: "true"
           - name: pgaudit.log
-            value: write
+            value: "write,ddl,role"
+          - name: "pgaudit.log_parameter"
+            value: "on"
   accessPolicy:
     outbound:
       external:
