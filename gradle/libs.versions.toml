@@ -1,8 +1,8 @@
 [versions]
 exposed = "0.61.0"
-flyway = "11.13.1"
-jackson = "2.20.0"
-tbdLibs = "2025.09.19-15.24-1a9c113f"
+flyway = "11.19.0"
+jackson = "2.20.1"
+tbdLibs = "2025.12.01-14.48-80521a4a"
 testcontainers = "1.21.3"
 
 [libraries]
@@ -22,18 +22,18 @@ jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin"
 
 kotliquery = "com.github.seratch:kotliquery:1.9.1"
 
-logback-classic = "ch.qos.logback:logback-classic:1.5.18"
+logback-classic = "ch.qos.logback:logback-classic:1.5.22"
 logback-logstashEncoder = "net.logstash.logback:logstash-logback-encoder:8.1"
-micrometer-prometheus = "io.micrometer:micrometer-registry-prometheus:1.15.4"
+micrometer-prometheus = "io.micrometer:micrometer-registry-prometheus:1.16.1"
 postgresJdbcDriver = "org.postgresql:postgresql:42.7.8"
-postgresSocketFactory = "com.google.cloud.sql:postgres-socket-factory:1.25.3"
-rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2025092210081758528498.1d4b108f2c61"
+postgresSocketFactory = "com.google.cloud.sql:postgres-socket-factory:1.27.1"
+rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2025110410541762250064.d7e58c3fad81"
 
 tbdLibs-rapidsAndRiversTest = { module = "com.github.navikt.tbd-libs:rapids-and-rivers-test", version.ref = "tbdLibs" }
 
 testcontainers-postgres = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 
-unleash-client = "io.getunleash:unleash-client-java:11.1.0"
+unleash-client = "io.getunleash:unleash-client-java:11.2.0"
 
 [bundles]
 exposed = [
