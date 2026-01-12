@@ -3,7 +3,7 @@ exposed = "0.61.0"
 flyway = "11.19.0"
 jackson = "2.20.1"
 tbdLibs = "2025.12.01-14.48-80521a4a"
-testcontainers = "1.21.3"
+testcontainers = "2.0.3"
 
 [libraries]
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref= "exposed" }
@@ -31,7 +31,7 @@ rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2025110410541762250064.d7
 
 tbdLibs-rapidsAndRiversTest = { module = "com.github.navikt.tbd-libs:rapids-and-rivers-test", version.ref = "tbdLibs" }
 
-testcontainers-postgres = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
+testcontainers-postgres = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
 
 unleash-client = "io.getunleash:unleash-client-java:11.2.0"
 
