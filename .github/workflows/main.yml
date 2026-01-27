@@ -52,7 +52,7 @@ jobs:
   deploy-dev:
     name: Deploy til dev
     needs: [build]
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     steps:
       - name: Sjekk ut kode
         uses: actions/checkout@v6
