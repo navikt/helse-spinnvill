@@ -27,8 +27,6 @@ spec:
         - id: loki
   kafka:
     pool: nav-dev
-  secureLogs:
-    enabled: true
   replicas:
     min: 1
     max: 2

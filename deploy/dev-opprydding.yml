@@ -40,8 +40,6 @@ spec:
   webproxy: true
   kafka:
     pool: nav-dev
-  secureLogs:
-    enabled: true
   envFrom:
     - secret: google-sql-spinnvill-spinnvill-spinnvill-opprydding-de-5cf54c23
   env:
