@@ -34,7 +34,7 @@ spec:
       kafka:
         topic: tbd.rapid.v1
         consumerGroup: tbd-spinnvill-v1
-        threshold: 200
+        threshold: 800
   gcp:
     sqlInstances:
       - type: POSTGRES_17
