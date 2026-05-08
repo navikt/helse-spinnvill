@@ -13,7 +13,9 @@ on:
       - '.dockerignore'
     branches:
       - main
-
+  schedule:
+    - cron: '0 3 * * 3'
+      timezone: 'Europe/Oslo'
 permissions:
   contents: read
   id-token: write
