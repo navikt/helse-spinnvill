@@ -34,7 +34,7 @@ jobs:
           distribution: "temurin"
           java-version: "21"
       - name: Sett opp Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
       - name: Bygg med Gradle
         env:
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
@@ -78,6 +78,3 @@ jobs:
           CLUSTER: prod-gcp
           RESOURCE: deploy/prod.yml,deploy/unleash/prod.yml
           IMAGE: ${{ needs.build.outputs.image }}
-
-
-
