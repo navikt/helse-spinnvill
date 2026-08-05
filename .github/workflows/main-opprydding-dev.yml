@@ -1,4 +1,4 @@
-name: main - spinnvill-opprydding-dev - Bygg, test og deploy
+name: main - opprydding-dev - Bygg, test og deploy
 
 on:
   push:

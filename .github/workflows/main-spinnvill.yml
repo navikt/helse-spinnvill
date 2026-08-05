@@ -1,4 +1,4 @@
-name: main - spinnvill-app - Bygg, test og deploy
+name: main - spinnvill - Bygg, test og deploy
 
 on:
   push:
