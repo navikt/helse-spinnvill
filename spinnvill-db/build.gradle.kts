@@ -1,4 +1,5 @@
 plugins {
+    id("no.nav.helse.sas.sas-kotlin")
     `java-test-fixtures`
 }
 
@@ -23,12 +24,4 @@ dependencies {
     testFixturesImplementation(libs.bundles.flyway.postgres)
     testFixturesImplementation(libs.kotliquery)
     testFixturesImplementation(libs.testcontainers.postgres)
-}
-
-tasks {
-    compileTestKotlin {
-        compilerOptions {
-            freeCompilerArgs.add("-Xcontext-parameters")
-        }
-    }
 }

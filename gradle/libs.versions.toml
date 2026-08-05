@@ -1,7 +1,7 @@
 [versions]
 exposed = "0.61.0"
 flyway = "11.19.0"
-jackson = "2.20.1"
+sasGradlePlugins = "20260804.1151"
 tbdLibs = "2025.12.01-14.48-80521a4a"
 testcontainers = "2.0.3"
 
@@ -17,8 +17,8 @@ flyway-postgres = { module = "org.flywaydb:flyway-database-postgresql", version.
 
 hikari = "com.zaxxer:HikariCP:7.0.2"
 
-jackson-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
-jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+jackson-jsr310 = { group = "com.fasterxml.jackson.datatype", name = "jackson-datatype-jsr310" }
+jackson-kotlin = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin" }
 
 kotliquery = "com.github.seratch:kotliquery:1.9.1"
 
@@ -28,6 +28,7 @@ micrometer-prometheus = "io.micrometer:micrometer-registry-prometheus:1.16.1"
 postgresJdbcDriver = "org.postgresql:postgresql:42.7.8"
 postgresSocketFactory = "com.google.cloud.sql:postgres-socket-factory:1.27.1"
 rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2025110410541762250064.d7e58c3fad81"
+slf4j-api = "org.slf4j:slf4j-api:2.0.17"
 
 tbdLibs-rapidsAndRiversTest = { module = "com.github.navikt.tbd-libs:rapids-and-rivers-test", version.ref = "tbdLibs" }
 
@@ -55,3 +56,8 @@ logback = [
     "logback-classic",
     "logback-logstashEncoder",
 ]
+
+[plugins]
+sas-deployable = { id = "no.nav.helse.sas.sas-deployable", version.ref = "sasGradlePlugins" }
+sas-kotlin = { id = "no.nav.helse.sas.sas-kotlin", version.ref = "sasGradlePlugins" }
+sas-root = { id = "no.nav.helse.sas.sas-root", version.ref = "sasGradlePlugins" }
