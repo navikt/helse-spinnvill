@@ -1,4 +1,4 @@
-name: main - spinnvill-app - Bygg, test og deploy
+name: main - spinnvill-opprydding-dev - Bygg, test og deploy
 
 on:
   push:
@@ -15,15 +15,11 @@ on:
       - '!.github/workflows/standard-dependabot-auto-merge.yml'
       - '!.github/workflows/standard-dependency-submission.yml'
       # Ressursene som deployes av denne workflowen
-      - 'deploy/dev.yml'
-      - 'deploy/prod.yml'
-      - 'deploy/dev-db-policy.yml'
-      - 'deploy/unleash/dev.yml'
-      - 'deploy/unleash/prod.yml'
+      - 'deploy/dev-opprydding.yml'
       # Spesielt for denne tjenesten ellers
       - '!.github/workflows/standard-pr.yml'
-      - '!.github/workflows/main-spinnvill-opprydding-dev.yml'
-      - '!spinnvill-opprydding-dev/**'
+      - '!.github/workflows/main-spinnvill.yml'
+      - '!spinnvill-app/**'
   schedule:
     - cron: '0 4 * * 3'
       timezone: 'Europe/Oslo'
@@ -51,7 +47,7 @@ jobs:
     needs: bygg-og-test
     uses: navikt/helse-sas-github-workflows/.github/workflows/bygg-modul-image-med-jib.yml@d943bbae32e67f52766859e62f56aab033857bfe # v1.0.0
     with:
-      modul: spinnvill-app
+      modul: spinnvill-opprydding-dev
     permissions:
       actions: read # for sarif upload on private repos
       contents: read
@@ -64,19 +60,7 @@ jobs:
     uses: navikt/helse-sas-github-workflows/.github/workflows/deploy.yml@d943bbae32e67f52766859e62f56aab033857bfe # v1.0.0
     with:
       CLUSTER: dev-gcp
-      RESOURCE: deploy/dev.yml,deploy/dev-db-policy.yml,deploy/unleash/dev.yml
-      WORKLOAD_IMAGE: ${{ needs.bygg-image.outputs.image_ref }}
-    permissions:
-      contents: read
-      id-token: write # for nais login
-
-  deploy-prod:
-    name: Deploy til prod
-    needs: [bygg-image, deploy-dev]
-    uses: navikt/helse-sas-github-workflows/.github/workflows/deploy.yml@d943bbae32e67f52766859e62f56aab033857bfe # v1.0.0
-    with:
-      CLUSTER: prod-gcp
-      RESOURCE: deploy/prod.yml,deploy/unleash/prod.yml
+      RESOURCE: deploy/dev-opprydding.yml
       WORKLOAD_IMAGE: ${{ needs.bygg-image.outputs.image_ref }}
     permissions:
       contents: read
