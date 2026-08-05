@@ -22,7 +22,7 @@ jackson-kotlin = { group = "com.fasterxml.jackson.module", name = "jackson-modul
 
 kotliquery = "com.github.seratch:kotliquery:1.9.1"
 
-logback-classic = "ch.qos.logback:logback-classic:1.5.22"
+logback-classic = "ch.qos.logback:logback-classic:1.6.1"
 logback-logstashEncoder = "net.logstash.logback:logstash-logback-encoder:8.1"
 micrometer-prometheus = "io.micrometer:micrometer-registry-prometheus:1.16.1"
 postgresJdbcDriver = "org.postgresql:postgresql:42.7.13"
