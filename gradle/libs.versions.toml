@@ -28,7 +28,7 @@ micrometer-prometheus = "io.micrometer:micrometer-registry-prometheus:1.16.1"
 postgresJdbcDriver = "org.postgresql:postgresql:42.7.13"
 postgresSocketFactory = "com.google.cloud.sql:postgres-socket-factory:1.27.1"
 rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2025110410541762250064.d7e58c3fad81"
-slf4j-api = "org.slf4j:slf4j-api:2.0.17"
+slf4j-api = "org.slf4j:slf4j-api:2.0.18"
 
 tbdLibs-rapidsAndRiversTest = { module = "com.github.navikt.tbd-libs:rapids-and-rivers-test", version.ref = "tbdLibs" }
 
