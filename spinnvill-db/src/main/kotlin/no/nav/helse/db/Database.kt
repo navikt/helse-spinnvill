@@ -11,13 +11,16 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-class PgDatabase private constructor(env: Map<String, String>): Database {
+class PgDatabase private constructor(
+    env: Map<String, String>,
+) : Database {
     private val dataSourceBuilder = DataSourceBuilder(env)
     private val avviksvurderingRepository = AvviksvurderingRepository()
     private val avviksvurderingBehovDao = AvviksvurderingBehovDao()
 
     init {
-        org.jetbrains.exposed.sql.Database.connect(datasource())
+        org.jetbrains.exposed.sql.Database
+            .connect(datasource())
     }
 
     override fun migrate() {
@@ -26,8 +29,11 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
 
     override fun datasource(): HikariDataSource = dataSourceBuilder.getDataSource()
 
-    override fun finnUbehandletAvviksvurderingBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehov? {
-        return avviksvurderingBehovDao.findUløst(fødselsnummer, skjæringstidspunkt)?.let { dto ->
+    override fun finnUbehandletAvviksvurderingBehov(
+        fødselsnummer: Fødselsnummer,
+        skjæringstidspunkt: LocalDate,
+    ): AvviksvurderingBehov? =
+        avviksvurderingBehovDao.findUløst(fødselsnummer, skjæringstidspunkt)?.let { dto ->
             val jsonNode = jacksonObjectMapper().convertValue<JsonNode>(dto.json)
             AvviksvurderingBehov.fraLagring(
                 behovId = dto.id,
@@ -37,26 +43,27 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
                 vedtaksperiodeId = jsonNode["Avviksvurdering"].get("vedtaksperiodeId").asUUID(),
                 organisasjonsnummer = jsonNode["Avviksvurdering"].get("organisasjonsnummer").asText().somArbeidsgiverref(),
                 løst = dto.løst != null,
-                beregningsgrunnlag = Beregningsgrunnlag(
-                    jsonNode["Avviksvurdering"].get("omregnedeÅrsinntekter").associate {
-                        Arbeidsgiverreferanse(it["organisasjonsnummer"].asText()) to OmregnetÅrsinntekt(it["beløp"].asDouble())
-                    }
-                ),
+                beregningsgrunnlag =
+                    Beregningsgrunnlag(
+                        jsonNode["Avviksvurdering"].get("omregnedeÅrsinntekter").associate {
+                            Arbeidsgiverreferanse(it["organisasjonsnummer"].asText()) to OmregnetÅrsinntekt(it["beløp"].asDouble())
+                        },
+                    ),
                 json = dto.json,
                 opprettet = dto.opprettet,
             )
         }
-    }
 
     override fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov) {
-        val dto = AvviksvurderingBehovDto(
-            avviksvurderingBehov.behovId,
-            fødselsnummer = avviksvurderingBehov.fødselsnummer.value,
-            skjæringstidspunkt = avviksvurderingBehov.skjæringstidspunkt,
-            opprettet = avviksvurderingBehov.opprettet,
-            løst = if (avviksvurderingBehov.erLøst()) LocalDateTime.now() else null,
-            json = avviksvurderingBehov.json
-        )
+        val dto =
+            AvviksvurderingBehovDto(
+                avviksvurderingBehov.behovId,
+                fødselsnummer = avviksvurderingBehov.fødselsnummer.value,
+                skjæringstidspunkt = avviksvurderingBehov.skjæringstidspunkt,
+                opprettet = avviksvurderingBehov.opprettet,
+                løst = if (avviksvurderingBehov.erLøst()) LocalDateTime.now() else null,
+                json = avviksvurderingBehov.json,
+            )
         avviksvurderingBehovDao.lagre(dto)
     }
 
@@ -64,9 +71,10 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
         avviksvurderingBehovDao.slett(avviksvurderingBehov.behovId)
     }
 
-    override fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurderingsgrunnlag? {
-        return avviksvurderingRepository.findLatest(fødselsnummer, skjæringstidspunkt)
-    }
+    override fun finnAvviksvurderingsgrunnlag(
+        fødselsnummer: Fødselsnummer,
+        skjæringstidspunkt: LocalDate,
+    ): Avviksvurderingsgrunnlag? = avviksvurderingRepository.findLatest(fødselsnummer, skjæringstidspunkt)
 
     override fun lagreAvviksvurderinggrunnlag(grunnlag: Avviksvurderingsgrunnlag) {
         avviksvurderingRepository.insertOne(grunnlag)
@@ -74,11 +82,11 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
 
     companion object {
         private var instance: Database? = null
-        fun instance(env: Map<String, String>): Database {
-            return instance ?: synchronized(this) {
+
+        fun instance(env: Map<String, String>): Database =
+            instance ?: synchronized(this) {
                 instance ?: PgDatabase(env).also { instance = it }
             }
-        }
 
         private fun JsonNode.asUUID(): UUID = UUID.fromString(this.asText())
     }
@@ -86,14 +94,22 @@ class PgDatabase private constructor(env: Map<String, String>): Database {
 
 interface Database {
     fun datasource(): HikariDataSource
+
     fun migrate()
 
-    fun finnUbehandletAvviksvurderingBehov(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehov?
+    fun finnUbehandletAvviksvurderingBehov(
+        fødselsnummer: Fødselsnummer,
+        skjæringstidspunkt: LocalDate,
+    ): AvviksvurderingBehov?
 
     fun lagreAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov)
 
-    fun finnAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): Avviksvurderingsgrunnlag?
+    fun finnAvviksvurderingsgrunnlag(
+        fødselsnummer: Fødselsnummer,
+        skjæringstidspunkt: LocalDate,
+    ): Avviksvurderingsgrunnlag?
 
     fun lagreAvviksvurderinggrunnlag(grunnlag: Avviksvurderingsgrunnlag)
+
     fun slettAvviksvurderingBehov(avviksvurderingBehov: AvviksvurderingBehov)
 }

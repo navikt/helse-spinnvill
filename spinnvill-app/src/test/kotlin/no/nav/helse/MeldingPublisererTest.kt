@@ -57,11 +57,17 @@ class MeldingPublisererTest {
         val beregningsperiodeTom = desember(2017)
         meldingPubliserer.behovForSammenligningsgrunnlag(BehovForSammenligningsgrunnlag(skjæringstidspunkt, beregningsperiodeFom, beregningsperiodeTom))
         meldingPubliserer.`8-30 ledd 1`(dummyBeregningsgrunnlag)
-        meldingPubliserer.`8-30 ledd 2 punktum 1`(avviksvurdering = avviksvurdering(
-            false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0
-        ))
+        meldingPubliserer.`8-30 ledd 2 punktum 1`(
+            avviksvurdering =
+                avviksvurdering(
+                    false,
+                    26.0,
+                    beregningsgrunnlag,
+                    sammenligningsgrunnlag,
+                    25.0,
+                ),
+        )
         meldingPubliserer.sendMeldinger()
-
 
         assertEquals(3, testRapid.inspektør.size)
         testRapid.inspektør.meldinger().forEach {
@@ -74,7 +80,6 @@ class MeldingPublisererTest {
 
     @Test
     fun `lag subsumsjonsmelding for fastsettelse etter hovedregel - 8-30 ledd 1`() {
-
         meldingPubliserer.`8-30 ledd 1`(dummyBeregningsgrunnlag)
         meldingPubliserer.sendMeldinger()
 
@@ -109,9 +114,16 @@ class MeldingPublisererTest {
 
     @Test
     fun `lager subsumsjonsmelding for 8-30 ledd 2 punktum 1`() {
-        meldingPubliserer.`8-30 ledd 2 punktum 1`(avviksvurdering = avviksvurdering(
-            false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0
-        ))
+        meldingPubliserer.`8-30 ledd 2 punktum 1`(
+            avviksvurdering =
+                avviksvurdering(
+                    false,
+                    26.0,
+                    beregningsgrunnlag,
+                    sammenligningsgrunnlag,
+                    25.0,
+                ),
+        )
         meldingPubliserer.sendMeldinger()
 
         val message = testRapid.inspektør.message(0)
@@ -170,9 +182,14 @@ class MeldingPublisererTest {
     @Test
     fun `svarer ut behov med løsning uten vurdering`() {
         meldingPubliserer.behovløsningUtenVurdering(
-            vurdering = avviksvurdering(
-                false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0
-            )
+            vurdering =
+                avviksvurdering(
+                    false,
+                    26.0,
+                    beregningsgrunnlag,
+                    sammenligningsgrunnlag,
+                    25.0,
+                ),
         )
         meldingPubliserer.sendMeldinger()
 
@@ -215,9 +232,14 @@ class MeldingPublisererTest {
     @Test
     fun `svarer ut behov med løsning med vurdering`() {
         meldingPubliserer.behovløsningMedVurdering(
-            vurdering = avviksvurdering(
-                false, 26.0, beregningsgrunnlag, sammenligningsgrunnlag, 25.0
-            )
+            vurdering =
+                avviksvurdering(
+                    false,
+                    26.0,
+                    beregningsgrunnlag,
+                    sammenligningsgrunnlag,
+                    25.0,
+                ),
         )
         meldingPubliserer.sendMeldinger()
 
@@ -259,10 +281,11 @@ class MeldingPublisererTest {
     private fun avviksvurderingBehovJsonMap(
         fødselsnummer: String,
         organisasjonsnummer: String,
-        skjæringstidspunkt: LocalDate
+        skjæringstidspunkt: LocalDate,
     ): Map<String, Any> {
         @Language("JSON")
-        val json = """
+        val json =
+            """
             {
                 "@event_name": "behov",
                 "@behovId": "c64a73be-7337-4f25-8923-94f355c23d76",
@@ -289,12 +312,12 @@ class MeldingPublisererTest {
                 "@id": "ba376523-62b1-49d7-8647-f902c739b634",
                 "@opprettet": "2018-01-01T00:00:00.000"
             }
-        """.trimIndent()
+            """.trimIndent()
         return objectMapper.readValue<Map<String, Any>>(json)
     }
 
-    private fun avviksvurderingBehov(): AvviksvurderingBehov {
-        return AvviksvurderingBehov.nyttBehov(
+    private fun avviksvurderingBehov(): AvviksvurderingBehov =
+        AvviksvurderingBehov.nyttBehov(
             vilkårsgrunnlagId = vilkårsgrunnlagId,
             behovId = behovId,
             skjæringstidspunkt = 1.januar,
@@ -302,9 +325,8 @@ class MeldingPublisererTest {
             vedtaksperiodeId = vedtaksperiodeId,
             organisasjonsnummer = organisasjonsnummer,
             beregningsgrunnlag = beregningsgrunnlag,
-            json = avviksvurderingBehovJsonMap(organisasjonsnummer = organisasjonsnummer.value, fødselsnummer = fødselsnummer.value, skjæringstidspunkt = 1.januar)
+            json = avviksvurderingBehovJsonMap(organisasjonsnummer = organisasjonsnummer.value, fødselsnummer = fødselsnummer.value, skjæringstidspunkt = 1.januar),
         )
-    }
 
     private fun avviksvurdering(
         harAkseptabeltAvvik: Boolean,
@@ -312,8 +334,8 @@ class MeldingPublisererTest {
         beregningsgrunnlag: Beregningsgrunnlag,
         sammenligningsgrunnlag: Sammenligningsgrunnlag,
         maksimaltTillattAvvik: Double,
-    ): Avviksvurdering {
-        return Avviksvurdering(
+    ): Avviksvurdering =
+        Avviksvurdering(
             id = UUID.randomUUID(),
             harAkseptabeltAvvik = harAkseptabeltAvvik,
             avviksprosent = avviksprosent,
@@ -321,23 +343,17 @@ class MeldingPublisererTest {
             sammenligningsgrunnlag = sammenligningsgrunnlag,
             maksimaltTillattAvvik = maksimaltTillattAvvik,
         )
-    }
 
     private fun assertPresent(jsonNode: JsonNode?) {
         assertNotNull(jsonNode) { "Forventer at noden ikke er null" }
         jsonNode?.isMissingOrNull()?.let { assertFalse(it) { "Forventer at noden ikke mangler" } }
     }
 
-    private fun TestRapid.RapidInspector.meldinger() =
-        (0 until size).map { index -> message(index) }
+    private fun TestRapid.RapidInspector.meldinger() = (0 until size).map { index -> message(index) }
 
-    private fun TestRapid.RapidInspector.hendelser(type: String) =
-        meldinger().filter { it.path("@event_name").asText() == type }
+    private fun TestRapid.RapidInspector.hendelser(type: String) = meldinger().filter { it.path("@event_name").asText() == type }
 
     private fun TestRapid.RapidInspector.behov(behov: String) =
         hendelser("behov")
             .filter { it.path("@behov").map(JsonNode::asText).containsAll(listOf(behov)) }
 }
-
-
-

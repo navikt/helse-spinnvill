@@ -14,18 +14,18 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class AvviksvurderingbehovRiverTest {
-
     private val testRapid = TestRapid()
 
-    private val messageHandler = object : MessageHandler {
-        val behov = mutableListOf<AvviksvurderingBehov>()
+    private val messageHandler =
+        object : MessageHandler {
+            val behov = mutableListOf<AvviksvurderingBehov>()
 
-        override fun håndter(behov: AvviksvurderingBehov) {
-            this.behov.add(behov)
+            override fun håndter(behov: AvviksvurderingBehov) {
+                this.behov.add(behov)
+            }
+
+            override fun håndter(løsning: SammenligningsgrunnlagLøsning) {}
         }
-
-        override fun håndter(løsning: SammenligningsgrunnlagLøsning) {}
-    }
 
     private companion object {
         private const val FØDSELSNUMMER = "12345678910"
@@ -47,11 +47,14 @@ class AvviksvurderingbehovRiverTest {
         assertEquals(
             Beregningsgrunnlag(
                 mapOf(
-                    Arbeidsgiverreferanse(ORGANISASJONSNUMMER) to OmregnetÅrsinntekt(
-                        500000.0
-                    ), Arbeidsgiverreferanse("000000000") to OmregnetÅrsinntekt(200000.20)
-                )
-            ), behov.beregningsgrunnlag
+                    Arbeidsgiverreferanse(ORGANISASJONSNUMMER) to
+                        OmregnetÅrsinntekt(
+                            500000.0,
+                        ),
+                    Arbeidsgiverreferanse("000000000") to OmregnetÅrsinntekt(200000.20),
+                ),
+            ),
+            behov.beregningsgrunnlag,
         )
     }
 
@@ -64,10 +67,11 @@ class AvviksvurderingbehovRiverTest {
     private fun avviksvurderingBehov(
         fødselsnummer: String = FØDSELSNUMMER,
         organisasjonsnummer: String = ORGANISASJONSNUMMER,
-        skjæringstidspunkt: LocalDate
+        skjæringstidspunkt: LocalDate,
     ): String {
         @Language("JSON")
-        val json = """
+        val json =
+            """
             {
                 "@event_name": "behov",
                 "@behovId": "c64a73be-7337-4f25-8923-94f355c23d76",
@@ -94,19 +98,21 @@ class AvviksvurderingbehovRiverTest {
                 "@id": "ba376523-62b1-49d7-8647-f902c739b634",
                 "@opprettet": "2018-01-01T00:00:00.000"
             }
-        """.trimIndent()
+            """.trimIndent()
         return json
     }
 
     private fun avviksvurderingJsonNode(
-        fødselsnummer: String, organisasjonsnummer: String, skjæringstidspunkt: LocalDate
+        fødselsnummer: String,
+        organisasjonsnummer: String,
+        skjæringstidspunkt: LocalDate,
     ) = avviksvurderingBehov(fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
         .let(objectMapper::readTree) as ObjectNode
 
     private fun avviksvurderingJsonMedLøsning(
         fødselsnummer: String,
         organisasjonsnummer: String,
-        skjæringstidspunkt: LocalDate
+        skjæringstidspunkt: LocalDate,
     ) = avviksvurderingJsonNode(fødselsnummer, organisasjonsnummer, skjæringstidspunkt)
         .med("@løsning" to "{}")
         .let(objectMapper::writeValueAsString)

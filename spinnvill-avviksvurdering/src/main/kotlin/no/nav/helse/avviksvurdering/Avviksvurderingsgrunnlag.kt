@@ -23,36 +23,33 @@ class Avviksvurderingsgrunnlag(
             avviksprosent = avviksprosent.avrundetTilFireDesimaler,
             beregningsgrunnlag = beregningsgrunnlag,
             sammenligningsgrunnlag = sammenligningsgrunnlag,
-            maksimaltTillattAvvik = MAKSIMALT_TILLATT_AVVIK.avrundetTilFireDesimaler
+            maksimaltTillattAvvik = MAKSIMALT_TILLATT_AVVIK.avrundetTilFireDesimaler,
         )
     }
 
-    fun beregningsgrunnlagLiktSom(beregningsgrunnlag: Beregningsgrunnlag): Boolean {
-        return this.beregningsgrunnlag.erLikt(beregningsgrunnlag)
-    }
+    fun beregningsgrunnlagLiktSom(beregningsgrunnlag: Beregningsgrunnlag): Boolean = this.beregningsgrunnlag.erLikt(beregningsgrunnlag)
 
-    fun kopierMedNyttBeregningsgrunnlag(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsgrunnlag {
-        return nyttGrunnlag(
+    fun kopierMedNyttBeregningsgrunnlag(beregningsgrunnlag: Beregningsgrunnlag): Avviksvurderingsgrunnlag =
+        nyttGrunnlag(
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = skjæringstidspunkt,
             sammenligningsgrunnlag = sammenligningsgrunnlag,
-            beregningsgrunnlag = beregningsgrunnlag
+            beregningsgrunnlag = beregningsgrunnlag,
         )
-    }
 
     companion object {
         fun nyttGrunnlag(
             fødselsnummer: Fødselsnummer,
             skjæringstidspunkt: LocalDate,
             sammenligningsgrunnlag: Sammenligningsgrunnlag,
-            beregningsgrunnlag: Beregningsgrunnlag
+            beregningsgrunnlag: Beregningsgrunnlag,
         ) = Avviksvurderingsgrunnlag(
             id = UUID.randomUUID(),
             fødselsnummer = fødselsnummer,
             skjæringstidspunkt = skjæringstidspunkt,
             beregningsgrunnlag = beregningsgrunnlag,
             sammenligningsgrunnlag = sammenligningsgrunnlag,
-            opprettet = LocalDateTime.now()
+            opprettet = LocalDateTime.now(),
         )
     }
 }

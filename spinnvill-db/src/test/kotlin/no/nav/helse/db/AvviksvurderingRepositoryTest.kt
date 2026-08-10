@@ -16,7 +16,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 internal class AvviksvurderingRepositoryTest {
-
     private val database = TestDatabase.database()
     private val avviksvurderingRepository = AvviksvurderingRepository()
 
@@ -33,14 +32,15 @@ internal class AvviksvurderingRepositoryTest {
         val beregningsgrunnlag = beregningsgrunnlag()
 
         val id = UUID.randomUUID()
-        val avviksvurdering = opprettEn(
-            id,
-            fødselsnummer,
-            skjæringstidspunkt,
-            LocalDateTime.now(),
-            sammenligningsgrunnlag,
-            beregningsgrunnlag
-        )
+        val avviksvurdering =
+            opprettEn(
+                id,
+                fødselsnummer,
+                skjæringstidspunkt,
+                LocalDateTime.now(),
+                sammenligningsgrunnlag,
+                beregningsgrunnlag,
+            )
         assertNotNull(avviksvurdering)
 
         assertEquals(id, avviksvurdering.id)
@@ -84,7 +84,7 @@ internal class AvviksvurderingRepositoryTest {
             skjæringstidspunkt,
             LocalDateTime.now().minusDays(1),
             sammenligningsgrunnlag,
-            beregningsgrunnlag
+            beregningsgrunnlag,
         )
         opprettEn(
             avviksvurderingId,
@@ -92,12 +92,15 @@ internal class AvviksvurderingRepositoryTest {
             skjæringstidspunkt,
             LocalDateTime.now(),
             sammenligningsgrunnlag,
-            beregningsgrunnlag
+            beregningsgrunnlag,
         )
 
-        val antallSammenligningsgrunnlag = transaction {
-            AvviksvurderingRepository.Companion.SammenligningsgrunnlagRow.find { AvviksvurderingRepository.Companion.SammenligningsgrunnlagTable.avviksvurdering eq avviksvurderingId}.count()
-        }
+        val antallSammenligningsgrunnlag =
+            transaction {
+                AvviksvurderingRepository.Companion.SammenligningsgrunnlagRow
+                    .find { AvviksvurderingRepository.Companion.SammenligningsgrunnlagTable.avviksvurdering eq avviksvurderingId }
+                    .count()
+            }
 
         assertEquals(1, antallSammenligningsgrunnlag)
     }
@@ -105,21 +108,22 @@ internal class AvviksvurderingRepositoryTest {
     @Test
     fun `henter ikke grunnlag med annet skjæringstidspunkt`() {
         val fødselsnummer = Fødselsnummer("12345678910")
-        val grunnlag1 = opprettEn(
-            UUID.randomUUID(),
-            fødselsnummer,
-            1.januar,
-            LocalDateTime.now(),
-            sammenligningsgrunnlag(),
-            beregningsgrunnlag()
-        )
+        val grunnlag1 =
+            opprettEn(
+                UUID.randomUUID(),
+                fødselsnummer,
+                1.januar,
+                LocalDateTime.now(),
+                sammenligningsgrunnlag(),
+                beregningsgrunnlag(),
+            )
         opprettEn(
             UUID.randomUUID(),
             fødselsnummer,
             2.februar,
             LocalDateTime.now(),
             sammenligningsgrunnlag(),
-            beregningsgrunnlag()
+            beregningsgrunnlag(),
         )
         val funnetGrunnlag = avviksvurderingRepository.findLatest(fødselsnummer, 1.januar)
         assertLike(grunnlag1, funnetGrunnlag)
@@ -128,21 +132,22 @@ internal class AvviksvurderingRepositoryTest {
     @Test
     fun `henter ikke avviksvurderinger med annet fødselsnummer`() {
         val fødselsnummer = Fødselsnummer("12345678910")
-        val grunnlag1 = opprettEn(
-            UUID.randomUUID(),
-            fødselsnummer,
-            1.januar,
-            LocalDateTime.now(),
-            sammenligningsgrunnlag(),
-            beregningsgrunnlag()
-        )
+        val grunnlag1 =
+            opprettEn(
+                UUID.randomUUID(),
+                fødselsnummer,
+                1.januar,
+                LocalDateTime.now(),
+                sammenligningsgrunnlag(),
+                beregningsgrunnlag(),
+            )
         opprettEn(
             UUID.randomUUID(),
             Fødselsnummer("0101010101"),
             1.januar,
             LocalDateTime.now(),
             sammenligningsgrunnlag(),
-            beregningsgrunnlag()
+            beregningsgrunnlag(),
         )
         val funnetGrunnlag = avviksvurderingRepository.findLatest(fødselsnummer, 1.januar)
         assertLike(grunnlag1, funnetGrunnlag)
@@ -157,40 +162,42 @@ internal class AvviksvurderingRepositoryTest {
             1.januar,
             LocalDateTime.now(),
             sammenligningsgrunnlag(),
-            beregningsgrunnlag()
+            beregningsgrunnlag(),
         )
         fakeInfotrygdAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt = 1.januar)
         val funnetGrunnlag = avviksvurderingRepository.findLatest(fødselsnummer, 1.januar)
         assertNull(funnetGrunnlag)
     }
 
-    private fun beregningsgrunnlag(omregnetÅrsinntekt: Double = 20000.0): Beregningsgrunnlag {
-        return Beregningsgrunnlag(
-            mapOf(Arbeidsgiverreferanse("123456789") to OmregnetÅrsinntekt(omregnetÅrsinntekt))
+    private fun beregningsgrunnlag(omregnetÅrsinntekt: Double = 20000.0): Beregningsgrunnlag =
+        Beregningsgrunnlag(
+            mapOf(Arbeidsgiverreferanse("123456789") to OmregnetÅrsinntekt(omregnetÅrsinntekt)),
         )
-    }
 
-    private fun sammenligningsgrunnlag(inntektPerMåned: Double = 200000.0): Sammenligningsgrunnlag {
-        return Sammenligningsgrunnlag(
-            inntekter = listOf(
-                ArbeidsgiverInntekt(
-                    Arbeidsgiverreferanse("123456789"),
-                    inntekter = listOf(
-                        ArbeidsgiverInntekt.MånedligInntekt(
-                            InntektPerMåned(inntektPerMåned),
-                            YearMonth.of(2020, 1),
-                            fordel = Fordel("En fordel"),
-                            beskrivelse = Beskrivelse("En beskrivelse"),
-                            inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
-                        )
-
-                    )
-                )
-            )
+    private fun sammenligningsgrunnlag(inntektPerMåned: Double = 200000.0): Sammenligningsgrunnlag =
+        Sammenligningsgrunnlag(
+            inntekter =
+                listOf(
+                    ArbeidsgiverInntekt(
+                        Arbeidsgiverreferanse("123456789"),
+                        inntekter =
+                            listOf(
+                                ArbeidsgiverInntekt.MånedligInntekt(
+                                    InntektPerMåned(inntektPerMåned),
+                                    YearMonth.of(2020, 1),
+                                    fordel = Fordel("En fordel"),
+                                    beskrivelse = Beskrivelse("En beskrivelse"),
+                                    inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT,
+                                ),
+                            ),
+                    ),
+                ),
         )
-    }
 
-    private fun assertLike(expected: Avviksvurderingsgrunnlag?, actual: Avviksvurderingsgrunnlag?) {
+    private fun assertLike(
+        expected: Avviksvurderingsgrunnlag?,
+        actual: Avviksvurderingsgrunnlag?,
+    ) {
         assertEquals(expected?.id, actual?.id)
         assertEquals(expected?.fødselsnummer, actual?.fødselsnummer)
         assertEquals(expected?.beregningsgrunnlag, actual?.beregningsgrunnlag)
@@ -212,20 +219,34 @@ internal class AvviksvurderingRepositoryTest {
         return avviksvurderingRepository.findLatest(fødselsnummer, skjæringstidspunkt)
     }
 
-    private fun fakeInfotrygdAvviksvurderingsgrunnlag(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate) {
+    private fun fakeInfotrygdAvviksvurderingsgrunnlag(
+        fødselsnummer: Fødselsnummer,
+        skjæringstidspunkt: LocalDate,
+    ) {
         val conn = database.datasource().connection
-        val stmt = conn.prepareStatement("""
+        val stmt =
+            conn.prepareStatement(
+                """
             INSERT INTO avviksvurdering(id, fødselsnummer, skjæringstidspunkt, opprettet, kilde) 
             VALUES (?::uuid, ?, ?::timestamp, ?::timestamp, ?)
-            """
+            """,
+            )
+        stmt.setString(
+            1,
+            java.util.UUID
+                .randomUUID()
+                .toString(),
         )
-        stmt.setString(1, java.util.UUID.randomUUID().toString())
         stmt.setString(2, fødselsnummer.value)
         stmt.setString(3, skjæringstidspunkt.toString())
-        stmt.setString(4, java.time.LocalDateTime.now().toString())
+        stmt.setString(
+            4,
+            java.time.LocalDateTime
+                .now()
+                .toString(),
+        )
         stmt.setString(5, "INFOTRYGD")
         stmt.executeUpdate()
         conn.close()
     }
-
 }

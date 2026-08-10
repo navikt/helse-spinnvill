@@ -1,24 +1,40 @@
 package no.nav.helse
 
 @JvmInline
-value class Fødselsnummer(val value: String)
+value class Fødselsnummer(
+    val value: String,
+)
 
 @JvmInline
-value class Arbeidsgiverreferanse(val value: String)
+value class Arbeidsgiverreferanse(
+    val value: String,
+)
 
 @JvmInline
-value class InntektPerMåned(val value: Double)
+value class InntektPerMåned(
+    val value: Double,
+)
 
 @JvmInline
-value class Fordel(val value: String)
+value class Fordel(
+    val value: String,
+)
 
 @JvmInline
-value class Beskrivelse(val value: String)
+value class Beskrivelse(
+    val value: String,
+)
 
 @JvmInline
-value class OmregnetÅrsinntekt(val value: Double)
+value class OmregnetÅrsinntekt(
+    val value: Double,
+)
+
 @JvmInline
-value class VersjonAvKode(val value: String)
+value class VersjonAvKode(
+    val value: String,
+)
 
 fun String.somFnr() = Fødselsnummer(this)
+
 fun String.somArbeidsgiverref() = Arbeidsgiverreferanse(this)

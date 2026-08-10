@@ -3,7 +3,6 @@ package no.nav.helse.helpers
 import no.nav.helse.Toggle
 
 internal object ToggleHelpers {
-
     internal fun Toggle.enable() = setPrivateValue(true)
 
     internal fun Toggle.disable() = setPrivateValue(false)

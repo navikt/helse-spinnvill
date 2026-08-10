@@ -10,7 +10,9 @@ internal fun main() {
     App().start()
 }
 
-class App(private val env: Map<String, String> = System.getenv()) : RapidsConnection.StatusListener {
+class App(
+    private val env: Map<String, String> = System.getenv(),
+) : RapidsConnection.StatusListener {
     private lateinit var database: Database
     private val rapidsConnection = RapidApplication.create(env)
 
@@ -19,7 +21,7 @@ class App(private val env: Map<String, String> = System.getenv()) : RapidsConnec
         Mediator(
             versjonAvKode = VersjonAvKode(versjonAvKode(env)),
             rapidsConnection = rapidsConnection,
-            databaseProvider = { database }
+            databaseProvider = { database },
         )
     }
 
@@ -32,7 +34,5 @@ class App(private val env: Map<String, String> = System.getenv()) : RapidsConnec
         database.migrate()
     }
 
-    private fun versjonAvKode(env: Map<String, String>): String {
-        return env["NAIS_APP_IMAGE"] ?: throw IllegalArgumentException("NAIS_APP_IMAGE env variable is missing")
-    }
+    private fun versjonAvKode(env: Map<String, String>): String = env["NAIS_APP_IMAGE"] ?: throw IllegalArgumentException("NAIS_APP_IMAGE env variable is missing")
 }

@@ -21,41 +21,46 @@ import java.util.*
 
 internal class AvviksvurderingBehovDao {
     internal companion object {
-    val mapper = jacksonObjectMapper()
+        val mapper = jacksonObjectMapper()
+
         private object AvviksvurderingBehov : IdTable<UUID>(name = "avviksvurdering_behov") {
             override val id: Column<EntityID<UUID>> = uuid("behov_id").entityId()
             val fødselsnummer: Column<String> = varchar("fødselsnummer", 11)
             val skjæringstidspunkt: Column<LocalDate> = date("skjæringstidspunkt")
             val opprettet: Column<LocalDateTime> = datetime("opprettet")
             val løst: Column<LocalDateTime?> = datetime("løst").nullable()
-            val json: Column<JsonNode> = json("json",  { mapper.writeValueAsString(it) }, { mapper.readTree(it) })
+            val json: Column<JsonNode> = json("json", { mapper.writeValueAsString(it) }, { mapper.readTree(it) })
 
             override val primaryKey = PrimaryKey(id)
         }
 
-        class EtAvviksvurderingBehov(id: EntityID<UUID>) : UUIDEntity(id) {
+        class EtAvviksvurderingBehov(
+            id: EntityID<UUID>,
+        ) : UUIDEntity(id) {
             companion object : UUIDEntityClass<EtAvviksvurderingBehov>(AvviksvurderingBehov)
 
             var fødselsnummer by AvviksvurderingBehov.fødselsnummer
             var skjæringstidspunkt by AvviksvurderingBehov.skjæringstidspunkt
             var opprettet by AvviksvurderingBehov.opprettet
             var løst by AvviksvurderingBehov.løst
-            var json  by AvviksvurderingBehov.json
+            var json by AvviksvurderingBehov.json
         }
     }
 
-    internal fun findUløst(fødselsnummer: Fødselsnummer, skjæringstidspunkt: LocalDate): AvviksvurderingBehovDto? {
-        return transaction {
-            EtAvviksvurderingBehov.find {
-                AvviksvurderingBehov.fødselsnummer eq fødselsnummer.value and (AvviksvurderingBehov.skjæringstidspunkt eq skjæringstidspunkt) and AvviksvurderingBehov.løst.isNull()
-            }
-                .firstOrNull()
+    internal fun findUløst(
+        fødselsnummer: Fødselsnummer,
+        skjæringstidspunkt: LocalDate,
+    ): AvviksvurderingBehovDto? =
+        transaction {
+            EtAvviksvurderingBehov
+                .find {
+                    AvviksvurderingBehov.fødselsnummer eq fødselsnummer.value and (AvviksvurderingBehov.skjæringstidspunkt eq skjæringstidspunkt) and AvviksvurderingBehov.løst.isNull()
+                }.firstOrNull()
                 ?.dto()
         }
-    }
 
-    internal fun lagre(avviksvurderingBehovDto: AvviksvurderingBehovDto) {
-        return transaction {
+    internal fun lagre(avviksvurderingBehovDto: AvviksvurderingBehovDto) =
+        transaction {
             EtAvviksvurderingBehov.findByIdAndUpdate(avviksvurderingBehovDto.id) {
                 it.løst = avviksvurderingBehovDto.løst
             } ?: EtAvviksvurderingBehov.new(avviksvurderingBehovDto.id) {
@@ -66,7 +71,6 @@ internal class AvviksvurderingBehovDao {
                 json = mapper.valueToTree(avviksvurderingBehovDto.json)
             }
         }
-    }
 
     internal fun slett(behovId: UUID) {
         transaction {
@@ -74,16 +78,13 @@ internal class AvviksvurderingBehovDao {
         }
     }
 
-
-    private fun EtAvviksvurderingBehov.dto(): AvviksvurderingBehovDto {
-        return AvviksvurderingBehovDto(
+    private fun EtAvviksvurderingBehov.dto(): AvviksvurderingBehovDto =
+        AvviksvurderingBehovDto(
             id = this.id.value,
             fødselsnummer = this.fødselsnummer,
             skjæringstidspunkt = this.skjæringstidspunkt,
             opprettet = opprettet,
             løst = løst,
-            json =  mapper.convertValue(json)
+            json = mapper.convertValue(json),
         )
-    }
 }
-

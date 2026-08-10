@@ -14,7 +14,6 @@ import java.time.LocalDate
 import java.util.*
 
 internal class AvviksvurderingRepositoryBehovTest {
-
     private val database = TestDatabase.database()
 
     @BeforeEach
@@ -27,10 +26,11 @@ internal class AvviksvurderingRepositoryBehovTest {
         val etAvviksvurderingBehov = etAvviksvurderingBehov()
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
 
-        val funnetAvviksvurderingBehov = database.finnUbehandletAvviksvurderingBehov(
-            etAvviksvurderingBehov.fødselsnummer,
-            etAvviksvurderingBehov.skjæringstidspunkt
-        )
+        val funnetAvviksvurderingBehov =
+            database.finnUbehandletAvviksvurderingBehov(
+                etAvviksvurderingBehov.fødselsnummer,
+                etAvviksvurderingBehov.skjæringstidspunkt,
+            )
 
         assertNotNull(funnetAvviksvurderingBehov)
         assertEquals(etAvviksvurderingBehov.behovId, funnetAvviksvurderingBehov?.behovId)
@@ -59,11 +59,12 @@ internal class AvviksvurderingRepositoryBehovTest {
         val fødselsnummer = "12345678910"
         val skjæringstidspunkt = 1.januar
         val id = UUID.randomUUID()
-        val etAvviksvurderingBehov = etAvviksvurderingBehov(
-            fødselsnummer = fødselsnummer,
-            skjæringstidspunkt = skjæringstidspunkt,
-            id = UUID.randomUUID()
-        )
+        val etAvviksvurderingBehov =
+            etAvviksvurderingBehov(
+                fødselsnummer = fødselsnummer,
+                skjæringstidspunkt = skjæringstidspunkt,
+                id = UUID.randomUUID(),
+            )
         val etTilAvviksvurderingBehov =
             etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt = skjæringstidspunkt, id = id)
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
@@ -87,11 +88,12 @@ internal class AvviksvurderingRepositoryBehovTest {
         val enTilId = UUID.randomUUID()
         val etAvviksvurderingBehov =
             etAvviksvurderingBehov(fødselsnummer = fødselsnummer, skjæringstidspunkt = skjæringstidspunkt, id = id)
-        val etTilAvviksvurderingBehov = etAvviksvurderingBehov(
-            fødselsnummer = fødselsnummer,
-            skjæringstidspunkt = etTilSkjæringstidspunkt,
-            id = enTilId
-        )
+        val etTilAvviksvurderingBehov =
+            etAvviksvurderingBehov(
+                fødselsnummer = fødselsnummer,
+                skjæringstidspunkt = etTilSkjæringstidspunkt,
+                id = enTilId,
+            )
         database.lagreAvviksvurderingBehov(etAvviksvurderingBehov)
         database.lagreAvviksvurderingBehov(etTilAvviksvurderingBehov)
 
@@ -138,26 +140,32 @@ internal class AvviksvurderingRepositoryBehovTest {
             vilkårsgrunnlagId = vilkårsgrunnlagId,
             vedtaksperiodeId = vedtaksperiodeId,
             organisasjonsnummer = organisasjonsnummer,
-            beregningsgrunnlag = Beregningsgrunnlag(
-                mapOf(
-                    pair = organisasjonsnummer to OmregnetÅrsinntekt(
-                        beløp,
+            beregningsgrunnlag =
+                Beregningsgrunnlag(
+                    mapOf(
+                        pair =
+                            organisasjonsnummer to
+                                OmregnetÅrsinntekt(
+                                    beløp,
+                                ),
                     ),
                 ),
-            ),
-            json = mapOf(
-                "Avviksvurdering" to mapOf(
-                    "organisasjonsnummer" to organisasjonsnummer,
-                    "vedtaksperiodeId" to vedtaksperiodeId,
-                    "vilkårsgrunnlagId" to vilkårsgrunnlagId,
-                    "omregnedeÅrsinntekter" to listOf(
+            json =
+                mapOf(
+                    "Avviksvurdering" to
                         mapOf(
                             "organisasjonsnummer" to organisasjonsnummer,
-                            "beløp" to beløp
+                            "vedtaksperiodeId" to vedtaksperiodeId,
+                            "vilkårsgrunnlagId" to vilkårsgrunnlagId,
+                            "omregnedeÅrsinntekter" to
+                                listOf(
+                                    mapOf(
+                                        "organisasjonsnummer" to organisasjonsnummer,
+                                        "beløp" to beløp,
+                                    ),
+                                ),
                         ),
-                    )
-                )
-            ),
+                ),
         )
     }
 }

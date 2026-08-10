@@ -13,10 +13,10 @@ class AvviksvurderingBehov private constructor(
     val fødselsnummer: Fødselsnummer,
     val vedtaksperiodeId: UUID,
     val organisasjonsnummer: Arbeidsgiverreferanse,
-    val beregningsgrunnlag : Beregningsgrunnlag,
+    val beregningsgrunnlag: Beregningsgrunnlag,
     val json: Map<String, Any>,
     val opprettet: LocalDateTime,
-    private var løst: Boolean
+    private var løst: Boolean,
 ) {
     fun erLøst() = løst
 
@@ -34,8 +34,8 @@ class AvviksvurderingBehov private constructor(
             organisasjonsnummer: Arbeidsgiverreferanse,
             beregningsgrunnlag: Beregningsgrunnlag,
             json: Map<String, Any>,
-        ): AvviksvurderingBehov {
-            return AvviksvurderingBehov(
+        ): AvviksvurderingBehov =
+            AvviksvurderingBehov(
                 vilkårsgrunnlagId = vilkårsgrunnlagId,
                 behovId = behovId,
                 skjæringstidspunkt = skjæringstidspunkt,
@@ -45,9 +45,8 @@ class AvviksvurderingBehov private constructor(
                 beregningsgrunnlag = beregningsgrunnlag,
                 json = json,
                 opprettet = LocalDateTime.now(),
-                løst = false
+                løst = false,
             )
-        }
 
         fun fraLagring(
             behovId: UUID,
@@ -60,8 +59,8 @@ class AvviksvurderingBehov private constructor(
             løst: Boolean,
             opprettet: LocalDateTime,
             json: Map<String, Any>,
-        ): AvviksvurderingBehov {
-            return AvviksvurderingBehov(
+        ): AvviksvurderingBehov =
+            AvviksvurderingBehov(
                 vilkårsgrunnlagId = vilkårsgrunnlagId,
                 behovId = behovId,
                 skjæringstidspunkt = skjæringstidspunkt,
@@ -71,8 +70,7 @@ class AvviksvurderingBehov private constructor(
                 beregningsgrunnlag = beregningsgrunnlag,
                 json = json,
                 opprettet = opprettet,
-                løst = løst
+                løst = løst,
             )
-        }
     }
 }

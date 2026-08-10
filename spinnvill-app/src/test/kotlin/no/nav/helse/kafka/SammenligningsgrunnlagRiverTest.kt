@@ -19,18 +19,18 @@ import java.util.*
 import kotlin.test.assertEquals
 
 class SammenligningsgrunnlagRiverTest {
-
     private val testRapid = TestRapid()
 
-    private val messageHandler = object : MessageHandler {
-        val messages = mutableListOf<SammenligningsgrunnlagLøsning>()
+    private val messageHandler =
+        object : MessageHandler {
+            val messages = mutableListOf<SammenligningsgrunnlagLøsning>()
 
-        override fun håndter(behov: AvviksvurderingBehov) {}
+            override fun håndter(behov: AvviksvurderingBehov) {}
 
-        override fun håndter(løsning: SammenligningsgrunnlagLøsning) {
-            messages.add(løsning)
+            override fun håndter(løsning: SammenligningsgrunnlagLøsning) {
+                messages.add(løsning)
+            }
         }
-    }
 
     private companion object {
         private const val FØDSELSNUMMER = "12345678910"
@@ -50,10 +50,11 @@ class SammenligningsgrunnlagRiverTest {
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
                 avviksvurderingBehovId = avviksvurderingBehovId,
-                inntekter = inntekterForSammenligningsgrunnlag(
-                    YearMonth.of(2023, 1) to listOf(inntekt())
-                )
-            )
+                inntekter =
+                    inntekterForSammenligningsgrunnlag(
+                        YearMonth.of(2023, 1) to listOf(inntekt()),
+                    ),
+            ),
         )
         val meldinger = messageHandler.messages
         val melding = meldinger.single()
@@ -61,20 +62,23 @@ class SammenligningsgrunnlagRiverTest {
         assertEquals(FØDSELSNUMMER, melding.fødselsnummer.value)
         assertEquals(1.januar, melding.skjæringstidspunkt)
         assertEquals(avviksvurderingBehovId, melding.avviksvurderingBehovId)
-        val expected = Sammenligningsgrunnlag(
-            listOf(
-                ArbeidsgiverInntekt(
-                    ORGANISASJONSNUMMER.somArbeidsgiverref(), listOf(
-                        ArbeidsgiverInntekt.MånedligInntekt(
-                            inntekt = InntektPerMåned(value = 20000.0), måned = YearMonth.of(2023, 1),
-                            fordel = Fordel("En fordel"),
-                            beskrivelse = Beskrivelse("En beskrivelse"),
-                            inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
-                        )
-                    )
-                )
+        val expected =
+            Sammenligningsgrunnlag(
+                listOf(
+                    ArbeidsgiverInntekt(
+                        ORGANISASJONSNUMMER.somArbeidsgiverref(),
+                        listOf(
+                            ArbeidsgiverInntekt.MånedligInntekt(
+                                inntekt = InntektPerMåned(value = 20000.0),
+                                måned = YearMonth.of(2023, 1),
+                                fordel = Fordel("En fordel"),
+                                beskrivelse = Beskrivelse("En beskrivelse"),
+                                inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT,
+                            ),
+                        ),
+                    ),
+                ),
             )
-        )
         assertEquals(expected, melding.sammenligningsgrunnlag)
     }
 
@@ -85,8 +89,8 @@ class SammenligningsgrunnlagRiverTest {
                 fødselsnummer = FØDSELSNUMMER,
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
-                avviksvurderingBehovId = UUID.randomUUID()
-            )
+                avviksvurderingBehovId = UUID.randomUUID(),
+            ),
         )
         assertEquals(0, messageHandler.messages.size)
     }
@@ -100,8 +104,8 @@ class SammenligningsgrunnlagRiverTest {
                     organisasjonsnummer = ORGANISASJONSNUMMER,
                     skjæringstidspunkt = 1.januar,
                     avviksvurderingBehovId = UUID.randomUUID(),
-                    inntekterForSammenligningsgrunnlag(null to emptyList())
-                )
+                    inntekterForSammenligningsgrunnlag(null to emptyList()),
+                ),
             )
         }
         assertEquals(0, messageHandler.messages.size)
@@ -116,8 +120,8 @@ class SammenligningsgrunnlagRiverTest {
                     organisasjonsnummer = ORGANISASJONSNUMMER,
                     skjæringstidspunkt = 1.januar,
                     avviksvurderingBehovId = UUID.randomUUID(),
-                    inntekter = inntekterForSammenligningsgrunnlag(YearMonth.of(2023, 1) to null)
-                )
+                    inntekter = inntekterForSammenligningsgrunnlag(YearMonth.of(2023, 1) to null),
+                ),
             )
         }
         assertEquals(0, messageHandler.messages.size)
@@ -131,10 +135,11 @@ class SammenligningsgrunnlagRiverTest {
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
                 avviksvurderingBehovId = UUID.randomUUID(),
-                inntekter = inntekterForSammenligningsgrunnlag(
-                    YearMonth.of(2023, 1) to listOf(inntekt(fordel = null))
-                )
-            )
+                inntekter =
+                    inntekterForSammenligningsgrunnlag(
+                        YearMonth.of(2023, 1) to listOf(inntekt(fordel = null)),
+                    ),
+            ),
         )
         assertEquals(1, messageHandler.messages.size)
     }
@@ -149,9 +154,9 @@ class SammenligningsgrunnlagRiverTest {
                     skjæringstidspunkt = 1.januar,
                     avviksvurderingBehovId = UUID.randomUUID(),
                     inntekterForSammenligningsgrunnlag(
-                        YearMonth.of(2023, 1) to listOf(inntekt(inntektstype = null))
-                    )
-                )
+                        YearMonth.of(2023, 1) to listOf(inntekt(inntektstype = null)),
+                    ),
+                ),
             )
         }
         assertEquals(0, messageHandler.messages.size)
@@ -167,9 +172,9 @@ class SammenligningsgrunnlagRiverTest {
                     skjæringstidspunkt = 1.januar,
                     avviksvurderingBehovId = UUID.randomUUID(),
                     inntekterForSammenligningsgrunnlag(
-                        YearMonth.of(2023, 1) to listOf(inntekt(arbeidsgiverMangler = true))
-                    )
-                )
+                        YearMonth.of(2023, 1) to listOf(inntekt(arbeidsgiverMangler = true)),
+                    ),
+                ),
             )
         }
         assertEquals(0, messageHandler.messages.size)
@@ -185,9 +190,9 @@ class SammenligningsgrunnlagRiverTest {
                     skjæringstidspunkt = 1.januar,
                     avviksvurderingBehovId = UUID.randomUUID(),
                     inntekterForSammenligningsgrunnlag(
-                        YearMonth.of(2023, 1) to listOf(inntekt(beløp = null))
-                    )
-                )
+                        YearMonth.of(2023, 1) to listOf(inntekt(beløp = null)),
+                    ),
+                ),
             )
         }
         assertEquals(0, messageHandler.messages.size)
@@ -203,9 +208,9 @@ class SammenligningsgrunnlagRiverTest {
                     skjæringstidspunkt = 1.januar,
                     avviksvurderingBehovId = UUID.randomUUID(),
                     inntekterForSammenligningsgrunnlag(
-                        YearMonth.of(2023, 1) to listOf(inntekt(inntektstype = "NOE ANNET"))
-                    )
-                )
+                        YearMonth.of(2023, 1) to listOf(inntekt(inntektstype = "NOE ANNET")),
+                    ),
+                ),
             )
         }
         assertEquals(0, messageHandler.messages.size)
@@ -219,11 +224,12 @@ class SammenligningsgrunnlagRiverTest {
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
                 avviksvurderingBehovId = UUID.randomUUID(),
-                inntekter = inntekterForSammenligningsgrunnlag(
-                    YearMonth.of(2023, 1) to listOf(inntekt(fordel = null))
-                ),
-                final = false
-            )
+                inntekter =
+                    inntekterForSammenligningsgrunnlag(
+                        YearMonth.of(2023, 1) to listOf(inntekt(fordel = null)),
+                    ),
+                final = false,
+            ),
         )
         testRapid.sendTestMessage(
             sammenligningsgrunnlagJsonMed(
@@ -231,42 +237,41 @@ class SammenligningsgrunnlagRiverTest {
                 organisasjonsnummer = ORGANISASJONSNUMMER,
                 skjæringstidspunkt = 1.januar,
                 avviksvurderingBehovId = UUID.randomUUID(),
-                inntekter = inntekterForSammenligningsgrunnlag(
-                    YearMonth.of(2023, 1) to listOf(inntekt(fordel = null))
-                )
-            )
+                inntekter =
+                    inntekterForSammenligningsgrunnlag(
+                        YearMonth.of(2023, 1) to listOf(inntekt(fordel = null)),
+                    ),
+            ),
         )
         assertEquals(1, messageHandler.messages.size)
     }
 
     private fun inntekterForSammenligningsgrunnlag(
-        vararg inntekter: Pair<YearMonth?, List<Inntekt>?>
-    ): List<InntektForSammenligningsgrunnlag> {
-        return inntekter.map { (yearMonth, inntekter) ->
+        vararg inntekter: Pair<YearMonth?, List<Inntekt>?>,
+    ): List<InntektForSammenligningsgrunnlag> =
+        inntekter.map { (yearMonth, inntekter) ->
             InntektForSammenligningsgrunnlag(yearMonth, inntekter)
         }
-    }
 
     private fun inntekt(
         beløp: Double? = 20000.0,
         inntektstype: String? = "LOENNSINNTEKT",
         arbeidsgiverMangler: Boolean = false,
         beskrivelse: String? = "En beskrivelse",
-        fordel: String? = "En fordel"
-    ): Inntekt {
-        return Inntekt(
+        fordel: String? = "En fordel",
+    ): Inntekt =
+        Inntekt(
             beløp = beløp,
             inntektstype = inntektstype,
             orgnummer = if (arbeidsgiverMangler) null else ORGANISASJONSNUMMER,
             fødselsnummer = if (arbeidsgiverMangler) null else FØDSELSNUMMER,
             beskrivelse = beskrivelse,
-            fordel = fordel
+            fordel = fordel,
         )
-    }
 
     private data class InntektForSammenligningsgrunnlag(
         val årMåned: YearMonth?,
-        val inntektsliste: List<Inntekt>?
+        val inntektsliste: List<Inntekt>?,
     )
 
     private data class Inntekt(
@@ -275,25 +280,27 @@ class SammenligningsgrunnlagRiverTest {
         val orgnummer: String?,
         val fødselsnummer: String?,
         val beskrivelse: String?,
-        val fordel: String?
+        val fordel: String?,
     )
 
-    private fun List<InntektForSammenligningsgrunnlag>.toJson(): String {
-        return no.nav.helse.helpers.objectMapper.writeValueAsString(this)
-    }
+    private fun List<InntektForSammenligningsgrunnlag>.toJson(): String =
+        no.nav.helse.helpers.objectMapper
+            .writeValueAsString(this)
 
     private fun sammenligningsgrunnlagJsonMed(
         fødselsnummer: String,
         organisasjonsnummer: String,
         skjæringstidspunkt: LocalDate,
         avviksvurderingBehovId: UUID?,
-        inntekter: List<InntektForSammenligningsgrunnlag> = inntekterForSammenligningsgrunnlag(
-            YearMonth.of(2023, 1) to listOf(inntekt())
-        ),
-        final: Boolean = true
+        inntekter: List<InntektForSammenligningsgrunnlag> =
+            inntekterForSammenligningsgrunnlag(
+                YearMonth.of(2023, 1) to listOf(inntekt()),
+            ),
+        final: Boolean = true,
     ): String {
         @Language("JSON")
-        val json = """
+        val json =
+            """
             {
               "@event_name": "behov",
               "@behovId": "ed8f2e02-15b1-45a7-88e4-3b2f0b9cda73",
@@ -317,7 +324,7 @@ class SammenligningsgrunnlagRiverTest {
               },
               "@final": $final
             }
-        """.trimIndent()
+            """.trimIndent()
         return json
     }
 
@@ -328,7 +335,8 @@ class SammenligningsgrunnlagRiverTest {
         avviksvurderingBehovId: UUID,
     ): String {
         @Language("JSON")
-        val json = """
+        val json =
+            """
             {
               "@event_name": "behov",
               "@behovId": "ed8f2e02-15b1-45a7-88e4-3b2f0b9cda73",
@@ -348,8 +356,7 @@ class SammenligningsgrunnlagRiverTest {
               "@id": "ecfe47f6-2063-451a-b7e1-182490cc3153",
               "@opprettet": "2018-01-01T00:00:00.000"
             }
-        """.trimIndent()
+            """.trimIndent()
         return json
     }
-
 }

@@ -8,16 +8,15 @@ import java.time.YearMonth
 
 data class ArbeidsgiverInntekt(
     val arbeidsgiverreferanse: Arbeidsgiverreferanse,
-    val inntekter: List<MånedligInntekt>
+    val inntekter: List<MånedligInntekt>,
 ) {
     operator fun plus(other: Double) = other + inntekter.sumOf { it.inntekt.value }
 
     internal companion object {
-        internal fun Iterable<ArbeidsgiverInntekt>.sum(): Double {
-            return this.fold(0.0) { acc, arbeidsgiverInntekt ->
+        internal fun Iterable<ArbeidsgiverInntekt>.sum(): Double =
+            this.fold(0.0) { acc, arbeidsgiverInntekt ->
                 arbeidsgiverInntekt + acc
             }
-        }
     }
 
     data class MånedligInntekt(
@@ -25,7 +24,7 @@ data class ArbeidsgiverInntekt(
         val måned: YearMonth,
         val fordel: Fordel?,
         val beskrivelse: Beskrivelse?,
-        val inntektstype: Inntektstype
+        val inntektstype: Inntektstype,
     )
 
     enum class Inntektstype {

@@ -1,13 +1,12 @@
 package no.nav.helse.avviksvurdering
 
-import no.nav.helse.OmregnetÅrsinntekt
 import no.nav.helse.Arbeidsgiverreferanse
+import no.nav.helse.OmregnetÅrsinntekt
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class BeregningsgrunnlagTest {
-
     @Test
     fun `referential equals`() {
         val omregnedeÅrsinntekter = beregningsgrunnlag("a1" to 400000.0)
@@ -44,7 +43,8 @@ class BeregningsgrunnlagTest {
         assertThrows<IllegalArgumentException> { Beregningsgrunnlag(omregnedeÅrsinntekter) }
     }
 
-    private fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) = Beregningsgrunnlag(
-        arbeidsgivere.toMap().entries.associate { Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value) }
-    )
+    private fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) =
+        Beregningsgrunnlag(
+            arbeidsgivere.toMap().entries.associate { Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value) },
+        )
 }

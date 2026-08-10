@@ -2,8 +2,6 @@ package no.nav.helse
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import java.util.UUID
-import javax.sql.DataSource
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import org.flywaydb.core.Flyway
@@ -12,28 +10,31 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.testcontainers.containers.PostgreSQLContainer
 import java.time.LocalDate
+import java.util.UUID
+import javax.sql.DataSource
 
 internal abstract class AbstractDatabaseTest {
-
     protected companion object {
+        private val postgres =
+            PostgreSQLContainer<Nothing>("postgres:14").apply {
+                withReuse(true)
+                withLabel("app-navn", "spinnvill-opprydding")
+                start()
 
-        private val postgres = PostgreSQLContainer<Nothing>("postgres:14").apply {
-            withReuse(true)
-            withLabel("app-navn", "spinnvill-opprydding")
-            start()
-
-            println("Database: jdbc:postgresql://localhost:$firstMappedPort/test startet opp, credentials: test og test")
-        }
+                println("Database: jdbc:postgresql://localhost:$firstMappedPort/test startet opp, credentials: test og test")
+            }
 
         val dataSource =
-            HikariDataSource(HikariConfig().apply {
-                jdbcUrl = postgres.jdbcUrl
-                username = postgres.username
-                password = postgres.password
-                maximumPoolSize = 5
-                connectionTimeout = 500
-                initializationFailTimeout = 5000
-            })
+            HikariDataSource(
+                HikariConfig().apply {
+                    jdbcUrl = postgres.jdbcUrl
+                    username = postgres.username
+                    password = postgres.password
+                    maximumPoolSize = 5
+                    connectionTimeout = 500
+                    initializationFailTimeout = 5000
+                },
+            )
 
         private fun createTruncateFunction(dataSource: DataSource) {
             sessionOf(dataSource).use {
@@ -58,7 +59,8 @@ internal abstract class AbstractDatabaseTest {
         }
 
         init {
-            Flyway.configure()
+            Flyway
+                .configure()
                 .dataSource(dataSource)
                 .ignoreMigrationPatterns("*:missing")
                 .locations("classpath:db/migration")
@@ -86,9 +88,8 @@ internal abstract class AbstractDatabaseTest {
                     "sammenligninsgrunnlag_id" to sammenligningsgrunnlagId.toString(),
                     "fødselsnummer" to fødselsnummer,
                     "skjæringstidspunkt" to skjæringstidspunkt.toString(),
-                )
-            )
-            .locations("classpath:db/testperson")
+                ),
+            ).locations("classpath:db/testperson")
             .load()
             .migrate()
     }
@@ -108,21 +109,19 @@ internal abstract class AbstractDatabaseTest {
         }
     }
 
-    protected fun finnTabeller(): List<String> {
-        return sessionOf(dataSource).use { session ->
+    protected fun finnTabeller(): List<String> =
+        sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
             session.run(queryOf(query).map { it.string("table_name") }.asList)
         }
-    }
 
-    private fun finnRowCount(tabellnavn: String): Int {
-        return sessionOf(dataSource).use { session ->
+    private fun finnRowCount(tabellnavn: String): Int =
+        sessionOf(dataSource).use { session ->
             @Language("PostgreSQL")
             val query = "SELECT COUNT(1) FROM $tabellnavn"
             session.run(queryOf(query).map { it.int(1) }.asSingle) ?: 0
         }
-    }
 
     @BeforeEach
     fun resetDatabase() {

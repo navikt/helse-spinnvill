@@ -8,6 +8,7 @@ import java.util.*
 
 internal fun JsonNode.asUUID() = UUID.fromString(this.asText())
 
-internal val objectMapper = jacksonObjectMapper()
-    .registerModule(JavaTimeModule())
-    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+internal val objectMapper =
+    jacksonObjectMapper()
+        .registerModule(JavaTimeModule())
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)

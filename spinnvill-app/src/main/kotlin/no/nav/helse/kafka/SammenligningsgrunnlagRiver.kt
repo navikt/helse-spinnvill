@@ -20,30 +20,39 @@ import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import no.nav.helse.avviksvurdering.SammenligningsgrunnlagLøsning
 import org.slf4j.LoggerFactory
 
-internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, private val messageHandler: MessageHandler) : River.PacketListener {
+internal class SammenligningsgrunnlagRiver(
+    rapidsConnection: RapidsConnection,
+    private val messageHandler: MessageHandler,
+) : River.PacketListener {
     init {
-        River(rapidsConnection).apply {
-            precondition {
-                it.requireValue("@event_name", "behov")
-                it.requireAll("@behov", listOf("InntekterForSammenligningsgrunnlag"))
-                it.requireKey("@løsning")
-                it.requireValue("@final", true)
-            }
-            validate {
-                it.requireKey("fødselsnummer", "InntekterForSammenligningsgrunnlag.skjæringstidspunkt", "InntekterForSammenligningsgrunnlag.avviksvurderingBehovId")
-                it.requireArray("@løsning.InntekterForSammenligningsgrunnlag") {
-                    require("årMåned", JsonNode::asYearMonth)
-                    requireArray("inntektsliste") {
-                        requireKey("beløp")
-                        requireAny("inntektstype", listOf("LOENNSINNTEKT", "NAERINGSINNTEKT", "PENSJON_ELLER_TRYGD", "YTELSE_FRA_OFFENTLIGE"))
-                        interestedIn("orgnummer", "fødselsnummer", "fordel", "beskrivelse")
+        River(rapidsConnection)
+            .apply {
+                precondition {
+                    it.requireValue("@event_name", "behov")
+                    it.requireAll("@behov", listOf("InntekterForSammenligningsgrunnlag"))
+                    it.requireKey("@løsning")
+                    it.requireValue("@final", true)
+                }
+                validate {
+                    it.requireKey("fødselsnummer", "InntekterForSammenligningsgrunnlag.skjæringstidspunkt", "InntekterForSammenligningsgrunnlag.avviksvurderingBehovId")
+                    it.requireArray("@løsning.InntekterForSammenligningsgrunnlag") {
+                        require("årMåned", JsonNode::asYearMonth)
+                        requireArray("inntektsliste") {
+                            requireKey("beløp")
+                            requireAny("inntektstype", listOf("LOENNSINNTEKT", "NAERINGSINNTEKT", "PENSJON_ELLER_TRYGD", "YTELSE_FRA_OFFENTLIGE"))
+                            interestedIn("orgnummer", "fødselsnummer", "fordel", "beskrivelse")
+                        }
                     }
                 }
-            }
-        }.register(this)
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val skjæringstidspunkt = packet["InntekterForSammenligningsgrunnlag.skjæringstidspunkt"].asLocalDate()
         val fødselsnummer = packet["fødselsnummer"].asText().somFnr()
         val avviksvurderingBehovId = packet["InntekterForSammenligningsgrunnlag.avviksvurderingBehovId"].asUUID()
@@ -55,12 +64,16 @@ internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, p
                 fødselsnummer = fødselsnummer,
                 skjæringstidspunkt = skjæringstidspunkt,
                 avviksvurderingBehovId = avviksvurderingBehovId,
-                sammenligningsgrunnlag = Sammenligningsgrunnlag(sammenligningsgrunnlag)
-            )
+                sammenligningsgrunnlag = Sammenligningsgrunnlag(sammenligningsgrunnlag),
+            ),
         )
     }
 
-    override fun onError(problems: MessageProblems, context: MessageContext, metadata: MessageMetadata) {
+    override fun onError(
+        problems: MessageProblems,
+        context: MessageContext,
+        metadata: MessageMetadata,
+    ) {
         logg.error("Melding passerte ikke validering i river {}. Se sikkerlogg for mer informasjon", this::class.simpleName)
         sikkerlogg.error("Meldingen passerte ikke validering i river {}. {}", this::class.simpleName, problems.toExtendedReport())
         error("Melding passerte ikke validering i river ${this::class.simpleName}, ${problems.toExtendedReport()}")
@@ -72,32 +85,33 @@ internal class SammenligningsgrunnlagRiver(rapidsConnection: RapidsConnection, p
                 måned["inntektsliste"].map { opplysning ->
                     (opplysning as ObjectNode).put("årMåned", måned.path("årMåned").asText())
                 }
-            }
-            .groupBy({ inntekt -> inntekt.arbeidsgiver() }) { inntekt ->
+            }.groupBy({ inntekt -> inntekt.arbeidsgiver() }) { inntekt ->
                 MånedligInntekt(
                     måned = inntekt["årMåned"].asYearMonth(),
                     inntekt = InntektPerMåned(inntekt["beløp"].asDouble()),
                     inntektstype = inntekt["inntektstype"].asInntektstype(),
                     fordel = if (inntekt.path("fordel").isTextual) Fordel(inntekt["fordel"].asText()) else null,
-                    beskrivelse = if (inntekt.path("beskrivelse").isTextual) Beskrivelse(inntekt["beskrivelse"].asText()) else null
+                    beskrivelse = if (inntekt.path("beskrivelse").isTextual) Beskrivelse(inntekt["beskrivelse"].asText()) else null,
                 )
             }.map { (arbeidsgiver, inntekter) ->
                 ArbeidsgiverInntekt(arbeidsgiver, inntekter)
             }
 
-    private fun JsonNode.asInntektstype() = when (this.asText()) {
-        "LOENNSINNTEKT" -> Inntektstype.LØNNSINNTEKT
-        "NAERINGSINNTEKT" -> Inntektstype.NÆRINGSINNTEKT
-        "PENSJON_ELLER_TRYGD" -> Inntektstype.PENSJON_ELLER_TRYGD
-        "YTELSE_FRA_OFFENTLIGE" -> Inntektstype.YTELSE_FRA_OFFENTLIGE
-        else -> error("Kunne ikke mappe Inntektstype")
-    }
+    private fun JsonNode.asInntektstype() =
+        when (this.asText()) {
+            "LOENNSINNTEKT" -> Inntektstype.LØNNSINNTEKT
+            "NAERINGSINNTEKT" -> Inntektstype.NÆRINGSINNTEKT
+            "PENSJON_ELLER_TRYGD" -> Inntektstype.PENSJON_ELLER_TRYGD
+            "YTELSE_FRA_OFFENTLIGE" -> Inntektstype.YTELSE_FRA_OFFENTLIGE
+            else -> error("Kunne ikke mappe Inntektstype")
+        }
 
-    private fun JsonNode.arbeidsgiver() = when {
-        path("orgnummer").isTextual -> path("orgnummer").asText().somArbeidsgiverref()
-        path("fødselsnummer").isTextual -> path("fødselsnummer").asText().somArbeidsgiverref()
-        else -> error("Mangler arbeidsgiver for inntekt i svar på sammenligningsgrunnlagbehov")
-    }
+    private fun JsonNode.arbeidsgiver() =
+        when {
+            path("orgnummer").isTextual -> path("orgnummer").asText().somArbeidsgiverref()
+            path("fødselsnummer").isTextual -> path("fødselsnummer").asText().somArbeidsgiverref()
+            else -> error("Mangler arbeidsgiver for inntekt i svar på sammenligningsgrunnlagbehov")
+        }
 
     private companion object {
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")

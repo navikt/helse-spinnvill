@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test
 import java.time.YearMonth
 
 internal class AvviksvurderingsgrunnlagTest {
-
     @Test
     fun `har fire desimalers oppløsning på avviksprosent`() {
         val grunnlag = Avviksvurderingsgrunnlag.nyttGrunnlag("12345678910".somFnr(), 1.januar, sammenligningsgrunnlag(50000.0), beregningsgrunnlag("a1" to 750000.6))
@@ -30,7 +29,7 @@ internal class AvviksvurderingsgrunnlagTest {
         val vurdering = grunnlag.avviksvurdering()
         val (_, harAkseptabeltAvvik, avviksprosent) = vurdering
         assertEquals(25.0001, avviksprosent)
-        assertFalse(harAkseptabeltAvvik) {"Forventet at $avviksprosent er et uakseptabelt avvik"}
+        assertFalse(harAkseptabeltAvvik) { "Forventet at $avviksprosent er et uakseptabelt avvik" }
     }
 
     @Test
@@ -40,7 +39,7 @@ internal class AvviksvurderingsgrunnlagTest {
         val vurdering = grunnlag.avviksvurdering()
         val (_, harAkseptabeltAvvik, avviksprosent) = vurdering
         assertEquals(25.0, avviksprosent)
-        assertTrue(harAkseptabeltAvvik) {"Forventet at $avviksprosent er et akseptabelt avvik"}
+        assertTrue(harAkseptabeltAvvik) { "Forventet at $avviksprosent er et akseptabelt avvik" }
     }
 
     // tilfelle fra produksjon (en biarbeidsgiver som trakk tilbake tidligere utbetalt bonus)
@@ -69,21 +68,23 @@ internal class AvviksvurderingsgrunnlagTest {
         assertFalse(avviksvurderingsgrunnlag.beregningsgrunnlagLiktSom(beregningsgrunnlag))
     }
 
-    private fun sammenligningsgrunnlag(inntekt: Double) = Sammenligningsgrunnlag(
-        listOf(
-            ArbeidsgiverInntekt(Arbeidsgiverreferanse("a1"), List(12) {
-                ArbeidsgiverInntekt.MånedligInntekt(
-                    inntekt = InntektPerMåned(inntekt),
-                    måned = YearMonth.of(2018, it + 1),
-                    fordel = Fordel("En fordel"),
-                    beskrivelse = Beskrivelse("En beskrivelse"),
-                    inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT
-                )
-            })
+    private fun sammenligningsgrunnlag(inntekt: Double) =
+        Sammenligningsgrunnlag(
+            listOf(
+                ArbeidsgiverInntekt(
+                    Arbeidsgiverreferanse("a1"),
+                    List(12) {
+                        ArbeidsgiverInntekt.MånedligInntekt(
+                            inntekt = InntektPerMåned(inntekt),
+                            måned = YearMonth.of(2018, it + 1),
+                            fordel = Fordel("En fordel"),
+                            beskrivelse = Beskrivelse("En beskrivelse"),
+                            inntektstype = ArbeidsgiverInntekt.Inntektstype.LØNNSINNTEKT,
+                        )
+                    },
+                ),
+            ),
         )
-    )
 
-    private fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) =
-        Beregningsgrunnlag(arbeidsgivere.toMap().entries.associate { Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value) })
+    private fun beregningsgrunnlag(vararg arbeidsgivere: Pair<String, Double>) = Beregningsgrunnlag(arbeidsgivere.toMap().entries.associate { Arbeidsgiverreferanse(it.key) to OmregnetÅrsinntekt(it.value) })
 }
-

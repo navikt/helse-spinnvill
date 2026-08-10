@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class AvviksprosentTest {
-
     private val nullAvvik = Avviksprosent(0.0)
 
     @Test

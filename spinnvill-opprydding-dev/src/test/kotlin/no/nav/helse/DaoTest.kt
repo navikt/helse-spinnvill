@@ -2,8 +2,7 @@ package no.nav.helse
 
 import org.junit.jupiter.api.Test
 
-internal class DaoTest: AbstractDatabaseTest() {
-
+internal class DaoTest : AbstractDatabaseTest() {
     private val dao = Dao(dataSource)
     private val fødselsnummer = "12345678910"
 

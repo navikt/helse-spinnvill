@@ -21,7 +21,6 @@ class Mediator(
     private val rapidsConnection: RapidsConnection,
     databaseProvider: () -> Database,
 ) : MessageHandler {
-
     private val database by lazy(databaseProvider)
 
     init {
@@ -36,7 +35,7 @@ class Mediator(
             logg.info("Ignorerer avviksvurdering-behov, det ble funnet igjen som ubesvart i databasen")
             sikkerlogg.info(
                 "Ignorerer avviksvurdering-behov for {}, det ble funnet igjen som ubesvart i databasen",
-                kv("fødselsnummer", fødselsnummer.value)
+                kv("fødselsnummer", fødselsnummer.value),
             )
             return
         }
@@ -67,7 +66,10 @@ class Mediator(
         meldingPubliserer.sendMeldinger()
     }
 
-    private fun avgjørVidereBehandling(behov: AvviksvurderingBehov, meldingPubliserer: MeldingPubliserer) {
+    private fun avgjørVidereBehandling(
+        behov: AvviksvurderingBehov,
+        meldingPubliserer: MeldingPubliserer,
+    ) {
         val fødselsnummer = behov.fødselsnummer
         val gjeldendeGrunnlag = gjeldendeAvviksvurderingsgrunnlagOrNull(fødselsnummer, behov.skjæringstidspunkt)
         when {
@@ -94,18 +96,21 @@ class Mediator(
         return BehovForSammenligningsgrunnlag(
             skjæringstidspunkt = behov.skjæringstidspunkt,
             beregningsperiodeFom = fom,
-            beregningsperiodeTom = tom
+            beregningsperiodeTom = tom,
         )
     }
 
-    private fun skalHoppesOver(fødselsnummer: Fødselsnummer, behov: AvviksvurderingBehov): Boolean {
+    private fun skalHoppesOver(
+        fødselsnummer: Fødselsnummer,
+        behov: AvviksvurderingBehov,
+    ): Boolean {
         val ubehandletBehov =
             database.finnUbehandletAvviksvurderingBehov(fødselsnummer, behov.skjæringstidspunkt) ?: return false
         if (!ubehandletBehov.opprettet.isBefore(LocalDateTime.now().minusHours(1))) return true
         logg.info("Sletter ubehandlet avviksvurdering-behov ${ubehandletBehov.behovId} som er eldre enn en time")
         sikkerlogg.info(
             "Sletter ubehandlet avviksvurdering-behov ${ubehandletBehov.behovId} for {} som er eldre enn en time",
-            kv("fødselsnummer", fødselsnummer.value)
+            kv("fødselsnummer", fødselsnummer.value),
         )
         database.slettAvviksvurderingBehov(ubehandletBehov)
         return false
@@ -130,15 +135,14 @@ class Mediator(
 
     private fun nyttAvviksvurderingsgrunnlag(
         behov: AvviksvurderingBehov,
-        sammenligningsgrunnlag: Sammenligningsgrunnlag
-    ): Avviksvurderingsgrunnlag {
-        return nyttGrunnlag(
+        sammenligningsgrunnlag: Sammenligningsgrunnlag,
+    ): Avviksvurderingsgrunnlag =
+        nyttGrunnlag(
             fødselsnummer = behov.fødselsnummer,
             skjæringstidspunkt = behov.skjæringstidspunkt,
             sammenligningsgrunnlag = sammenligningsgrunnlag,
-            beregningsgrunnlag = behov.beregningsgrunnlag
+            beregningsgrunnlag = behov.beregningsgrunnlag,
         )
-    }
 
     private fun Avviksvurderingsgrunnlag.lagre() {
         database.lagreAvviksvurderinggrunnlag(this)
@@ -150,11 +154,10 @@ class Mediator(
 
     private fun gjeldendeAvviksvurderingsgrunnlagOrNull(
         fødselsnummer: Fødselsnummer,
-        skjæringstidspunkt: LocalDate
-    ): Avviksvurderingsgrunnlag? {
-        return database
+        skjæringstidspunkt: LocalDate,
+    ): Avviksvurderingsgrunnlag? =
+        database
             .finnAvviksvurderingsgrunnlag(fødselsnummer, skjæringstidspunkt)
-    }
 
     internal companion object {
         private val logg = LoggerFactory.getLogger(Mediator::class.java)

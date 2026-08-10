@@ -11,25 +11,30 @@ import org.slf4j.LoggerFactory
 
 internal class SlettPersonRiver(
     rapidsConnection: RapidsConnection,
-    private val dao: Dao
-): River.PacketListener {
-
+    private val dao: Dao,
+) : River.PacketListener {
     private companion object {
         private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
     }
 
     init {
-        River(rapidsConnection).apply {
-            precondition {
-                it.requireValue("@event_name", "slett_person")
-            }
-            validate {
-                it.requireKey("@id", "fødselsnummer")
-            }
-        }.register(this)
+        River(rapidsConnection)
+            .apply {
+                precondition {
+                    it.requireValue("@event_name", "slett_person")
+                }
+                validate {
+                    it.requireKey("@id", "fødselsnummer")
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         val fødselsnummer = packet["fødselsnummer"].asText()
         sikkerlogg.info("Sletter person med fødselsnummer: $fødselsnummer")
         dao.slett(fødselsnummer.somFnr())
@@ -37,10 +42,11 @@ internal class SlettPersonRiver(
     }
 
     @Language("JSON")
-    private fun lagPersonSlettet(fødselsnummer: String) = """
+    private fun lagPersonSlettet(fødselsnummer: String) =
+        """
         {
             "@event_name": "person_slettet",
             "fødselsnummer": "$fødselsnummer"
         }
-    """.trimIndent()
+        """.trimIndent()
 }

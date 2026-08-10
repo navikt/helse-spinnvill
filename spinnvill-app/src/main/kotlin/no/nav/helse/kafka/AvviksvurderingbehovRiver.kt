@@ -21,32 +21,43 @@ import no.nav.helse.somArbeidsgiverref
 import no.nav.helse.somFnr
 import org.slf4j.LoggerFactory
 
-internal class AvviksvurderingbehovRiver(rapidsConnection: RapidsConnection, private val messageHandler: MessageHandler) : River.PacketListener {
-    private val mapper = jacksonObjectMapper()
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        .registerModule(JavaTimeModule())
+internal class AvviksvurderingbehovRiver(
+    rapidsConnection: RapidsConnection,
+    private val messageHandler: MessageHandler,
+) : River.PacketListener {
+    private val mapper =
+        jacksonObjectMapper()
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .registerModule(JavaTimeModule())
+
     init {
-        River(rapidsConnection).apply {
-            precondition {
-                it.requireValue("@event_name", "behov")
-                it.requireAll("@behov", listOf("Avviksvurdering"))
-                it.forbid("@løsning")
-            }
-            validate {
-                it.requireKey("fødselsnummer", "@behovId")
-                it.requireKey("Avviksvurdering.vilkårsgrunnlagId", "Avviksvurdering.skjæringstidspunkt", "Avviksvurdering.organisasjonsnummer", "Avviksvurdering.vedtaksperiodeId")
-                it.requireArray("Avviksvurdering.omregnedeÅrsinntekter") {
-                    requireKey("organisasjonsnummer", "beløp")
+        River(rapidsConnection)
+            .apply {
+                precondition {
+                    it.requireValue("@event_name", "behov")
+                    it.requireAll("@behov", listOf("Avviksvurdering"))
+                    it.forbid("@løsning")
                 }
-            }
-        }.register(this)
+                validate {
+                    it.requireKey("fødselsnummer", "@behovId")
+                    it.requireKey("Avviksvurdering.vilkårsgrunnlagId", "Avviksvurdering.skjæringstidspunkt", "Avviksvurdering.organisasjonsnummer", "Avviksvurdering.vedtaksperiodeId")
+                    it.requireArray("Avviksvurdering.omregnedeÅrsinntekter") {
+                        requireKey("organisasjonsnummer", "beløp")
+                    }
+                }
+            }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext, metadata: MessageMetadata, meterRegistry: MeterRegistry) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
         logg.info("Leser avviksvurdering-behov")
         sikkerlogg.info(
             "Leser avviksvurdering-behov for {}",
-            kv("fødselsnummer", packet["fødselsnummer"].asText())
+            kv("fødselsnummer", packet["fødselsnummer"].asText()),
         )
         messageHandler.håndter(
             AvviksvurderingBehov.nyttBehov(
@@ -56,15 +67,22 @@ internal class AvviksvurderingbehovRiver(rapidsConnection: RapidsConnection, pri
                 fødselsnummer = packet["fødselsnummer"].asText().somFnr(),
                 vedtaksperiodeId = packet["Avviksvurdering.vedtaksperiodeId"].asUUID(),
                 organisasjonsnummer = packet["Avviksvurdering.organisasjonsnummer"].asText().somArbeidsgiverref(),
-                beregningsgrunnlag = Beregningsgrunnlag(packet["Avviksvurdering.omregnedeÅrsinntekter"].associate {
-                    Arbeidsgiverreferanse(it["organisasjonsnummer"].asText()) to OmregnetÅrsinntekt(it["beløp"].asDouble())
-                }),
-                json = mapper.readValue(packet.toJson())
-            )
+                beregningsgrunnlag =
+                    Beregningsgrunnlag(
+                        packet["Avviksvurdering.omregnedeÅrsinntekter"].associate {
+                            Arbeidsgiverreferanse(it["organisasjonsnummer"].asText()) to OmregnetÅrsinntekt(it["beløp"].asDouble())
+                        },
+                    ),
+                json = mapper.readValue(packet.toJson()),
+            ),
         )
     }
 
-    override fun onError(problems: MessageProblems, context: MessageContext, metadata: MessageMetadata) {
+    override fun onError(
+        problems: MessageProblems,
+        context: MessageContext,
+        metadata: MessageMetadata,
+    ) {
         logg.error("Melding passerte ikke validering i river {}. Se sikkerlogg for mer informasjon", this::class.simpleName)
         sikkerlogg.error("Meldingen passerte ikke validering i river {}. {}", this::class.simpleName, problems.toExtendedReport())
         error("Melding passerte ikke validering i river ${this::class.simpleName}, ${problems.toExtendedReport()}")

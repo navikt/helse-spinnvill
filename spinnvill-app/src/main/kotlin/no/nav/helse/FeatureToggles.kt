@@ -1,4 +1,3 @@
 package no.nav.helse
 
-interface FeatureToggles {
-}
+interface FeatureToggles
