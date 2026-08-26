@@ -2,7 +2,7 @@
 exposed = "0.61.0"
 flyway = "13.3.0"
 sasGradlePlugins = "20260807.0944"
-tbdLibs = "20260821.1252"
+tbdLibs = "20260826.1506"
 testcontainers = "2.0.5"
 
 [libraries]
