@@ -26,7 +26,7 @@ logback-classic = "ch.qos.logback:logback-classic:1.6.3"
 logback-logstashEncoder = "net.logstash.logback:logstash-logback-encoder:9.0"
 micrometer-prometheus = "io.micrometer:micrometer-registry-prometheus:1.17.1"
 postgresJdbcDriver = "org.postgresql:postgresql:42.7.13"
-postgresSocketFactory = "com.google.cloud.sql:postgres-socket-factory:1.29.0"
+postgresSocketFactory = "com.google.cloud.sql:postgres-socket-factory:1.30.0"
 rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2025110410541762250064.d7e58c3fad81"
 slf4j-api = "org.slf4j:slf4j-api:2.0.18"
 
