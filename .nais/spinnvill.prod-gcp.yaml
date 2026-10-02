@@ -1,0 +1,31 @@
+spec:
+  kafka:
+    pool: nav-prod
+  replicas:
+    min: 3
+    max: 24
+    scalingStrategy:
+      kafka:
+        topic: tbd.rapid.v1
+        consumerGroup: tbd-spinnvill-v1
+        threshold: 800
+  gcp:
+    sqlInstances:
+      - type: POSTGRES_17
+        diskAutoresize: true
+        pointInTimeRecovery: true
+        tier: db-custom-1-3840
+        databases:
+          - name: spinnvill
+            envVarPrefix: DATABASE
+        flags:
+          - name: max_connections
+            value: "300"
+          - name: cloudsql.enable_pgaudit
+            value: "true"
+          - name: pgaudit.log
+            value: "write,ddl,role"
+          - name: pgaudit.log_parameter
+            value: "on"
+          - name: pgaudit.log_relation
+            value: "on"

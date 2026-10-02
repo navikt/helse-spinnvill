@@ -24,26 +24,6 @@ spec:
       destinations:
         - id: elastic
         - id: loki
-  kafka:
-    pool: nav-dev
-  replicas:
-    min: 1
-    max: 2
-  gcp:
-    sqlInstances:
-      - type: POSTGRES_17
-        diskAutoresize: true
-        tier: db-f1-micro
-        flags:
-          - name: cloudsql.enable_pgaudit
-            value: 'true'
-          - name: pgaudit.log
-            value: write
-        databases:
-          - name: spinnvill
-            envVarPrefix: DATABASE
-            users:
-              - name: spinnvill-opprydding-dev
   accessPolicy:
     outbound:
       external:
