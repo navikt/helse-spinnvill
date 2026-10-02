@@ -2,7 +2,7 @@
 exposed = "0.61.0"
 flyway = "13.8.0"
 sykepengerGradlePlugins = "20261001.1830"
-tbdLibs = "20260821.1252"
+tbdLibs = "20261002.1227"
 testcontainers = "2.0.5"
 
 [libraries]
