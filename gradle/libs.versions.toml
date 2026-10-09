@@ -17,8 +17,7 @@ flyway-postgres = { module = "org.flywaydb:flyway-database-postgresql", version.
 
 hikari = "com.zaxxer:HikariCP:7.1.0"
 
-jackson-jsr310 = { group = "com.fasterxml.jackson.datatype", name = "jackson-datatype-jsr310" }
-jackson-kotlin = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin" }
+jackson-kotlin = { group = "tools.jackson.module", name = "jackson-module-kotlin" }
 
 kotliquery = "com.github.seratch:kotliquery:1.9.1"
 
@@ -49,7 +48,6 @@ flyway-postgres = [
     "flyway-postgres"
 ]
 jackson = [
-    "jackson-jsr310",
     "jackson-kotlin",
 ]
 logback = [

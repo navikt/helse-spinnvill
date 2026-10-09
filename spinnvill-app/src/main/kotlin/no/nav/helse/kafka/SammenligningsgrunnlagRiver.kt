@@ -1,7 +1,5 @@
 package no.nav.helse.kafka
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
@@ -19,6 +17,8 @@ import no.nav.helse.avviksvurdering.ArbeidsgiverInntekt.MånedligInntekt
 import no.nav.helse.avviksvurdering.Sammenligningsgrunnlag
 import no.nav.helse.avviksvurdering.SammenligningsgrunnlagLøsning
 import org.slf4j.LoggerFactory
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.ObjectNode
 
 internal class SammenligningsgrunnlagRiver(
     rapidsConnection: RapidsConnection,
@@ -54,7 +54,7 @@ internal class SammenligningsgrunnlagRiver(
         meterRegistry: MeterRegistry,
     ) {
         val skjæringstidspunkt = packet["InntekterForSammenligningsgrunnlag.skjæringstidspunkt"].asLocalDate()
-        val fødselsnummer = packet["fødselsnummer"].asText().somFnr()
+        val fødselsnummer = packet["fødselsnummer"].asString().somFnr()
         val avviksvurderingBehovId = packet["InntekterForSammenligningsgrunnlag.avviksvurderingBehovId"].asUUID()
         val sammenligningsgrunnlag = mapSammenligningsgrunnlag(packet["@løsning.InntekterForSammenligningsgrunnlag"])
         logg.info("Leser sammenligningsgrunnlag-løsning")
@@ -82,23 +82,23 @@ internal class SammenligningsgrunnlagRiver(
     private fun mapSammenligningsgrunnlag(opplysninger: JsonNode) =
         opplysninger
             .flatMap { måned ->
-                måned["inntektsliste"].map { opplysning ->
-                    (opplysning as ObjectNode).put("årMåned", måned.path("årMåned").asText())
+                måned["inntektsliste"].values().map { opplysning ->
+                    (opplysning as ObjectNode).put("årMåned", måned.path("årMåned").asString())
                 }
             }.groupBy({ inntekt -> inntekt.arbeidsgiver() }) { inntekt ->
                 MånedligInntekt(
                     måned = inntekt["årMåned"].asYearMonth(),
                     inntekt = InntektPerMåned(inntekt["beløp"].asDouble()),
                     inntektstype = inntekt["inntektstype"].asInntektstype(),
-                    fordel = if (inntekt.path("fordel").isTextual) Fordel(inntekt["fordel"].asText()) else null,
-                    beskrivelse = if (inntekt.path("beskrivelse").isTextual) Beskrivelse(inntekt["beskrivelse"].asText()) else null,
+                    fordel = if (inntekt.path("fordel").isString) Fordel(inntekt["fordel"].asString()) else null,
+                    beskrivelse = if (inntekt.path("beskrivelse").isString) Beskrivelse(inntekt["beskrivelse"].asString()) else null,
                 )
             }.map { (arbeidsgiver, inntekter) ->
                 ArbeidsgiverInntekt(arbeidsgiver, inntekter)
             }
 
     private fun JsonNode.asInntektstype() =
-        when (this.asText()) {
+        when (this.asString()) {
             "LOENNSINNTEKT" -> Inntektstype.LØNNSINNTEKT
             "NAERINGSINNTEKT" -> Inntektstype.NÆRINGSINNTEKT
             "PENSJON_ELLER_TRYGD" -> Inntektstype.PENSJON_ELLER_TRYGD
@@ -108,8 +108,8 @@ internal class SammenligningsgrunnlagRiver(
 
     private fun JsonNode.arbeidsgiver() =
         when {
-            path("orgnummer").isTextual -> path("orgnummer").asText().somArbeidsgiverref()
-            path("fødselsnummer").isTextual -> path("fødselsnummer").asText().somArbeidsgiverref()
+            path("orgnummer").isString -> path("orgnummer").asString().somArbeidsgiverref()
+            path("fødselsnummer").isString -> path("fødselsnummer").asString().somArbeidsgiverref()
             else -> error("Mangler arbeidsgiver for inntekt i svar på sammenligningsgrunnlagbehov")
         }
 

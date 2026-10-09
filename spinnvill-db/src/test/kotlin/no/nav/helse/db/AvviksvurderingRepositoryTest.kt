@@ -4,7 +4,8 @@ import no.nav.helse.*
 import no.nav.helse.avviksvurdering.*
 import no.nav.helse.helpers.februar
 import no.nav.helse.helpers.januar
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNull

@@ -1,12 +1,12 @@
 package no.nav.helse.db
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.helse.*
 import no.nav.helse.avviksvurdering.*
 import no.nav.helse.dto.AvviksvurderingBehovDto
+import tools.jackson.databind.JsonNode
+import tools.jackson.module.kotlin.convertValue
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -19,7 +19,7 @@ class PgDatabase private constructor(
     private val avviksvurderingBehovDao = AvviksvurderingBehovDao()
 
     init {
-        org.jetbrains.exposed.sql.Database
+        org.jetbrains.exposed.v1.jdbc.Database
             .connect(datasource())
     }
 
@@ -41,12 +41,12 @@ class PgDatabase private constructor(
                 skjæringstidspunkt = dto.skjæringstidspunkt,
                 fødselsnummer = dto.fødselsnummer.somFnr(),
                 vedtaksperiodeId = jsonNode["Avviksvurdering"].get("vedtaksperiodeId").asUUID(),
-                organisasjonsnummer = jsonNode["Avviksvurdering"].get("organisasjonsnummer").asText().somArbeidsgiverref(),
+                organisasjonsnummer = jsonNode["Avviksvurdering"].get("organisasjonsnummer").asString().somArbeidsgiverref(),
                 løst = dto.løst != null,
                 beregningsgrunnlag =
                     Beregningsgrunnlag(
                         jsonNode["Avviksvurdering"].get("omregnedeÅrsinntekter").associate {
-                            Arbeidsgiverreferanse(it["organisasjonsnummer"].asText()) to OmregnetÅrsinntekt(it["beløp"].asDouble())
+                            Arbeidsgiverreferanse(it["organisasjonsnummer"].asString()) to OmregnetÅrsinntekt(it["beløp"].asDouble())
                         },
                     ),
                 json = dto.json,
@@ -88,7 +88,7 @@ class PgDatabase private constructor(
                 instance ?: PgDatabase(env).also { instance = it }
             }
 
-        private fun JsonNode.asUUID(): UUID = UUID.fromString(this.asText())
+        private fun JsonNode.asUUID(): UUID = UUID.fromString(this.asString())
     }
 }
 
