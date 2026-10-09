@@ -1,20 +1,23 @@
 package no.nav.helse.db
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.helse.Fødselsnummer
 import no.nav.helse.dto.AvviksvurderingBehovDto
-import org.jetbrains.exposed.dao.UUIDEntity
-import org.jetbrains.exposed.dao.UUIDEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.javatime.date
-import org.jetbrains.exposed.sql.javatime.datetime
-import org.jetbrains.exposed.sql.json.json
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.dao.java.UUIDEntity
+import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.javatime.date
+import org.jetbrains.exposed.v1.javatime.datetime
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.json.json
+import tools.jackson.databind.JsonNode
+import tools.jackson.module.kotlin.convertValue
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -24,7 +27,7 @@ internal class AvviksvurderingBehovDao {
         val mapper = jacksonObjectMapper()
 
         private object AvviksvurderingBehov : IdTable<UUID>(name = "avviksvurdering_behov") {
-            override val id: Column<EntityID<UUID>> = uuid("behov_id").entityId()
+            override val id: Column<EntityID<UUID>> = javaUUID("behov_id").entityId()
             val fødselsnummer: Column<String> = varchar("fødselsnummer", 11)
             val skjæringstidspunkt: Column<LocalDate> = date("skjæringstidspunkt")
             val opprettet: Column<LocalDateTime> = datetime("opprettet")

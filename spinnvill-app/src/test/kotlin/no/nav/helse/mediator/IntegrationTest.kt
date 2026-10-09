@@ -2,8 +2,6 @@
 
 package no.nav.helse.mediator
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import no.nav.helse.*
@@ -18,6 +16,8 @@ import no.nav.helse.spesialist.domain.testfixtures.jan
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.ObjectNode
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -47,7 +47,13 @@ internal class IntegrationTest {
 
             assertEquals(1, testRapid.inspektør.size)
             assertEquals("behov", testRapid.inspektør.field(0, "@event_name").asText())
-            assertEquals(listOf("InntekterForSammenligningsgrunnlag"), testRapid.inspektør.field(0, "@behov").map { it.asText() })
+            assertEquals(
+                listOf("InntekterForSammenligningsgrunnlag"),
+                testRapid.inspektør
+                    .field(0, "@behov")
+                    .values()
+                    .map { it.asText() },
+            )
         }
 
     @Test
@@ -61,7 +67,7 @@ internal class IntegrationTest {
 
             val sisteMelding = testRapid.inspektør.meldinger().last()
             assertEquals("behov", sisteMelding["@event_name"].asText())
-            assertEquals(listOf("InntekterForSammenligningsgrunnlag"), sisteMelding["@behov"].map { it.asText() })
+            assertEquals(listOf("InntekterForSammenligningsgrunnlag"), sisteMelding["@behov"].values().map { it.asText() })
         }
 
     @Test
@@ -198,12 +204,23 @@ internal class IntegrationTest {
 
     private fun TestRapid.RapidInspector.sisteBehovAvType(vararg behov: String) =
         hendelser("behov").lastOrNull {
-            it.path("@behov").map(JsonNode::asText).containsAll(behov.toList()) && !it.hasNonNull("@løsning")
+            it
+                .path("@behov")
+                .values()
+                .map(JsonNode::asText)
+                .containsAll(behov.toList()) &&
+                !it.hasNonNull("@løsning")
         }
 
     private fun TestRapid.RapidInspector.behov(behov: String) =
         hendelser("behov")
-            .filter { it.path("@behov").map(JsonNode::asText).containsAll(listOf(behov)) }
+            .filter {
+                it
+                    .path("@behov")
+                    .values()
+                    .map(JsonNode::asText)
+                    .containsAll(listOf(behov))
+            }
 
     private fun medTestContext(
         skjæringstidspunkt: LocalDate,
@@ -269,7 +286,7 @@ internal class IntegrationTest {
 
         val løsning =
             behov
-                .set<ObjectNode>("@løsning", inntekterForSammenligningsgrunnlag)
+                .set("@løsning", inntekterForSammenligningsgrunnlag)
                 .put("@final", true)
 
         testRapid.sendTestMessage(objectMapper.writeValueAsString(løsning))

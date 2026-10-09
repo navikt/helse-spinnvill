@@ -1,9 +1,5 @@
 package no.nav.helse.kafka
 
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
@@ -20,15 +16,20 @@ import no.nav.helse.avviksvurdering.Beregningsgrunnlag
 import no.nav.helse.somArbeidsgiverref
 import no.nav.helse.somFnr
 import org.slf4j.LoggerFactory
+import tools.jackson.databind.cfg.DateTimeFeature
+import tools.jackson.databind.introspect.DefaultAccessorNamingStrategy
+import tools.jackson.module.kotlin.jacksonMapperBuilder
+import tools.jackson.module.kotlin.readValue
 
 internal class AvviksvurderingbehovRiver(
     rapidsConnection: RapidsConnection,
     private val messageHandler: MessageHandler,
 ) : River.PacketListener {
     private val mapper =
-        jacksonObjectMapper()
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            .registerModule(JavaTimeModule())
+        jacksonMapperBuilder()
+            .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .accessorNaming(DefaultAccessorNamingStrategy.Provider().withFirstCharAcceptance(true, true))
+            .build()
 
     init {
         River(rapidsConnection)
@@ -57,20 +58,20 @@ internal class AvviksvurderingbehovRiver(
         logg.info("Leser avviksvurdering-behov")
         sikkerlogg.info(
             "Leser avviksvurdering-behov for {}",
-            kv("fødselsnummer", packet["fødselsnummer"].asText()),
+            kv("fødselsnummer", packet["fødselsnummer"].asString()),
         )
         messageHandler.håndter(
             AvviksvurderingBehov.nyttBehov(
                 vilkårsgrunnlagId = packet["Avviksvurdering.vilkårsgrunnlagId"].asUUID(),
                 behovId = packet["@behovId"].asUUID(),
                 skjæringstidspunkt = packet["Avviksvurdering.skjæringstidspunkt"].asLocalDate(),
-                fødselsnummer = packet["fødselsnummer"].asText().somFnr(),
+                fødselsnummer = packet["fødselsnummer"].asString().somFnr(),
                 vedtaksperiodeId = packet["Avviksvurdering.vedtaksperiodeId"].asUUID(),
-                organisasjonsnummer = packet["Avviksvurdering.organisasjonsnummer"].asText().somArbeidsgiverref(),
+                organisasjonsnummer = packet["Avviksvurdering.organisasjonsnummer"].asString().somArbeidsgiverref(),
                 beregningsgrunnlag =
                     Beregningsgrunnlag(
                         packet["Avviksvurdering.omregnedeÅrsinntekter"].associate {
-                            Arbeidsgiverreferanse(it["organisasjonsnummer"].asText()) to OmregnetÅrsinntekt(it["beløp"].asDouble())
+                            Arbeidsgiverreferanse(it["organisasjonsnummer"].asString()) to OmregnetÅrsinntekt(it["beløp"].asDouble())
                         },
                     ),
                 json = mapper.readValue(packet.toJson()),

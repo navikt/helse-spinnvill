@@ -1,8 +1,5 @@
 package no.nav.helse
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers.asYearMonth
@@ -14,6 +11,9 @@ import no.nav.helse.kafka.asUUID
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.ArrayNode
+import tools.jackson.module.kotlin.readValue
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.*
@@ -43,7 +43,7 @@ class MeldingPublisererTest {
         val behovdata = message["InntekterForSammenligningsgrunnlag"]
 
         assertEquals("behov", message["@event_name"].asText())
-        assertEquals(listOf("InntekterForSammenligningsgrunnlag"), message["@behov"].map { it.asText() })
+        assertEquals(listOf("InntekterForSammenligningsgrunnlag"), message["@behov"].values().map { it.asText() })
         assertEquals(beregningsperiodeFom, behovdata["beregningStart"].asYearMonth())
         assertEquals(beregningsperiodeTom, behovdata["beregningSlutt"].asYearMonth())
         assertEquals(skjæringstidspunkt, behovdata["skjæringstidspunkt"].asLocalDate())
@@ -355,5 +355,11 @@ class MeldingPublisererTest {
 
     private fun TestRapid.RapidInspector.behov(behov: String) =
         hendelser("behov")
-            .filter { it.path("@behov").map(JsonNode::asText).containsAll(listOf(behov)) }
+            .filter {
+                it
+                    .path("@behov")
+                    .values()
+                    .map(JsonNode::asText)
+                    .containsAll(listOf(behov))
+            }
 }

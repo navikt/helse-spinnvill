@@ -88,7 +88,10 @@ class MediatorTest {
         assertEquals(1, testRapid.inspektør.size)
         assertEquals(
             listOf("InntekterForSammenligningsgrunnlag"),
-            testRapid.inspektør.message(0)["@behov"].map { it.asText() },
+            testRapid.inspektør
+                .message(0)["@behov"]
+                .values()
+                .map { it.asText() },
         )
 
         val behovId2 = UUID.randomUUID()
@@ -133,7 +136,10 @@ class MediatorTest {
         assertEquals(1, testRapid.inspektør.size)
         assertEquals(
             listOf("InntekterForSammenligningsgrunnlag"),
-            testRapid.inspektør.message(0)["@behov"].map { it.asText() },
+            testRapid.inspektør
+                .message(0)["@behov"]
+                .values()
+                .map { it.asText() },
         )
 
         val behovId2 = UUID.randomUUID()
@@ -154,7 +160,10 @@ class MediatorTest {
         assertEquals(2, testRapid.inspektør.size)
         assertEquals(
             listOf("InntekterForSammenligningsgrunnlag"),
-            testRapid.inspektør.message(1)["@behov"].map { it.asText() },
+            testRapid.inspektør
+                .message(1)["@behov"]
+                .values()
+                .map { it.asText() },
         )
     }
 

@@ -2,14 +2,16 @@ package no.nav.helse.db
 
 import no.nav.helse.*
 import no.nav.helse.avviksvurdering.*
-import org.jetbrains.exposed.dao.UUIDEntity
-import org.jetbrains.exposed.dao.UUIDEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.javatime.date
-import org.jetbrains.exposed.sql.javatime.datetime
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.dao.java.UUIDEntity
+import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.javatime.date
+import org.jetbrains.exposed.v1.javatime.datetime
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -129,7 +131,7 @@ internal class AvviksvurderingRepository {
             )
         }
 
-    private fun Transaction.insertAvviksvurdering(
+    private fun JdbcTransaction.insertAvviksvurdering(
         id: UUID,
         fødselsnummer: Fødselsnummer,
         skjæringstidspunkt: LocalDate,

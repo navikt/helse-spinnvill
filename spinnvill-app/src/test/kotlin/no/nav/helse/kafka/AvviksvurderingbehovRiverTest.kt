@@ -1,6 +1,5 @@
 package no.nav.helse.kafka
 
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import no.nav.helse.Arbeidsgiverreferanse
 import no.nav.helse.OmregnetÅrsinntekt
@@ -11,6 +10,7 @@ import no.nav.helse.helpers.januar
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.node.ObjectNode
 import java.time.LocalDate
 
 class AvviksvurderingbehovRiverTest {

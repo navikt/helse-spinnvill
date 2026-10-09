@@ -35,7 +35,7 @@ internal class SlettPersonRiver(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val fødselsnummer = packet["fødselsnummer"].asText()
+        val fødselsnummer = packet["fødselsnummer"].asString()
         sikkerlogg.info("Sletter person med fødselsnummer: $fødselsnummer")
         dao.slett(fødselsnummer.somFnr())
         context.publish(fødselsnummer, lagPersonSlettet(fødselsnummer))
