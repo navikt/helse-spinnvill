@@ -1,5 +1,5 @@
 [versions]
-exposed = "1.5.0"
+exposed = "1.5.1"
 flyway = "13.10.0"
 sykepengerGradlePlugins = "20261013.1718"
 tbdLibs = "20261013.1613"
