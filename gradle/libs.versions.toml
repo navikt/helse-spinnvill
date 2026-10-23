@@ -1,6 +1,6 @@
 [versions]
-exposed = "1.5.1"
-flyway = "13.10.0"
+exposed = "1.6.0"
+flyway = "13.10.3"
 sykepengerGradlePlugins = "20261013.1718"
 tbdLibs = "20261013.1613"
 testcontainers = "2.0.5"
