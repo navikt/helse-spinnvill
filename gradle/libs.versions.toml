@@ -1,7 +1,7 @@
 [versions]
 exposed = "1.6.0"
 flyway = "13.10.3"
-sykepengerGradlePlugins = "20261013.1718"
+sykepengerGradlePlugins = "20261026.1611"
 tbdLibs = "20261013.1613"
 testcontainers = "2.0.5"
 
@@ -33,7 +33,7 @@ tbdLibs-rapidsAndRiversTest = { module = "com.github.navikt.tbd-libs:rapids-and-
 
 testcontainers-postgres = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
 
-unleash-client = "io.getunleash:unleash-client-java:12.3.0"
+unleash-client = "io.getunleash:unleash-client-java:12.3.1"
 
 [bundles]
 exposed = [
