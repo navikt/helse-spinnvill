@@ -1,6 +1,6 @@
 [versions]
 exposed = "1.6.0"
-flyway = "13.10.3"
+flyway = "13.11.1"
 sykepengerGradlePlugins = "20261028.1441"
 tbdLibs = "20261013.1613"
 testcontainers = "2.0.5"
@@ -23,7 +23,7 @@ kotliquery = "com.github.seratch:kotliquery:1.9.1"
 
 logback-classic = "ch.qos.logback:logback-classic:1.6.5"
 logback-logstashEncoder = "net.logstash.logback:logstash-logback-encoder:9.0"
-micrometer-prometheus = "io.micrometer:micrometer-registry-prometheus:1.17.1"
+micrometer-prometheus = "io.micrometer:micrometer-registry-prometheus:1.17.2"
 postgresJdbcDriver = "org.postgresql:postgresql:42.7.14"
 postgresSocketFactory = "com.google.cloud.sql:postgres-socket-factory:1.30.1"
 rapidsAndRivers = "com.github.navikt:rapids-and-rivers:2026091610031789545782"
